@@ -7,6 +7,11 @@ most of the HTTP protocol.
 
  See https://skarnet.org/software/tipidee/ for details.
 
+ tipidee is still in ALPHA state. There is no numbered version
+release yet (the download link will not work), it's not fully
+documented yet, and there is no guarantee it will work for you.
+Please be patient.
+
 
 * Installation
   ------------
