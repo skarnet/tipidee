@@ -1,0 +1,137 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="Content-Language" content="en" />
+    <title>tipidee - a small and fast HTTP/1.1 server</title>
+    <meta name="Description" content="tipidee - a small and fast HTTP/1.1 server" />
+    <meta name="Keywords" content="tipidee web server http https laurent bercot ska skarnet.org" />
+    <!-- <link rel="stylesheet" type="text/css" href="//skarnet.org/default.css" /> -->
+  </head>
+<body>
+
+<p>
+<a href="//skarnet.org/software/">Software</a><br />
+<a href="//skarnet.org/">skarnet.org</a>
+</p>
+
+<h1> tipidee </h1>
+
+<h2> What is it&nbsp;? </h2>
+
+<p>
+  tipidee is a web server. It supports HTTP/1.1. It aims to be compliant
+with <a href="https://datatracker.ietf.org/doc/html/rfc9112">RFC 9112</a>:
+while it only implements a very limited subset of the optional functionality
+in HTTP/1.1, it implements all the mandatory parts.
+</p>
+
+<hr />
+
+<h2> Why another Web server? </h2>
+
+<p>
+ There are two groups of web servers.
+</p>
+
+<p>
+ The first one is big, powerful servers such as
+<a href="https://nginx.org/">nginx</a>,
+<a href="https://httpd.apache.org/">Apache httpd</a>,
+and so on. They focus on environments where simplicity isn't a concern
+and can be traded off for features, integration with larger ecosystems,
+or just serving speed. (<a href="https://www.lighttpd.net/">lighttpd</a>,
+for instance, was developed as a proof of concept for solving the
+<a href="http://www.kegel.com/c10k.html">c10k problem</a>.)
+</p>
+
+<p>
+ The second one is 
+</p>
+
+<h3> And why "tipidee"? </h3>
+
+<p>
+ Because <em>h-t-t-p-d</em> is pretty tedious to say out loud, and only
+keeping the last syllables makes it easier.
+</p>
+
+<h2> Installation </h2>
+
+<h3> Requirements </h3>
+
+<ul>
+ <li> A POSIX-compliant system with a standard C development environment </li>
+ <li> GNU make, version 3.81 or later </li>
+ <li> <a href="//skarnet.org/software/skalibs/">skalibs</a> version
+2.13.2.0 or later. It's a build-time requirement. It's also a run-time
+requirement if you link against the shared version of the skalibs
+library. </li>
+ <li> Recommended at run-time: <a href="//skarnet.org/software/s6-networking/">s6-networking</a> version
+2.5.1.3 or later. It's not a strict requirement, but tipidee relies
+on a super-server to listen to the network and provide connection
+information via environment variables. It also defers to tools such as
+<a href="//skarnet.org/software/s6-networking/s6-tcpserver-access.html">s6-tcpserver-access</a>
+to provide access control and connection fine-tuning. </li>
+</ul>
+
+<h3> Licensing </h3>
+
+<p>
+ tipidee is free software. It is available under the
+<a href="https://opensource.org/licenses/ISC">ISC license</a>.
+</p>
+
+<h3> Download </h3>
+
+<ul>
+ <li> The current released version of tipidee is
+<a href="tipidee-0.0.1.0.tar.gz">0.0.1.0</a>. </li>
+ <li> You can checkout a copy of the
+<a href="//git.skarnet.org/cgi-bin/cgit.cgi/tipidee/">tipidee
+git repository</a>:
+<pre> git clone git://git.skarnet.org/tipidee </pre> </li>
+ <li> There's also a
+<a href="https://github.com/skarnet/tipidee">GitHub mirror</a>
+of the tipidee git repository. </li>
+</ul>
+
+<h3> Compilation </h3>
+
+<ul>
+ <li> See the enclosed INSTALL file for installation details. </li>
+</ul>
+
+<h3> Upgrade notes </h3>
+
+<ul>
+ <li> <a href="upgrade.html">This page</a> lists the differences to be aware of between
+the previous versions of tipidee and the current one. </li>
+</ul>
+
+<hr />
+
+<h2> Reference </h2>
+
+<h3> Commands </h3>
+
+<ul>
+<li><a href="tipideed.html">The <tt>tipideed</tt> program</a></li>
+<li><a href="tipidee-config.html">The <tt>tipidee-config</tt> program</a></li>
+</ul>
+
+<h3> Internal commands </h3>
+
+<ul>
+<li><a href="tipidee-config-preprocess.html">The <tt>tipidee-config-preprocess</tt> internal program</a></li>
+</ul>
+
+<h2> Related resources </h2>
+
+<ul>
+ <li> <tt>tipidee</tt> is discussed on the
+<a href="//skarnet.org/lists/#skaware">skaware</a> mailing-list. </li>
+</ul>
+
+</body>
+</html>

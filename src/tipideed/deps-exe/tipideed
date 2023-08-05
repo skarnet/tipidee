@@ -1,0 +1,11 @@
+cgi.o
+harden.o
+log.o
+options.o
+regular.o
+responses.o
+send_file.o
+tipideed.o
+trace.o
+libtipidee.a.xyzzy
+-lskarnet

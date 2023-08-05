@@ -1,0 +1,6 @@
+confnode.o
+conftree.o
+defaults.o
+lexparse.o
+-lskarnet
+${SPAWN_LIB}

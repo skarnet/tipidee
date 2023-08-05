@@ -1,0 +1,10 @@
+*.o
+*.a
+*.lo
+*.so
+*.so.*
+/config.mak
+/src/include/tipidee/config.h
+/tipideed
+/tipidee-config
+/tipidee-config-preprocess

@@ -1,0 +1,24 @@
+tipidee - a minimalistic web server
+-----------------------------------
+
+ tipidee is a minimalistic HTTP/1.1 web server. It is designed to
+run under a super-server like inetd or s6-tcpserver. It supports
+most of the HTTP protocol.
+
+ See https://skarnet.org/software/tipidee/ for details.
+
+
+* Installation
+  ------------
+
+ See the INSTALL file.
+
+
+* Contact information
+  -------------------
+
+ Laurent Bercot <ska-skaware at skarnet.org>
+
+ Please use the <skaware at list.skarnet.org> mailing-list for
+questions about tipidee.
+

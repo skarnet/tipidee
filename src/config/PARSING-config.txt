@@ -1,0 +1,56 @@
+global verbosity 1
+global read_timeout 60000
+global index index.cgi index.html
+
+content-type application/pdf .pdf
+content-type text/plain .c .h .txt
+
+
+domain example.com
+
+nph-prefix nph-
+
+redirect rickroll.html 307 https://www.youtube.com/watch?v=dQw4w9WgXcQ
+redirect community/ 308 https://example.org/
+
+cgi /cgi-bin/
+nph /cgi-bin/nph/
+
+cgi /some/script
+nph /some/otherscript
+
+noncgi /cgi-bin/file.html
+noncgi /cgi-bin/directory
+
+file-type /source/ text/plain
+file-type /source/file.html text/html
+
+basic-auth /protected.html
+basic-auth /protected/
+
+
+class	|	0	1	2	3	4
+st\ev	|	\0	space	#	\n	other
+
+START	|				P	np
+00	|	END	SPACE	COMMENT	START	WORD
+
+COMMENT	|				P
+01	|	END	COMMENT	COMMENT	START	COMMENT
+
+SPACE	|	P			P	np
+02	|	END	SPACE	COMMENT	START	WORD
+
+WORD	|	0P	0	p	0P	p
+03	|	END	SPACE	WORD	START	WORD
+
+END: 04
+X: 05
+
+states: 3 bits
+actions: 4 bits
+
+0x10	n	new word
+0x20	p	push cur
+0x40	0	push \0
+0x80	P	process line
