@@ -6,6 +6,9 @@
 #include <unistd.h>
 #include <errno.h>
 #include <stdlib.h>
+#ifdef SKALIBS_HASSETGROUPS
+#include <grp.h>
+#endif
 
 #include <skalibs/types.h>
 #include <skalibs/strerr.h>
