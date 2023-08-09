@@ -110,7 +110,8 @@ static inline void parse_global (char const *s, size_t const *word, size_t n, md
     {
       char pack[4] ;
       uint32_t u ;
-      if (n > 2) strerr_dief8x(1, "too ", "many", " arguments to global setting ", s + word[0], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+      if (n > 2)
+        strerr_dief8x(1, "too ", "many", " arguments to global setting ", s + word[0], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
       if (!uint320_scan(s + word[1], &u))
         strerr_dief6x(1, "invalid (non-numeric) value for global setting ", s + word[0], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
       uint32_pack_big(pack, u) ;
@@ -134,17 +135,17 @@ static inline void parse_contenttype (char const *s, size_t const *word, size_t 
 {
   char const *ct ;
   if (n < 2)
-    strerr_dief8x(1, "too ", "few", " arguments to directive ", "redirect", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    strerr_dief8x(1, "too ", "few", " arguments to directive ", "content-type", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   ct = s + *word++ ;
   if (!strchr(ct, '/'))
-    strerr_dief6x(1, "Content-Type must include a slash, ", "check directive", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    strerr_dief6x(1, "Content-Type must include a slash", " - check directive content-type", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   n-- ;
   for (size_t i = 0 ; i < n ; i++)
   {
     size_t len = strlen(s + word[i]) ;
     char key[len + 2] ;
     if (s[word[i]] != '.')
-      strerr_dief6x(1, "file extensions must start with a dot, ", "check directive", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+      strerr_dief6x(1, "file extensions must start with a dot", " - check directive content-type", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
     key[0] = 'T' ;
     key[1] = ':' ;
     memcpy(key + 2, s + word[i] + 1, len - 1) ;
