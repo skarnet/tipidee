@@ -1,6 +1,6 @@
 global verbosity 1
 global read_timeout 60000
-global index index.cgi index.html
+global index_file index.cgi index.html
 
 content-type application/pdf .pdf
 content-type text/plain .c .h .txt

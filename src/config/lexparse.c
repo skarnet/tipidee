@@ -100,8 +100,8 @@ static inline void parse_global (char const *s, size_t const *word, size_t n, md
     { .name = "write_timeout", .key = "G:write_timeout", .type = 0 }
   } ;
   struct globalkey_s *gl ;
-  if (n != 2)
-    strerr_dief8x(1, "too ", n > 2 ? "many" : "few", " arguments to directive ", "global", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+  if (n < 2)
+    strerr_dief8x(1, "too ", "few", " arguments to directive ", "global", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   gl = bsearch(s + word[0], globalkeys, sizeof(globalkeys)/sizeof(struct globalkey_s), sizeof(struct globalkey_s), &globalkey_cmp) ;
   if (!gl) strerr_dief6x(1, "unrecognized global setting ", s + word[0], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   switch (gl->type)
@@ -110,7 +110,7 @@ static inline void parse_global (char const *s, size_t const *word, size_t n, md
     {
       char pack[4] ;
       uint32_t u ;
-      if (n != 2) strerr_dief7x(1, "too many", " arguments to global setting ", s + word[0], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+      if (n > 2) strerr_dief8x(1, "too ", "many", " arguments to global setting ", s + word[0], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
       if (!uint320_scan(s + word[1], &u))
         strerr_dief6x(1, "invalid (non-numeric) value for global setting ", s + word[0], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
       uint32_pack_big(pack, u) ;
@@ -133,8 +133,8 @@ static inline void parse_global (char const *s, size_t const *word, size_t n, md
 static inline void parse_contenttype (char const *s, size_t const *word, size_t n, mdt const *md)
 {
   char const *ct ;
-  if (n != 3)
-    strerr_dief8x(1, "too ", n > 3 ? "many" : "few", " arguments to directive ", "redirect", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+  if (n < 2)
+    strerr_dief8x(1, "too ", "few", " arguments to directive ", "redirect", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   ct = s + *word++ ;
   if (!strchr(ct, '/'))
     strerr_dief6x(1, "Content-Type must include a slash, ", "check directive", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
