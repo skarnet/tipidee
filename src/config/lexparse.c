@@ -185,7 +185,9 @@ static inline void parse_redirect (char const *s, size_t const *word, size_t n, 
     confnode_start(&node, key, md->filepos, md->line) ;
     key[0] = '@' | i ;
     confnode_add(&node, &key[0], 1) ;
-    confnode_add(&node, s + word[2], strlen(s + word[2]) + 1) ;
+    urlen = strlen(s + word[2]) ;
+    confnode_add(&node, s + word[2], urlen - (s[word[2] + urlen - 1] == '/')) ;
+    confnode_add(&node, "", 1) ;
     conftree_add(&node) ;
   }
 }
