@@ -229,7 +229,7 @@ static inline int serve (tipidee_rql *rql, char const *docroot, size_t docrootle
   if (rql->m != TIPIDEE_METHOD_OPTIONS)
   {
     tipidee_redirection rd = TIPIDEE_REDIRECTION_ZERO ;
-    int e = tipidee_conf_get_redirection(&g.conf, fn, docrootlen, &rd) ;
+    int e = tipidee_conf_get_redirection(&g.conf, docroot, docrootlen, rql->uri.path, &rd) ;
     if (e == -1) die500sys(rql, 111, "get redirection data for ", fn) ;
     if (e)
     {

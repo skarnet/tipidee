@@ -38,7 +38,7 @@ extern int tipidee_conf_get_uint32 (tipidee_conf const *, char const *, uint32_t
 extern unsigned int tipidee_conf_get_argv (tipidee_conf const *, char const *, char const **, unsigned int, size_t *) ;
 
 extern char const *tipidee_conf_get_docroot (tipidee_conf const *, tipidee_uri const *, uint16_t) ;
-extern int tipidee_conf_get_redirection (tipidee_conf const *, char const *, size_t, tipidee_redirection *) ;
+extern int tipidee_conf_get_redirection (tipidee_conf const *, char const *, size_t, char const *, tipidee_redirection *) ;
 extern char const *tipidee_conf_get_content_type (tipidee_conf const *, char const *) ;
 
 #endif
