@@ -1,5 +1,7 @@
 /* ISC license. */
 
+#include <errno.h>
+
 #include <skalibs/uint64.h>
 #include <skalibs/types.h>
 #include <skalibs/buffer.h>
@@ -39,7 +41,12 @@ int respond_regular (tipidee_rql const *rql, char const *fn, uint64_t size, tipi
     if (fd == -1)
     {
       buffer_unput(buffer_1, n) ;
-      die500sys(rql, 111, "open ", fn) ;
+      if (errno == EACCES)
+      {
+        respond_403(rql) ;
+        return 0 ;
+      }
+      else die500sys(rql, 111, "open ", fn) ;
     }
     send_file(fd, size, fn) ;
     fd_close(fd) ;
