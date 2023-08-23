@@ -20,18 +20,34 @@
 <h2> What is it&nbsp;? </h2>
 
 <p>
-  tipidee is a web server. It supports HTTP/1.1. It aims to be compliant
+  tipidee is a web server. It supports HTTP 1.0 and 1.1. It aims to be compliant
 with <a href="https://datatracker.ietf.org/doc/html/rfc9112">RFC 9112</a>:
 while it only implements a very limited subset of the optional functionality
-in HTTP/1.1, it implements all the mandatory parts.
+in HTTP 1.1, it implements all the mandatory parts. It is usable with both
+HTTP and HTTPS.
 </p>
+
+<p>
+ It runs under a super-server, e.g. inetd,
+<a href="//skarnet.org/software/s6-networking/s6-tcpserver.html">s6-tcpserver</a>, or
+<a href="//skarnet.org/software/s6-networking/s6-tlsserver.html">s6-tlsserver</a>
+(for HTTPS). Traditionally, inetd-mode web servers aren't considered performant,
+but tipidee aims to eke out every single drop of performance that is attainable from
+its programming model.
+</p>
+
+<hr />
+
+<ul>
+ <li> For the impatient: a <a href="quickstart.html">quickstart guide</a>. </li>
+</ul>
 
 <hr />
 
 <h2> Why another Web server? </h2>
 
 <p>
- There are two groups of web servers.
+ There are roughly two groups of web servers.
 </p>
 
 <p>
@@ -46,14 +62,41 @@ for instance, was developed as a proof of concept for solving the
 </p>
 
 <p>
- The second one is 
+ The second one is small, quick-and-dirty servers, aimed at easily deploying
+basic HTTP service for serving static files for prototying or in resource
+constrained environments such as embedded devices. Among them, for instance,
+<a href="https://busybox.net/">busybox httpd</a>,
+<a href="http://www.eterna.com.au/bozohttpd/">bozohttpd</a>, or various
+httpds from <a href="https://acme.com/software/">ACME Labs</a>.
+</p>
+
+<p>
+ And, surprisingly, not much in between. There are a ton of supposedly
+"tiny" or "minimal" servers, written in languages whose naked runtime uses
+more resources than <a href="//skarnet.org/software/">the whole skarnet.org
+ecosystem</a> by two orders of magnitude; but there isn't one that focused
+on what I want from a web server, which is:
+</p>
+
+<ul>
+ <li> Usability with HTTPS without the need to entangle the code with a
+given TLS library (which means delegating the TLS layer to a super-server
+and not performing the socket work itself) </li>
+ <li> Support for HTTP 1.1, not only 1.0 </li>
+ <li> Support for real CGI, not only NPH </li>
+</ul>
+
+<p>
+ All in all, I felt that despite how crowded the web server space is,
+there wasn't a satisfactory offer for the needs of skarnet.org and a
+few similar sites.
 </p>
 
 <h3> And why "tipidee"? </h3>
 
 <p>
- Because <em>h-t-t-p-d</em> is pretty tedious to say out loud, and only
-keeping the last syllables makes it easier.
+ Because <em>h-t-t-p-d</em> is pretty tedious to say out loud.
+kKeeping the last three syllables makes it easier.
 </p>
 
 <h2> Installation </h2>
@@ -72,7 +115,10 @@ library. </li>
 on a super-server to listen to the network and provide connection
 information via environment variables. It also defers to tools such as
 <a href="//skarnet.org/software/s6-networking/s6-tcpserver-access.html">s6-tcpserver-access</a>
-to provide access control and connection fine-tuning. </li>
+to provide access control and connection fine-tuning. And if you want
+to run an HTTPS server, you'll need something like
+<a href="//skarnet.org/software/s6-networking/s6-tlsserver.html">s6-tlsserver</a>
+to manage the TLS transport layer. </li>
 </ul>
 
 <h3> Licensing </h3>
@@ -124,6 +170,12 @@ the previous versions of tipidee and the current one. </li>
 
 <ul>
 <li><a href="tipidee-config-preprocess.html">The <tt>tipidee-config-preprocess</tt> internal program</a></li>
+</ul>
+
+<h3> Configuration format </h3>
+
+<ul>
+<li><a href="tipidee.conf.html">The <tt>/etc/tipidee.conf</tt> file format</a></li>
 </ul>
 
 <h2> Related resources </h2>
