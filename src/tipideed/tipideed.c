@@ -42,7 +42,7 @@ static void sigchld_handler (int sig)
 
 static inline void prep_env (void)
 {
-  static char const basevars[] = "PROTO\0GATEWAY_INTERFACE=CGI/1.1\0SERVER_PROTOCOL=HTTP/1.1\0SERVER_SOFTWARE=tipidee/" TIPIDEE_VERSION ;
+  static char const basevars[] = "PROTO\0TCPCONNNUM\0GATEWAY_INTERFACE=CGI/1.1\0SERVER_PROTOCOL=HTTP/1.1\0SERVER_SOFTWARE=tipidee/" TIPIDEE_VERSION ;
   static char const sslvars[] = "SSL_PROTOCOL\0SSL_CIPHER\0SSL_TLS_SNI_SERVERNAME\0SSL_PEER_CERT_HASH\0SSL_PEER_CERT_SUBJECT\0HTTPS=on" ;
   char const *x = getenv("SSL_PROTOCOL") ;
   if (!stralloc_readyplus(&g.sa, 320)) dienomem() ;
@@ -489,6 +489,7 @@ int main (int argc, char const *const *argv, char const *const *envp)
             else exit_400(&rql, "Request body does not match Content-Length") ;
           }
           bodysa.len = content_length ;
+          break ;
         }
         case TIPIDEE_TRANSFERCODING_CHUNKED :
         {
@@ -498,6 +499,7 @@ int main (int argc, char const *const *argv, char const *const *envp)
             else if (errno == EMSGSIZE) exit_413(&rql, "Request body too large") ;
             else exit_400(&rql, "Invalid chunked body") ;
           }
+          break ;
         }
         default : break ;
       }

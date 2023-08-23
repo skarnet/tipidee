@@ -54,7 +54,7 @@ void respond_30x (tipidee_rql const *rql, tipidee_redirection const *rd)
   tain deadline ;
   tipidee_response_status_line(buffer_1, rql, rsl[rd->type]) ;
   tipidee_response_header_common_put_g(buffer_1, 0) ;
-  buffer_putsnoflush(buffer_1, "Location: ") ;
+  buffer_putsnoflush(buffer_1, "Content-Length: 0\r\nLocation: ") ;
   buffer_putsnoflush(buffer_1, rd->location) ;
   if (rd->sub) buffer_putsnoflush(buffer_1, rd->sub) ;
   buffer_putnoflush(buffer_1, "\r\n\r\n", 4) ;
