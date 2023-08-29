@@ -26,7 +26,7 @@
 #include <tipidee/tipidee.h>
 #include "tipideed-internal.h"
 
-#define USAGE "tipideed [ -v verbosity ] [ -f conffile ] [ -R chroot ] [ -U ]"
+#define USAGE "tipideed [ -v verbosity ] [ -f cdbfile ] [ -d basedir ] [ -R ] [ -U ]"
 #define dieusage() strerr_dieusage(100, USAGE)
 #define dienomem() strerr_diefu1sys(111, "stralloc_catb")
 

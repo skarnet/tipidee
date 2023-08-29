@@ -1,0 +1,65 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="Content-Language" content="en" />
+    <title>tipidee: the tipidee-config-preprocess internal program</title>
+    <meta name="Description" content="tipidee: the tipidee-config-preprocess internal program" />
+    <meta name="Keywords" content="tipidee tipidee web server configuration text compilation preprocessing internal libexec preprocessor include" />
+    <!-- <link rel="stylesheet" type="text/css" href="//skarnet.org/default.css" /> -->
+  </head>
+<body>
+
+<p>
+<a href="index.html">tipidee</a><br />
+<a href="//skarnet.org/software/">Software</a><br />
+<a href="//skarnet.org/">skarnet.org</a>
+</p>
+
+<h1> The <tt>tipidee-config-preprocess</tt> internal program </h1>
+
+<p>
+ <tt>tipidee-config-preprocess</tt> is a tool that reads a line-based
+configuration file like <a href="tipidee.conf.html">tipidee.conf</a>
+containing <tt>!include</tt>, <tt>!includedir</tt> and <tt>!included:</tt>
+directives, and preprocesses it, replacing the lines where these directive
+appear with the full contents of included files where appropriate.
+</p>
+
+<p>
+ <tt>tipidee-config-preprocess</tt> is not supposed to be invoked
+directly by the user. It is automatically invoked by the
+<a href="tipidee-config.html">tipidee-config</a> program.
+</p>
+
+<h2> Interface </h2>
+
+<pre>
+     tipidee-config-preprocess <em>file</em>
+</pre>
+
+<ul>
+ <li> tipidee-config-preprocess reads <em>file</em> and
+writes its contents to stdout. </li>
+ <li> If <em>file</em> contains a line starting with <tt>!included:</tt>,
+this line is not printed. </li>
+ <li> If <em>file</em> contains a line starting with <tt>!include</tt> or
+<tt>!includedir</tt>, this line is replaced with the contents of
+appropriately included files. </li>
+ <li> tipidee-config-preprocess then exits 0. </li>
+</ul>
+
+<p>
+ TODO: write this page.
+</p>
+
+<h2> Exit codes </h2>
+
+<h2> Options </h2>
+
+<h2> Detailed operation </h2>
+
+<h2> Notes </h2>
+
+</body>
+</html>

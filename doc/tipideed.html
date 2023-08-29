@@ -1,0 +1,60 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="Content-Language" content="en" />
+    <title>tipidee: the tipideed program</title>
+    <meta name="Description" content="tipidee: the tipideed program" />
+    <meta name="Keywords" content="tipidee tipideed web server serving http skarnet.org skarnet software httpd" />
+    <!-- <link rel="stylesheet" type="text/css" href="//skarnet.org/default.css" /> -->
+  </head>
+<body>
+
+<p>
+<a href="index.html">tipidee</a><br />
+<a href="//skarnet.org/software/">Software</a><br />
+<a href="//skarnet.org/">skarnet.org</a>
+</p>
+
+<h1> The <tt>tipideed</tt> program </h1>
+
+<p>
+ <tt>tipideed</tt> is the binary that actually does what you want from
+a web server package: it serves files over HTTP.
+</p>
+
+<h2> Interface </h2>
+
+<pre>
+     tipideed [ -v <em>verbosity</em> ] [ -f <em>cdbfile</em> ] [ -d <em>basedir</em> ] [ -R ] [ -U ]
+</pre>
+
+<ul>
+ <li> tipideed reads a stream of HTTP (1.0 or 1.1) requests on its stdin, and tries
+to fulfill them, sending answers to stdout, and logs to stderr. </li>
+ <li> tipideed only speaks plaintext HTTP. It supports HTTPS, but the TLS layer
+must be handled upstream by a program such as
+<a href="//skarnet.org/software/s6-networking/s6-tlsd.html">s6-tlsd</a>. </li>
+ <li> tipideed stays alive until the client closes the connection or (in
+HTTP 1.1) sends a request with a <tt>Connection: close</tt> header, or an error
+occurs that makes it nonsensical to keep the connection open. </li>
+ <li> By default, the documents it serves must be in subdirectories of its
+current working directory, one subdirectory for every domain it hosts. </li>
+</ul>
+
+<p>
+ TODO: write this page.
+</p>
+
+<h2> Exit codes </h2>
+
+<h2> Environment variables </h2>
+
+<h2> Options </h2>
+
+<h2> Detailed operation </h2>
+
+<h2> Notes </h2>
+
+</body>
+</html>
