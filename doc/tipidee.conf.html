@@ -237,8 +237,8 @@ the maximum duration that a CGI script spawned by
 the script will be killed, and <a href="tipideed.html">tipideed</a> will
 send a 504 (Gateway Timeout) response to the client. </li>
  <li> The default is 0, meaning infinite: <a href="tipideed.html">tipideed</a>
-will wait forever until the network uncongests and its client starts to behave. </li>
- <li> An example setting is <tt>global write_timeout 10000</tt>, giving any
+will wait forever until CGI scripts write their output. </li>
+ <li> An example setting is <tt>global cgi_timeout 10000</tt>, giving any
 CGI scripts 10 seconds to complete &mdash; most users aren't willing to wait
 more than a few seconds for a page to render anyway. </li>
 </ul>
