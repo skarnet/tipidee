@@ -30,6 +30,7 @@
 #define dieusage() strerr_dieusage(100, USAGE)
 #define dienomem() strerr_diefu1sys(111, "stralloc_catb")
 
+#define MAX_LOCALREDIRS 32
 #define ARGV_MAX 128
 
 struct global_s g = GLOBAL_ZERO ;
@@ -367,6 +368,7 @@ int main (int argc, char const *const *argv, char const *const *envp)
     tipidee_rql rql = TIPIDEE_RQL_ZERO ;
     tipidee_headers hdr ;
     int e ;
+    unsigned int localredirs = 0 ;
     char const *x ;
     size_t content_length ;
     tipidee_transfercoding tcoding = TIPIDEE_TRANSFERCODING_UNKNOWN ;
@@ -509,7 +511,9 @@ int main (int argc, char const *const *argv, char const *const *envp)
 
      /* And serve the resource. The loop is in case of CGI local-redirection. */
 
-      while (serve(&rql, docroot, hostlen + 1 + g.localportlen, uribuf, &hdr, bodysa.s, bodysa.len)) ;
+      while (serve(&rql, docroot, hostlen + 1 + g.localportlen, uribuf, &hdr, bodysa.s, bodysa.len))
+        if (localredirs++ >= MAX_LOCALREDIRS)
+          die502x(&rql, 1, "too many local redirections - possible loop involving path ", rql.uri.path) ;
     }
   }
   log_and_exit(0) ;

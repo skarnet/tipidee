@@ -2,4 +2,4 @@
 
 s6-setuidgid wwwlog
 exec -c
-s6-log -d3 t s1000000 n20 /var/log/httpd-6
+s6-log -d3 t s1000000 n20 /var/log/httpsd-6

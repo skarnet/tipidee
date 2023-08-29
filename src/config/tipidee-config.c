@@ -52,11 +52,6 @@ static inline void conf_output (char const *ofile, unsigned int omode)
   memcpy(otmp + olen, ":XXXXXX", 8) ;
   fdw = mkstemp(otmp) ;
   if (fdw == -1) strerr_diefu3sys(111, "open ", otmp, " for writing") ;
-  if (coe(fdw) == -1)
-  {
-    unlink_void(otmp) ;
-    strerr_diefu2sys(111, "coe ", otmp) ;
-  }
   if (!cdbmake_start(&cm, fdw))
   {
     unlink_void(otmp) ;
@@ -77,7 +72,7 @@ static inline void conf_output (char const *ofile, unsigned int omode)
     unlink_void(otmp) ;
     strerr_diefu2sys(111, "fsync ", otmp) ;
   }
-  if (fchmod(fdw, omode & 0755) == -1)
+  if (fchmod(fdw, omode & 0777) == -1)
   {
     unlink_void(otmp) ;
     strerr_diefu2sys(111, "fchmod ", otmp) ;

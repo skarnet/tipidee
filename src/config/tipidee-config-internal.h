@@ -35,8 +35,6 @@ extern struct global_s g ;
 
 extern void confnode_start (confnode *, char const *, size_t, uint32_t) ;
 extern void confnode_add (confnode *, char const *, size_t) ;
-#define confnode_adds(node, s) confnode_add(node, (s), strlen(s))
-#define confnode_add0(node) confnode_add((node), "", 1)
 
 
  /* conftree */

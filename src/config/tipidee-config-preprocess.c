@@ -206,9 +206,11 @@ static void includefromhere (char const *file)
       switch (cmd)
       {
         case 2 :
+          if (namesa.s[d] & 2)
+            strerr_dief5x(3, "in ", namesa.s + d + 1, " line ", linefmt, ": extra !included: directive") ;
           if (!strcmp(sa.s + sastart, "unique")) namesa.s[d] |= 3 ;
           else if (!strcmp(sa.s + sastart, "multiple")) namesa.s[d] |= 2 ;
-          else strerr_dief6x(3, "in ", namesa.s + d + 1, " line ", linefmt, "invalid !included: argument: ", sa.s + sastart) ;
+          else strerr_dief6x(3, "in ", namesa.s + d + 1, " line ", linefmt, ": invalid !included: argument: ", sa.s + sastart) ;
           break ;
         case 1 :
         case 0 :

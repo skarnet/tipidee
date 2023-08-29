@@ -99,7 +99,7 @@ static inline void parse_global (char const *s, size_t const *word, size_t n, md
     { .name = "verbosity", .key = "G:verbosity", .type = 0 },
     { .name = "write_timeout", .key = "G:write_timeout", .type = 0 }
   } ;
-  struct globalkey_s *gl ;
+  struct globalkey_s const *gl ;
   if (n < 2)
     strerr_dief8x(1, "too ", "few", " arguments to directive ", "global", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   gl = bsearch(s + word[0], globalkeys, sizeof(globalkeys)/sizeof(struct globalkey_s), sizeof(struct globalkey_s), &globalkey_cmp) ;
@@ -194,7 +194,7 @@ static inline void parse_redirect (char const *s, size_t const *word, size_t n, 
 
 static void parse_bitattr (char const *s, size_t const *word, size_t n, char const *domain, size_t domainlen, mdt const *md, unsigned int bit, int set)
 {
-  static char const *attr[3][2] = { { "noncgi", "cgi" }, { "nonnph", "nph", }, { "noauth", "basic-auth" } } ;
+  static char const *const attr[3][2] = { { "noncgi", "cgi" }, { "nonnph", "nph", }, { "noauth", "basic-auth" } } ;
   uint8_t mask = (uint8_t)0x01 << bit ;
   if (n != 1)
     strerr_dief8x(1, "too ", n > 1 ? "many" : "few", " arguments to directive ", attr[bit][set], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;

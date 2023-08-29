@@ -1,0 +1,11 @@
+#!/bin/execlineb -P
+
+fdmove -c 2 1
+backtick -E ip { pipeline { s6-dnsip4 example.com } head -n 1 }
+s6-envuidgid www
+export KEYFILE /etc/ssl/acme/private/example.com/key.pem
+export CERTFILE /etc/ssl/acme/example.com/cert.pem
+cd /home/www
+fdmove 1 3
+s6-tlsserver -v -4 -1 -U -c 512 -K 30000 -- $ip 443
+tipideed -v2 --
