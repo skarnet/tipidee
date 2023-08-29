@@ -76,7 +76,7 @@ corresponding private key is in <tt>/etc/ssl/acme/private/example.com/key.pem</t
 the basic command line for your HTTPS service could look like:
 <tt>s6-envuidgid www
 env CERTFILE=/etc/ssl/acme/example.com/cert.pem KEYFILE=/etc/ssl/acme/private/example.com/key.pem
-s6-tlsserver -U -e example.com 443 tipideed<tt>.
+s6-tlsserver -U -e example.com 443 tipideed</tt>.
   <ul>
    <li> <a href="//skarnet.org/software/s6/s6-envuidgid.html">s6-envuidgid</a>
 puts the uid and gid of user <tt>www</tt> into the environment. </li>

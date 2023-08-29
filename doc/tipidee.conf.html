@@ -1,0 +1,605 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="Content-Language" content="en" />
+    <title>tipidee: the /etc/tipidee.conf configuration file</title>
+    <meta name="Description" content="tipidee: the /etc/tipidee.conf configuration file" />
+    <meta name="Keywords" content="tipidee configuration file" />
+    <!-- <link rel="stylesheet" type="text/css" href="//skarnet.org/default.css" /> -->
+  </head>
+<body>
+
+<p>
+<a href="index.html">tipidee</a><br />
+<a href="//skarnet.org/software/">Software</a><br />
+<a href="//skarnet.org/">skarnet.org</a>
+</p>
+
+<h1> The <tt>/etc/tipidee.conf</tt> configuration file </h1>
+
+<h2> Goal and usage </h2>
+
+<p>
+ <tt>/etc/tipidee.conf</tt> is a text file written by the web administrator
+to configure the <a href="tipideed.html">tipideed</a> server. After writing
+or modifying this file, the administrator is expected to run the
+<a href="tipidee-config.html">tipidee-config</a> program, that will read
+<tt>/etc/tipidee.conf</tt> and output a <tt>/etc/tipidee.conf.cdb</tt> file
+that will be suitable for <a href="tipideed.html">tipideed</a> to use.
+</p>
+
+<p>
+ <a href="tipidee-config.html">tipidee-config</a> provides sane defaults,
+so an empty <tt>/etc/tipidee.conf</tt> file is perfectly usable
+for purely static installations. But an empty file still needs to be
+created, unless <a href="tipidee-config.html">tipidee-config</a> is run
+with the <tt>-i /dev/null</tt> option.
+</p>
+
+<h2> Description </h2>
+
+<p>
+ The <tt>/etc/tipidee.conf</tt> file contains a series of lines; every line is an
+instruction. Lines do not wrap around and there is no quoting, so a newline is
+always the end of an instruction. Empty lines, or lines containing only
+whitespace, or lines beginning with <tt>#</tt> (comments), are ignored.
+If a line contains a <tt>#</tt> that is not in the middle or end of a word, the
+rest of the line is also considered a comment, and ignored.
+</p>
+
+<p>
+ Words on a line are separated by whitespace (spaces or tabs).
+Instructions are one <em>directive</em>, the first word in the line, followed by
+one or more <em>arguments</em>. Most directives take a fixed number of
+arguments; some of them take a variable number. There are several types
+of directives.
+</p>
+
+<div id="preprocess">
+<h3> Preprocessing directives </h3>
+</div>
+
+<p>
+ These are meta-directives: they do not control <a href="tipideed.html">tipideed</a>'s
+behaviour directly, but tell <a href="tipidee-config.html">tipidee-config</a> to
+include other files. They allow administrators and packagers to write modular, pluggable
+configuration files. Preprocessing directives always start with a <tt>!</tt>
+(exclamation point, or <em>bang</em>) character.
+</p>
+
+<p>
+ You will probably never see preprocessing directives in simple configuration files.
+They are meant for bigger or more generic configurations.
+</p>
+
+<div id="!include">
+<h4> The <tt>!include</tt> directive </h4>
+</div>
+
+<p>
+ <code> !include <em>file</em> </code>
+</p>
+
+<ul>
+ <li> This directive will replace itself with the contents of <em>file</em>. </li>
+ <li> <em>file</em> can be a relative or absolute path. If relative, then
+it is relative to the directory of the file being currently processed, i.e.
+the file containing the <tt>!include</tt> directive. In other words, things
+will work as you intuitively expect. </li>
+</ul>
+
+<div id="!includedir">
+<h4> The <tt>!includedir</tt> directive </h4>
+</div>
+
+<p>
+ <code> !includedir <em>dir</em> </code>
+</p>
+
+<ul>
+ <li> This directive will include every file in directory <em>dir</em>. </li>
+ <li> File names starting with a <tt>.</tt> (dot) will be ignored (i.e. not included). </li>
+ <li> The inclusion order is deterministic: file names are sorted according to the C locale. </li>
+ <li> <em>dir</em> can be a relative or absolute path. If relative, then
+it is relative to the directory of the file being currently processed, i.e.
+the file containing the <tt>!includedir</tt> directive. In other words, things
+will work as you intuitively expect. </li>
+</ul>
+
+<div id="!included:">
+<h4> The <tt>!included:</tt> directive </h4>
+</div>
+
+<p>
+ <code> !included: unique </code> <br>
+ <code> !included: multiple </code>
+</p>
+
+<ul>
+ <li> This directive is usually written at the beginning of a file. Only one
+such directive per file is allowed. </li>
+ <li> <tt>!included:</tt> governs what happens when a file is included
+<em>more than once</em>.
+  <ul>
+   <li> If a file contains an <tt>!included: unique</tt> line, then all
+inclusions of this file after the first one will be ignored: the contents
+of the file will appear only once. </li>
+   <li> If a file contains an <tt>!included: multiple</tt> line, then the
+file will be expanded into its contents <em>every time</em> the file is
+included. </li>
+   <li> If a file does not contain an <tt>!included:</tt> directive, then
+including it twice is an error, and
+<a href="tipidee-config-preprocess.html">tipidee-config-preprocess</a>,
+the program in charge of the preprocessing directives, will complain and
+exit. </li>
+  </ul> </li>
+ <li> Don't forget the <tt>:</tt> (colon) at the end of the <tt>!included:</tt>
+directive! </li>
+</ul>
+
+<div id="global">
+<h3> Global directives </h3>
+</div>
+
+<p>
+ Global directives control global aspects of <a href="tipideed.html">tipideed</a>
+&mdash; values that apply to the server itself, no matter what domain it is
+serving. The directive name is <tt>global</tt>, and it takes two arguments: the
+name and the value of a setting.
+</p>
+
+<div id="verbosity">
+<h4> <tt>verbosity</tt> </h4>
+</div>
+
+<p>
+ <code> global verbosity <em>v</em> </code>
+</p>
+
+<ul>
+ <li> <em>v</em> is a non-negative integer, describing the level of verbosity that
+<a href="tipideed.html">tipideed</a> will write to its stderr with. </li>
+ <li> 0 means only error messages will be printed. </li>
+ <li> 1 is the default; it means error messages and warnings will be printed. </li>
+ <li> 2 is more verbose, also printing a summary of every HTTP request. </li>
+ <li> 3 is like 2 but also prints personally identifiable client information,
+such as its IP address. </li>
+ <li> 4 prints a lot of details for every request. </li>
+ <li> 5 or more is debugging output. </li>
+ <li> The configuration file setting can be overwritten by a <tt>-v</tt>
+option on the <a href="tipideed.html">tipideed</a> command line. </li>
+</ul>
+
+<div id="read_timeout">
+<h4> <tt>read_timeout</tt> </h4>
+</div>
+
+<p>
+ <code> global read_timeout <em>t</em> </code>
+</p>
+
+<ul>
+ <li> <em>t</em> is a non-negative integer, in milliseconds. It represents
+the maximum duration that a client is allowed to be idle. </li>
+ <li> If <em>t</em> milliseconds elapse without the client sending a request,
+<a href="tipideed.html">tipideed</a> will assume it is done, close the
+connection and exit. Also, if <em>t</em> milliseconds elapse while the client
+is sending a request, and the request is still not complete,
+<a href="tipideed.html">tipideed</a> will also close the connection. </li>
+ <li> The default is 0, meaning infinite: <a href="tipideed.html">tipideed</a>
+will never slam the door into a client's face, even if the client is
+excessively slow or fails to close a connection it's not using anymore. </li>
+ <li> A good setting is <tt>global read_timeout 60000</tt>, closing connections
+after one minute of inactivity. </li>
+</ul>
+
+<div id="write_timeout">
+<h4> <tt>write_timeout</tt> </h4>
+</div>
+
+<p>
+ <code> global write_timeout <em>t</em> </code>
+</p>
+
+<ul>
+ <li> <em>t</em> is a non-negative integer, in milliseconds. It represents
+the maximum duration that <a href="tipideed.html">tipideed</a> will accept
+to wait when sending data to the client. </li>
+ <li> If <em>t</em> milliseconds elapse while <a href="tipideed.html">tipideed</a>
+is sending data to the client, <a href="tipideed.html">tipideed</a> will
+give up and exit with an error message. </li>
+ <li> This typically happens when the network is congested, and the kernel's
+socket send buffers are full. It could also mean that a client is failing to
+read the data it has requested; or that the data is <em>very large</em> and
+taking time to transfer. </li>
+ <li> The default is 0, meaning infinite: <a href="tipideed.html">tipideed</a>
+will wait forever until the network uncongests and its client starts to behave. </li>
+ <li> An example setting is <tt>global write_timeout 600000</tt>, closing connections
+if a transfer takes more than 10 minutes; but servers serving large files to
+clients on slow connections will want a larger value. </li>
+</ul>
+
+<div id="cgi_timeout">
+<h4> <tt>cgi_timeout</tt> </h4>
+</div>
+
+<p>
+ <code> global cgi_timeout <em>t</em> </code>
+</p>
+
+<ul>
+ <li> <em>t</em> is a non-negative integer, in milliseconds. It represents
+the maximum duration that a CGI script spawned by
+<a href="tipideed.html">tipideed</a> is allowed to run. </li>
+ <li> If <em>t</em> milliseconds elapse while a CGI script is running, and
+<a href="tipideed.html">tipideed</a> hasn't gotten a full response yet,
+the script will be killed, and <a href="tipideed.html">tipideed</a> will
+send a 504 (Gateway Timeout) response to the client. </li>
+ <li> The default is 0, meaning infinite: <a href="tipideed.html">tipideed</a>
+will wait forever until the network uncongests and its client starts to behave. </li>
+ <li> An example setting is <tt>global write_timeout 10000</tt>, giving any
+CGI scripts 10 seconds to complete &mdash; most users aren't willing to wait
+more than a few seconds for a page to render anyway. </li>
+</ul>
+
+<div id="max_request_body_length">
+<h4> <tt>max_request_body_length</tt> </h4>
+</div>
+
+<p>
+ <code> global max_request_body_length <em>n</em> </code>
+</p>
+
+<ul>
+ <li> <em>n</em> is a non-negative integer, in bytes. It represents the
+maximum size that <a href="tipideed.html">tipideed</a> will accept for
+the body of an HTTP request. </li>
+ <li> If the client sends a request with a body larger than <em>n</em> bytes,
+<a href="tipideed.html">tipideed</a> will send a 413 (Content Too Large)
+response and close the connection. </li>
+ <li> The default is 8192, which is large enough for most. </li>
+ <li> An example setting is <tt>global max_request_body_length 500</tt>,
+when the administrator knows that no script on the site needs an input of
+more than 500 bytes and anything larger is malicious. </li>
+</ul>
+
+<div id="max_cgi_body_length">
+<h4> <tt>max_cgi_body_length</tt> </h4>
+</div>
+
+<p>
+ <code> global max_cgi_body_length <em>n</em> </code>
+</p>
+
+<ul>
+ <li> <em>n</em> is a non-negative integer, in bytes. It represents the
+maximum size that <a href="tipideed.html">tipideed</a> will accept for
+a CGI script's answer that it needs to process. </li>
+ <li> If a CGI script writes more than <em>n</em> bytes to its stdout,
+<a href="tipideed.html">tipideed</a> will send a 502 (Bad Gateway)
+response to the client and die with an error message. </li>
+ <li> This limit does not apply to NPH scripts, which send their stdout
+directly to the client without any processing by <a href="tipideed.html">tipideed</a>. </li>
+ <li> The default is 4194304 (4 mebibytes). </li>
+ <li> An example setting is <tt>global max_cgi_body_length 100000000</tt>,
+when the administrator knows that CGI scripts can write up to 100 megabytes.
+Note that the CGI specification forces web servers to read the whole CGI
+output in memory, so the larger the value, the more RAM
+<a href="tipideed.html">tipideed</a> may consume in order to hold CGI
+output data. And this is "private dirty" memory, i.e. memory that
+<em>really</em> counts towards resource use on your server, so be careful with
+that setting &mdash; and with the CGI scripts you choose to run. </li>
+</ul>
+
+<div id="index_file">
+<h4> <tt>index_file</tt> </h4>
+</div>
+
+<p>
+ <code> global index_file <em>file1</em> <em>file2</em> ... </code>
+</p>
+
+<ul>
+ <li> The <tt>global index_file</tt> directive has a variable number of
+arguments. <em>file1</em>, <em>file2</em>, and so on are the names of the
+files that should be used to try and complete the URI when a client request
+resolves to a directory. </li>
+ <li> For instance: <tt>global index_file index.cgi index.html index.htm</tt>
+means that when <a href="tipideed.html">tipideed</a> is asked to serve
+<tt>http://example.com</tt>, it will first try to serve as if the request
+had been <tt>http://example.com/index.cgi</tt>, then
+<tt>http://example.com/index.html</tt>, then <tt>http://example.com/index.htm</tt>.
+The first resource found is the one that is served; if none of the
+resources exist, <a href="tipideed.html">tipideed</a> responds 404 (Not Found). </li>
+ <li> This is valid for any subdirectory: <tt>http://example.com/foo</tt>, if the
+<tt>/foo</tt> resource resolves to a directory, is expanded to
+<tt>http://example.com/foo/index.cgi</tt>, then (if not found)
+<tt>http://example.com/foo/index.html</tt>, then (if not found)
+<tt>http://example.com/foo/index.htm</tt>. </li>
+ <li> The default is <tt>global index_file index.html</tt>, meaning that
+only the <tt>index.html</tt> file will be looked up when a resource resolves
+to a directory. </li>
+</ul>
+
+<div id="content-type">
+<h3> The <tt>content-type</tt> directive </h3>
+</div>
+
+<p>
+ <tt>content-type</tt> is also a global directive, but is introduced by the
+keyword <tt>content-type</tt>, without prepending <tt>global</tt>. It allows
+the user to define mappings from a document's extension to a standard Content-Type.
+</p>
+
+<p>
+ <code> content-type <em>type</em> <em>extension1</em> <em>extension2</em> ... </code>
+</p>
+
+<ul>
+ <li> Files ending with <em>extension1</em>, <em>extension2</em>, and so on, will be served
+to clients with the <tt>Content-Type: <em>type</em></tt> header.
+ <li> Extensions must be listed <em>with</em> their initial dot. </li>
+ <li> Example: <tt>content-type text/html .html .htm</tt> means that files
+ending in <tt>.html</tt> or <tt>.htm</tt> should be served as <tt>text/html</tt>.
+ <li> tipidee already comes with a
+<a href="https://git.skarnet.org/cgi-bin/cgit.cgi/tipidee/tree/src/config/defaults.c#n26">large
+list</a> of default Content-Type mappings; this directive should only be necessary if you're
+serving files with uncommon extensions or have specific needs. </li>
+</ul>
+
+<div id="local">
+<h3> Local directives </h3>
+</div>
+
+<p>
+ All the other directives are <em>local</em>: they only apply to the current <em>domain</em>.
+Except for <tt>domain</tt>, they can only be used after a <tt>domain</tt> directive.
+</p>
+
+<div id="domain">
+<h4> <tt>domain</tt> </h4>
+</div>
+
+<p>
+ <code> domain <em>domain</em> </code>
+</p>
+
+<ul>
+ <tt>domain</tt> is a special directive in that it is stateful. Instead of
+having a direct effect on the configuration, it merely defines the domain that
+the next local directives will apply to. <tt>domain example.com</tt> means
+that a subsequent <tt>cgi /cgi-bin/</tt> line will declare that a resource 
+under <tt>//example.com/cgi-bin/</tt> is a CGI script. </li>
+ <li> The current domain remains defined and active until the next
+<tt>domain</tt> directive. </li>
+ <li> Global directives are unaffected by the current domain. It is good
+practice to declare global directives <em>before</em> the first <tt>domain</tt>
+line, but it is not mandatory. </li>
+ <li> If your resources are accessible via several URIs, the declared <tt>domain</tt>
+should be the <em>canonical</em> one, i.e. the name of the <strong>real</strong>
+directory hosting them, and not the symlinks. E.g. if you are serving files in
+the real directory <tt>/home/www/docs/example.com</tt>, with <tt>example.com:80</tt>
+and <tt>example.com:443</tt> being symlinks to <tt>example.com</tt>, then
+<tt>domain example.com</tt> is the correct declaration for settings that will apply
+to these files. And if you are hosting a different set of documents in the real
+directory <tt>/home/www/docs/example.com:81</tt>, and <tt>example.com:444</tt> is
+a symlink to <tt>example.com:81</tt>, then these will be affected by the settings
+declared under <tt>domain example.com:81</tt>. </li>
+ <li> The point of all this is to make virtual hosting as flexible as possible,
+allowing you to have different configurations for different virtual hosts &mdash;
+including serving different sets of documents for the same host on different ports!)
+&mdash; without needing to duplicate the configuration when you are serving the same
+sets of documents over several ports, e.g. when you're serving both HTTP and HTTPS. </li>
+ <li> Complex configurations can benefit from the <tt>!include</tt> or
+<tt>!includedir</tt> primitives, by putting the configuration related to one domain
+in a dedicated file, and having the main <tt>/etc/tipidee.conf</tt> only declare
+global configuration and include all the domain-specific files. </li>
+</ul>
+
+<div id="cgi">
+<h4> <tt>cgi</tt> </h4>
+</div>
+
+<p>
+ <code> cgi <em>directory</em> </code> <br>
+ <code> cgi <em>file</em> </code>
+</p>
+
+<ul>
+ <li> The <tt>cgi <em>directory</em></tt> directive tells
+<a href="tipideed.html">tipideed</a> that under the current domain,
+all the files under <em>directory</em> (and its whole sub-hierarchy)
+are CGI scripts. <em>directory</em> is absolute (it must start with
+a slash, referring to the document root for the current domain), and
+must end with a slash as well. </li>
+ <li> The <tt>cgi <em>file</em></tt> directive tells
+<a href="tipideed.html">tipideed</a> that under the current domain,
+<em>file</em> is a CGI script, regardless of its location.
+<em>file</em> is absolute (it must start with
+a slash, referring to the document root for the current domain), but
+must not end with a slash. </li>
+ <li> A common use is: <tt>cgi /cgi-bin/</tt> </li>
+ <li> By default, no CGI directories or files are defined, so an
+empty tipidee configuration will only serve static files. </li>
+</ul>
+
+<div id="noncgi">
+<h4> <tt>noncgi</tt> </h4>
+</div>
+
+<p>
+ <code> noncgi <em>directory</em> </code> <br>
+ <code> noncgi <em>file</em> </code>
+</p>
+
+<ul>
+ <li> The <tt>noncgi <em>directory</em></tt> directive tells
+<a href="tipideed.html">tipideed</a> that under the current domain,
+all the files under <em>directory</em> (and its whole sub-hierarchy)
+are <em>not</em> CGI scripts.
+ <li> The <tt>noncgi <em>file</em></tt> directive tells
+<a href="tipideed.html">tipideed</a> that under the current domain,
+<em>file</em> is <em>not</em> a CGI script, regardless of its location.
+ <li> This is a rare directive, only useful if for some reason you have
+a static document under <tt>/cgi-bin</tt> or equivalent. </li>
+</ul>
+
+<div id="nph-prefix">
+<h4> nph-prefix </h4>
+</div>
+
+<p>
+ <code> nph-prefix <em>prefix</em> </code>
+</p>
+
+<ul>
+ <li> This directive tells <a href="tipideed.html">tipideed</a> that
+CGI scripts (recognized as such by a <tt>cgi</tt> directive) whose name
+starts with <em>prefix</em> are
+<a href="https://datatracker.ietf.org/doc/html/rfc3875#section-5">non-parsed header</a>
+scripts. </li>
+ <li> Common usage is <tt>nph-prefix nph-</tt> &mdash; paired with <tt>cgi /cgi-bin/</tt>,
+this means that under the current domain, scripts of the form
+<tt>/cgi-bin/nph-foobar</tt> are NPH. </li>
+</ul>
+
+<div id="nph">
+<h4> <tt>nph</tt> </h4>
+</div>
+
+<p>
+ <code> nph <em>directory</em> </code> <br>
+ <code> nph <em>file</em> </code>
+</p>
+
+<ul>
+ <li> This is an alternative way of specifying which scripts are
+<a href="https://datatracker.ietf.org/doc/html/rfc3875#section-5">NPH</a>.
+This directive says that CGI scripts under <em>directory</em> are NPH
+(provided they're also recognized as CGI), and that <em>file</em> is NPH
+(provided it's also recognized as CGI). </li>
+ <li> For instance, having both <tt>cgi /cgi-bin/</tt> and <tt>nph /cgi-bin/</tt>
+means that <em>all</em> the CGI scripts under <tt>/cgi-bin</tt> are considered NPH. </li>
+</ul>
+
+<div id="nonnph">
+<h4> <tt>nonnph</tt> </h4>
+</div>
+
+<p>
+ <code> nonnph <em>directory</em> </code> <br>
+ <code> nonnph <em>file</em> </code>
+</p>
+
+<ul>
+ <li> This is the opposite, saying that CGI scripts under <em>directory</em>,
+or CGI script <em>file</em>, are <em>not</em> NPH. </li>
+ <li> This is a rare directive, only useful if the vast majority of your
+scripts, but not all of them, are NPH. </li>
+</ul>
+
+<div id="basic-auth">
+<h4> <tt>basic-auth</tt> </h4>
+</div>
+
+<p>
+ <code> basic-auth <em>directory</em> </code> <br>
+ <code> basic-auth <em>file</em> </code>
+</p>
+
+<ul>
+ <li> This directive tells <a href="tipideed.html">tipideed</a> that
+file <em>file</em>, or all files under <em>directory</em>, are protected
+by <a href="https://datatracker.ietf.org/doc/html/rfc7617">Basic HTTP
+authentication</a>. </li>
+ <li> This feature is currently unimplemented, so
+<a href="tipidee-config.html">tipidee-config</a> will print a warning if
+it finds such a directive in your configuration file. </li>
+ <li> Implementation of this feature has been delayed because it needs an
+additional database to store the <tt>resource:user:password</tt> tuples,
+with more restricted permissions than <tt>/etc/tipidee.conf.cdb</tt>, since
+passwords are confidential information. This is planned in a future version
+of tipidee. And yes, existing web servers that make the administrator store
+cleartext passwords in the generic configuration file are terrible. </li>
+</ul>
+
+<div id="no-auth">
+<h4> <tt>no-auth</tt> </h4>
+</div>
+
+<p>
+ <code> no-auth <em>directory</em> </code> <br>
+ <code> no-auth <em>file</em> </code>
+</p>
+
+<ul>
+ <li> This is the opposite, saying that files under <em>directory</em>,
+or specific file <em>file</em>, do <em>not</em> require authentication. </li>
+ <li> This is a rare directive, only useful if you have a whole directory
+under <tt>basic-auth</tt> but want to carve exceptions. </li>
+</ul>
+
+<div id="file-type">
+<h4> <tt>file-type</tt> </h4>
+</div>
+
+<p>
+ <code> file-type <em>directory</em> <em>type</em> </code> <br>
+ <code> file-type <em>file</em> </code> <em>type</em>
+</p>
+
+<ul>
+ <li> <tt>file-type</tt> is similar to <a href="#content-type"><tt>content-type</tt></a>,
+but local. For files under <em>directory</em>, or for specific file <em>file</em>, it
+overrides the default Content-Type associated with their extension, and gives them the
+Content-Type <em>type</em> instead. </li>
+ <li> <tt>file-type /source/ text/plain</tt> will serve all files under the current
+domain under the <tt>/source</tt> directory as <tt>text/plain</tt>. </li>
+ <li> <tt>file-type /source/file.html text/html</tt> will serve <tt>/source/file.html</tt>
+under the current domain as <tt>text/html</tt>, even with the previous more generic
+rule applying to <tt>/source</tt>. </li>
+</ul>
+
+<div id="redirect">
+<h4> <tt>redirect</tt> </h4>
+</div>
+
+<p>
+ <code> redirect <em>resource</em> <em>rtype</em> <em>target</em> </code>
+</p>
+
+<ul>
+ <li> <em>resource</em> is the URI to redirect, relative to the current domain.
+For instance, if the current domain is <tt>example.com</tt> and <em>resource</em>
+is <tt>foobar.html</tt>, then a request for <tt>http://example.com/foobar.html</tt>
+will be redirected to <em>target</em>. </li>
+ <li> <em>rtype</em> is the type of redirection. It is one of the following four numbers:
+  <ul>
+   <li> <a href="https://datatracker.ietf.org/doc/html/rfc9110#section-15.4.9"><tt>308</tt></a>: permanent redirection </li>
+   <li> <a href="https://datatracker.ietf.org/doc/html/rfc9110#section-15.4.8"><tt>307</tt></a>: temporary redirection </li>
+   <li> <a href="https://datatracker.ietf.org/doc/html/rfc9110#section-15.4.2"><tt>301</tt></a>: permanent redirection
+while allowing the client to change the request method. You generally should not need this. </li>
+   <li> <a href="https://datatracker.ietf.org/doc/html/rfc9110#section-15.4.3"><tt>302</tt></a>: temporary redirection
+while allowing the client to change the request method. You generally should not need this. </li>
+  </ul> </li>
+ <li> <em>target</em> is the target of the redirection. It should be a full URL starting
+with <tt>http://</tt> or <tt>https://</tt>; it can also be a simple path, indicating a
+local redirection, in which case <a href="tipideed.html">tipideed</a> will process it
+under the requested host. </li>
+ <li> Unlike files or directories given as arguments in other local directives,
+<em>resource</em> does not need to exist in the filesystem.
+<a href="tipideed.html">tipideed</a> processes redirections <em>before</em> looking
+up resources in the filesystem. This is more efficient, but comes with a caveat:
+a file will only be served if there is no redirection directive for that resource,
+so make sure to keep your configuration file up-to-date. </li>
+ <li> This also means that the "real directory" rule does not apply to redirections.
+Instead, you can declare a redirection under the <tt>example.com:80</tt> domain, whether
+or not <tt>/home/www/docs/example.com:80</tt> is a real directory; the redirection
+will <em>only</em> apply to requests received on port 80 (and not, for instance, to
+requests received on port 443). But if you declare a redirection under the
+<tt>example.com</tt> domain, it will apply to requests received on <em>any</em> port. </li>
+</ul>
+
+</body>
+</html>

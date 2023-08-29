@@ -32,7 +32,7 @@ HTTP and HTTPS.
 <a href="//skarnet.org/software/s6-networking/s6-tcpserver.html">s6-tcpserver</a>, or
 <a href="//skarnet.org/software/s6-networking/s6-tlsserver.html">s6-tlsserver</a>
 (for HTTPS). Traditionally, inetd-mode web servers aren't considered performant,
-but tipidee aims to eke out every single drop of performance that is attainable from
+but tipidee aims to eke out every single drop of performance that is attainable with
 its programming model.
 </p>
 
@@ -88,15 +88,15 @@ and not performing the socket work itself) </li>
 
 <p>
  All in all, I felt that despite how crowded the web server space is,
-there wasn't a satisfactory offer for the needs of skarnet.org and a
-few similar sites.
+there wasn't a satisfactory offer for the needs of skarnet.org and
+similar sites that need an <em>intermediary</em> web server.
 </p>
 
 <h3> And why "tipidee"? </h3>
 
 <p>
  Because <em>h-t-t-p-d</em> is pretty tedious to say out loud.
-kKeeping the last three syllables makes it easier.
+Only keeping the last three syllables makes it easier.
 </p>
 
 <h2> Installation </h2>
@@ -132,7 +132,9 @@ to manage the TLS transport layer. </li>
 
 <ul>
  <li> The current released version of tipidee is
-<a href="tipidee-0.0.1.0.tar.gz">0.0.1.0</a>. </li>
+<a href="tipidee-0.0.1.0.tar.gz">0.0.1.0</a>.
+(That is a lie. The link is broken, because tipidee is still
+in beta. It will work when it's officially released.) </li>
  <li> You can checkout a copy of the
 <a href="//git.skarnet.org/cgi-bin/cgit.cgi/tipidee/">tipidee
 git repository</a>:
