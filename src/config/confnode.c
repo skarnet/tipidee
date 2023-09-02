@@ -8,7 +8,6 @@
 
 #include "tipidee-config-internal.h"
 
-#define dienomem() strerr_diefu1sys(111, "stralloc_catb")
 #define diestorage() strerr_diefu2x(100, "add node to configuration tree", ": too much data")
 #define diefilepos() strerr_diefu2x(100, "add node to configuration tree", ": file too large")
 

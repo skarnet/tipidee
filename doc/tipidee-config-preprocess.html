@@ -49,17 +49,55 @@ appropriately included files. </li>
  <li> tipidee-config-preprocess then exits 0. </li>
 </ul>
 
-<p>
- TODO: write this page.
-</p>
-
 <h2> Exit codes </h2>
 
-<h2> Options </h2>
+<p>
+If tipidee-config-preprocess exits nonzero, 
+<a href="tipidee-config.html">tipidee-config</a> will immediately exit
+with the same error code.
+</p>
+
+<dl>
+ <dt> 0 </dt> <dd> success </dd>
+ <dt> 1 </dt> <dd> syntax error </dd>
+ <dt> 2 </dt> <dd> invalid inclusion (cycle or unauthorized duplicate) </dd>
+ <dt> 100 </dt> <dd> wrong usage </dd>
+ <dt> 111 </dt> <dd> system call failed </dd>
+</dl>
 
 <h2> Detailed operation </h2>
 
+<ul>
+ <li> tipidee-config-preprocess reads <em>file</em>, looking for lines
+that start with a <tt>!</tt> (bang). It prints other lines as is to its
+stdout. </li>
+ <li> A line that starts with <tt>!</tt> is not printed. Instead, it
+is parsed for an <tt>!include</tt>, <tt>!includedir</tt> or <tt>!included:</tt>
+directive. </li>
+ <li> <tt>!included:</tt> directives immediately inform the file currently
+being preprocessed. </li>
+ <li> <tt>!include <em>foo</em></tt> and <tt>!includedir <em>bar</em></tt>
+directives cause tipidee-config-preprocess to immediately start preprocessing
+file <em>foo</em> or all files in directory <em>bar</em>; this can happen
+recursively. When it's done preprocessing <em>foo</em> or <em>bar</em>,
+tipidee-config-preprocess resumes its current file where it had left it. </li>
+ <li> Around inclusions, tipidee-config-preprocess prints special lines
+starting with a single <tt>!</tt> (bang) and containing line and file
+information. This helps <a href="tipidee-config.html">tipidee-config</a>
+track which file the data it's reading comes from and accurately report
+errors. </li>
+</ul>
+
 <h2> Notes </h2>
+
+<ul>
+ <li> tipidee-config-preprocess does not know anything about the
+<a href="tipidee.conf.html"><tt>/etc/tipidee.conf</tt></a> file format.
+It was purposefully written to be generic: it only reads lines and
+includes files based on <tt>!include</tt> information, and inserts
+<tt>!</tt> lines into the output stream to help with error reporting.
+It can be used as a preprocessor for other tools. </li>
+</ul>
 
 </body>
 </html>

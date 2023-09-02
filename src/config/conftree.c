@@ -11,8 +11,6 @@
 
 #include "tipidee-config-internal.h"
 
-#define dienomem() strerr_diefu1sys(111, "stralloc_catb")
-
 static void *confnode_dtok (uint32_t d, void *data)
 {
   return g.storage.s + GENSETDYN_P(confnode, (gensetdyn *)data, d)->key ;

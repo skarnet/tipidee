@@ -48,6 +48,18 @@ current working directory, one subdirectory for every domain it hosts. </li>
 
 <h2> Exit codes </h2>
 
+<dl>
+ <dt> 0 </dt> <dd> clean exit. The client closed the connection after a stream of
+HTTP exchanges. </dd>
+ <dt> 100 </dt> <dd> bad usage. tipideed has been run in an incorrect way: bad command
+line options, or missing environment variables, etc. </dd>
+ <dt> 101 </dt> <dd> cannot happen. This signals a bug in tipideed, and comes with an
+error message asking you to report the bug. Please do so. </dd>
+ <dt> 111 </dt> <dd> system call failed. If this happens while serving a request,
+tipideed likely has sent a 500 (Internal Server Error) response to the
+client before exiting. </dd>
+</dl>
+
 <h2> Environment variables </h2>
 
 <h2> Options </h2>
@@ -55,6 +67,12 @@ current working directory, one subdirectory for every domain it hosts. </li>
 <h2> Detailed operation </h2>
 
 <h2> Notes </h2>
+
+<ul>
+ <li> <tt>tipideed</tt> is pronounced <em>tipi-deed</em>. You can also say
+<em>tipi-dee-dee</em>, but only if you're the type of person who says
+<em>PC computer</em>, <em>NIC card</em> or <em>ATM machine</em>. </li>
+</ul>
 
 </body>
 </html>

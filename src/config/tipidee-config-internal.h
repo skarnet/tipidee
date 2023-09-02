@@ -10,6 +10,8 @@
 #include <skalibs/stralloc.h>
 #include <skalibs/cdbmake.h>
 
+#define dienomem() strerr_diefu1sys(111, "stralloc_catb")
+
 typedef struct confnode_s confnode, *confnode_ref ;
 struct confnode_s
 {

@@ -149,23 +149,22 @@ static void includefromhere (char const *file)
   uint32_t d ;
   uint32_t line = 1 ;
   char buf[4096] ;
-  char linefmt[UINT32_FMT] = "1" ;
   unsigned char state = 0 ;
 
   if (!stralloc_catb(&namesa, "\004", 1) || sarealpath(&namesa, file) < 0 || !stralloc_0(&namesa)) dienomem() ;
   if (avltree_search(&namemap, namesa.s + namesabase + 1, &d))
   {
     if (namesa.s[d] & 0x04)
-      strerr_dief3x(3, "file ", namesa.s + namesabase + 1, " is included in a cycle") ;
+      strerr_dief3x(2, "file ", namesa.s + namesabase + 1, " is included in a cycle") ;
     if (!(namesa.s[d] & 0x02))
-      strerr_dief3x(3, "file ", namesa.s + namesabase + 1, " is included twice but does not declare !included: unique or !included: multiple") ;
+      strerr_dief3x(2, "file ", namesa.s + namesabase + 1, " is included twice but does not declare !included: unique or !included: multiple") ;
     namesa.len = namesabase ;
     if (namesa.s[d] & 0x01) return ;
   }
   else
   {
     if (namesabase > UINT32_MAX)
-      strerr_dief3x(3, "in ", namesa.s + d + 1, ": too many, too long filenames") ;
+      strerr_dief3x(100, "in ", namesa.s + d + 1, ": too many, too long filenames") ;
     d = namesabase ;
     if (!avltree_insert(&namemap, d)) dienomem() ;
   }
@@ -197,7 +196,11 @@ static void includefromhere (char const *file)
       if (!stralloc_0(&sa)) dienomem() ;
       cmd = idcmd(sa.s + sastart) ;
       if (cmd == -1)
-        strerr_dief6x(2, "in ", namesa.s + d + 1, " line ", linefmt, ": unrecognized directive: ", sa.s + sastart) ;
+      {
+        char linefmt[UINT32_FMT] ;
+        linefmt[uint32_fmt(linefmt, line)] = 0 ;
+        strerr_dief6x(1, "in ", namesa.s + d + 1, " line ", linefmt, ": unrecognized directive: ", sa.s + sastart) ;
+      }
       sa.len = sastart ;
     }
     if (what & 0x0080)
@@ -207,17 +210,28 @@ static void includefromhere (char const *file)
       {
         case 2 :
           if (namesa.s[d] & 2)
-            strerr_dief5x(3, "in ", namesa.s + d + 1, " line ", linefmt, ": extra !included: directive") ;
+          {
+            char linefmt[UINT32_FMT] ;
+            linefmt[uint32_fmt(linefmt, line)] = 0 ;
+            strerr_dief5x(1, "in ", namesa.s + d + 1, " line ", linefmt, ": extra !included: directive") ;
+          }
           if (!strcmp(sa.s + sastart, "unique")) namesa.s[d] |= 3 ;
           else if (!strcmp(sa.s + sastart, "multiple")) namesa.s[d] |= 2 ;
-          else strerr_dief6x(3, "in ", namesa.s + d + 1, " line ", linefmt, ": invalid !included: argument: ", sa.s + sastart) ;
+          else
+          {
+            char linefmt[UINT32_FMT] ;
+            linefmt[uint32_fmt(linefmt, line)] = 0 ;
+            strerr_dief6x(1, "in ", namesa.s + d + 1, " line ", linefmt, ": invalid !included: argument: ", sa.s + sastart) ;
+          }
           break ;
         case 1 :
         case 0 :
         {
           int fdhere = open2(".", O_RDONLY | O_DIRECTORY) ;
+          char linefmt[UINT32_FMT] ;
           if (fdhere == -1)
             strerr_dief3sys(111, "in ", namesa.s + d + 1, ": unable to open base directory: ") ;
+          linefmt[uint32_fmt(linefmt, line)] = 0 ;
           if (cmd & 1)
           {
             if (chdir(sa.s + sastart) == -1)
@@ -239,9 +253,14 @@ static void includefromhere (char const *file)
       }
       sa.len = sastart ;
     }
-    if (c == '\n' && state <= 8) linefmt[uint32_fmt(linefmt, ++line)] = 0 ;
+    if (c == '\n' && state <= 8) line++ ;
   }
-  if (state > 8) strerr_dief5x(2, "in ", namesa.s + d + 1, " line ", linefmt, ": syntax error: invalid ! line") ;
+  if (state > 8)
+  {
+    char linefmt[UINT32_FMT] ;
+    linefmt[uint32_fmt(linefmt, line)] = 0 ;
+    strerr_dief5x(1, "in ", namesa.s + d + 1, " line ", linefmt, ": syntax error: invalid ! line") ;
+  }
   fd_close(fd) ;
   sa.len = sabase ;
   namesa.s[d] &= ~0x04 ;

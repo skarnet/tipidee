@@ -15,7 +15,6 @@
 #include <tipidee/config.h>
 #include "tipidee-config-internal.h"
 
-#define dienomem() strerr_diefu1sys(111, "stralloc_catb")
 #define dietoobig() strerr_diefu1sys(100, "read configuration")
 
 typedef struct mdt_s mdt, *mdt_ref ;

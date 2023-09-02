@@ -27,7 +27,7 @@ web server.
 <h2> Interface </h2>
 
 <pre>
-     tipidee-config [ -i <em>ifile</em> ] [ -o <em>ofile</em> ]
+     tipidee-config [ -i <em>textfile</em> ] [ -o <em>cdbfile</em> ] [ -m <em>mode</em> ]
 </pre>
 
 <ul>
@@ -36,17 +36,98 @@ configuration file, parses it, and outputs a cdb file to <tt>/etc/tipidee.conf.c
  <li> It then exits 0. </li>
 </ul>
 
-<p>
- TODO: write this page.
-</p>
-
 <h2> Exit codes </h2>
+
+<dl>
+ <dt> 0 </dt> <dd> success </dd>
+ <dt> 1 </dt> <dd> syntax error </dd>
+ <dt> 2 </dt> <dd> invalid inclusion (cycle or unauthorized duplicate) </dd>
+ <dt> 100 </dt> <dd> wrong usage </dd>
+ <dt> 111 </dt> <dd> system call failed </dd>
+ <dt> 129+ </dt> <dd> <a href="tipidee-config-preprocess.html">tipidee-config-preprocess</a> was killed </dd>
+</dl>
 
 <h2> Options </h2>
 
+<dl>
+ <dt> -i <em>textfile</em> </dt>
+  <dd> Use <em>textfile</em> as input instead of <tt>/etc/tipidee.conf</tt> </dd>
+ <dt> -o <em>cdbfile</em> </dt>
+  <dd> Use <em>cdbfile</em> as output instead of <tt>/etc/tipidee.conf.cdb</tt>.
+You can then use the <tt>-f <em>cdbfile</em> option to
+<a href="tipideed.html">tipideed</>. </dd>
+ <dt> -m <em>mode</em> </dt>
+  <dd> Create the output file with permissions <em>mode</em> (given in octal).
+Default is <strong>0644</strong>. Note that the output file should be readable
+by the user <a href="tipideed.html">tipideed</> is started as. If
+<a href="tipideed.html">tipideed</> is started as root and drops its privileges
+itself, the file can be made private. </dd>
+</dl>
+
 <h2> Detailed operation </h2>
 
+<ul>
+ <li> tipidee-config spawns a
+<a href="tipidee-config-preprocess.html">tipidee-config-preprocess</a> helper
+that reads <tt>/etc/tipidee.conf</tt>, takes care of all the inclusions, and
+feeds it a single stream of data. If
+<a href="tipidee-config-preprocess.html">tipidee-config-preprocess</a> dies
+with a nonzero exit code at any point, tipidee-config exits with the same
+error code, or 128 plus the signal number if
+<a href="tipidee-config-preprocess.html">tipidee-config-preprocess</a> was
+killed by a signal. </li>
+ <li> It reads the data and parses it, expecting it to follow the
+<a href="tipidee.conf.html">/etc/tipidee.conf file format</a>. </li>
+ </li> On failure, it exits nonzero with an error message. </li>
+ <li> It supplies sane defaults for configuration values that have not
+been provided. </li>
+ <li> It writes the data as a <a href="https://cr.yp.to/cdb/cdb.txt">cdb file</a>,
+<tt>/etc/tipidee.conf.cdb</tt>. A previously existing file is replaced
+atomically. </li>
+ <li> Running instances of <a href="tipideed.html">tipideed</a> will keep
+using the old <tt>/etc/tipidee.conf.cdb</tt> data until their connection is closed;
+new instances will use the new one. </li>
+</ul>
+
 <h2> Notes </h2>
+
+<ul>
+ <li> It is by design that tipidee uses this unconventional "compile the
+configuration file" approach. There are several benefits to it:
+  <ul>
+   <li> Parsing a configuration file is not very efficient. Every instance of
+<a href="tipideed.html">tipideed</a> would have to do it on startup, and
+there is an instance of <a href="tipideed.html">tipideed</a> for every
+HTTP connection. Pre-parsing the configuration makes the initial server
+response faster. </li>
+   <li> Data parsed by <a href="tipideed.html">tipideed</a> needs to use
+<em>private dirty</em> memory for every instance, even if the data is
+static &mdash; and that means incompressible RAM. By contrast, a cdb file
+is mapped read-only, so its pages are <em>shared clean</em>, which means it's
+essentially free. </li>
+   <li> <a href="tipideed.html">tipideed</a> is exposed to the network. You
+want to its attack surface to be as small as possible. Taking the parsing code
+out of it goes a long way &mdash; admittedly, having to parse HTTP in the
+first place is more attack surface than a simple config file can ever hope
+to be, but every little bit helps. </li>
+   <li> Run time is the worst time to detect errors. Nobody wants their
+service to go down because Bob edited the live config file and made a typo.
+Having the parsing done <em>offline</em> prevents that: tipidee-config
+doubles as a syntax checker, and when it runs successfully, you know the
+service will pick up the new config and be fine. </li>
+   <li> In general, decoupling the <em>live configuration</em>, which is
+the one used by live services (here, <tt>/etc/tipidee.conf.cdb</tt>), from
+the <em>working configuration</em>, which is the one that humans can
+tinker with (here, <tt>/etc/tipidee.conf</tt>), is a good idea. Don't
+touch production until you're ready to flip the switch atomically;
+tipidee-config is the switch. </li>
+  </ul> </li>
+</ul>
+
+<p>
+ Just remember to run <tt>tipidee-config</tt> whenever you make
+a modification to your config file. It not insurmountable.
+</p>
 
 </body>
 </html>
