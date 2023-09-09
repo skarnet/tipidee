@@ -13,6 +13,7 @@
 #include <skalibs/buffer.h>
 #include <skalibs/strerr.h>
 #include <skalibs/sig.h>
+#include <skalibs/cspawn.h>
 #include <skalibs/djbunix.h>
 
 #include <tipidee/config.h>

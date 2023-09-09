@@ -15,6 +15,7 @@
 #include <skalibs/allreadwrite.h>
 #include <skalibs/strerr.h>
 #include <skalibs/stralloc.h>
+#include <skalibs/cspawn.h>
 #include <skalibs/djbunix.h>
 #include <skalibs/iopause.h>
 #include <skalibs/env.h>
