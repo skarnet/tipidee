@@ -84,19 +84,19 @@ of the tipidee package provides service templates to help you run tipideed under
 <h2> Exit codes </h2>
 
 <dl>
- <dt> 0 </dt> <dd> clean exit. The client closed the connection after a stream of
+ <dt> 0 </dt> <dd> Clean exit. The client closed the connection after a stream of
 HTTP exchanges. </dd>
  <dt> 1 </dt> <dd> Illicit client behaviour. tipideed exited because it could
 not serve the client in good faith. </dd>
  <dt> 2 </dt> <dd> Illicit CGI script behaviour. tipideed exited because the invoked
 CGI script made it impossible to continue. Before exiting, tipideed likely has
 sent a 502 (Bad Gateway) response to the client. </dd>
- <dt> 100 </dt> <dd> bad usage. tipideed has been run in an incorrect way: bad command
+ <dt> 100 </dt> <dd> Bad usage. tipideed has been run in an incorrect way: bad command
 line options, or missing environment variables, etc. </dd>
- <dt> 101 </dt> <dd> cannot happen. This signals a bug in tipideed, and comes with an
+ <dt> 101 </dt> <dd> Cannot happen. This signals a bug in tipideed, and comes with an
 error message asking you to report the bug. Please do so, on the
 <a href="//skarnet.org/lists/#skaware">skaware mailing-list</a>. </dd>
- <dt> 111 </dt> <dd> system call failed. If this happens while serving a request,
+ <dt> 111 </dt> <dd> System call failed. If this happens while serving a request,
 tipideed likely has sent a 500 (Internal Server Error) response to the
 client before exiting. </dd>
 </dl>
@@ -182,11 +182,40 @@ not rely on.
 <dl>
  <dt> -v <em>verbosity</em> </dt>
  <dd> The level of log verbosity. This is the same as the <tt>global verbosity</tt>
-setting in the <a href="tipidee.conf.html">configuration file</a>; an explicit
+setting in the <a href="tipidee.conf.html#verbosity">configuration file</a>; an explicit
 command line option overrides any setting present in the configuration file.</dd>
 
  <dt> -f <em>file</em> </dt>
- <dd> </dd>
+ <dd> Use <em>file</em> as the compiled configuration database, typically obtained
+by running <tt><a href="tipidee-config.html">tipidee-config</a> -o <em>file</em></tt>.
+The default is <tt>/etc/tipidee.conf.cdb</tt>. </dd>
+
+ <dt> -d <em>docroot</em> </dt>
+ <dd> Change the working directory to <em>docroot</em> before serving. Default
+is serving from the current working directory. Note that documents need to
+be located in <strong>subdirectories</strong> of <em>docroot</em>, one subdirectory
+per virtual domain tipideed is serving. </dd>
+
+ <dt> -R </dt>
+ <dd> chroot. If the underlying operating system has the
+<a href="https://man7.org/linux/man-pages/man2/chroot.2.html">chroot()</a>
+system call, use it before serving. This always happens <em>after</em> opening
+the configuration database, <em>after</em> changing the working directory,
+and <em>before</em> dropping privileges. The idea is that chrooting helps
+with security, but the configuration database should be located outside of the
+document space. </dd>
+
+ <dt> -U </dt>
+ <dd> Drop root privileges. If this option is given, tipideed expects two
+additional environment variables, UID and GID, containing the uid and gid
+it should run as; it will drop its privileges to $UID:$GID before serving.
+This option is mainly useful when paired with <tt>-R</tt>, because chrooting
+can only be performed as root, so root privileges need to be kept all the
+way to tipideed then dropped after tipideed has chrooted. In a non-chrooted
+setup, it is simpler and more secure to run the <em>super-server</em> with
+the <tt>-U</tt> option instead: root privileges will be dropped as soon as
+the super-server has bound to its socket, and all the subsequent operations,
+including the spawning of tipideed processes, are performed as a normal user. </dd>
 </dl>
 
 <h2> Detailed operation </h2>
