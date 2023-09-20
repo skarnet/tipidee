@@ -513,7 +513,7 @@ int main (int argc, char const *const *argv, char const *const *envp)
 
       while (serve(&rql, docroot, hostlen + 1 + g.localportlen, uribuf, &hdr, bodysa.s, bodysa.len))
         if (localredirs++ >= MAX_LOCALREDIRS)
-          die502x(&rql, 1, "too many local redirections - possible loop involving path ", rql.uri.path) ;
+          die502x(&rql, 2, "too many local redirections - possible loop involving path ", rql.uri.path) ;
     }
   }
   log_and_exit(0) ;

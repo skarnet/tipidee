@@ -52,9 +52,9 @@ If you want to serve HTTP on port 80 and HTTPS on port 443, then you'll need
 two services. Or four if you want to serve on both IPv4 and IPv6 adresses. </li>
  <li> Start these processes in the <tt>/home/www</tt> directory, the base
 for all the domains you're serving. </li>
- <li> Assuming you want to run the server as user <tt>www</tt>,
-the basic command line for an HTTP service is:
-<tt>s6-envuidgid www s6-tcpserver -U example.com 80 s6-tcpserver-access -v0 -- tipideed</tt>.
+ <li> Assuming you want to run the server as user <tt>www</tt>, and your
+local IP address is ${ip}, the basic command line for an HTTP service is:
+<tt>s6-envuidgid www s6-tcpserver -U -- ${ip} 80 s6-tcpserver-access -- tipideed</tt>.
   <ul>
    <li> <a href="//skarnet.org/software/s6/s6-envuidgid.html">s6-envuidgid</a>
 puts the uid and gid of user <tt>www</tt> into the environment, for <tt>s6-tcpserver</tt>
@@ -63,9 +63,9 @@ to drop root privileges to. </li>
 binds to the address and port given, drops privileges, and listens; it accepts connections
 and spawns a new process for each one. </li>
    <li> <a href="//skarnet.org/software/s6-networking/s6-tcpserver-access.html">s6-tcpserver-access</a>
-performs DNS requests to fill environment variables that tipidee needs. Its main
-purpose is to perform access control, but we're not using it for that here:
-chances are your web server is public access and doesn't need to be IP-restricted. </li>
+performs DNS requests to fill environment variables that tipidee needs. (The main
+purpose of this program is to perform access control, but we're not using it for that here:
+chances are your web server is public access and doesn't need to be IP-restricted.) </li>
    <li> <a href="tipideed.html">tipideed</a> is the tipidee daemon, and will
 handle HTTP requests until the client closes the connection or tipideed itself
 needs to close it. </li>

@@ -111,10 +111,16 @@ static inline int do_nph (tipidee_rql const *rql, char const *const *argv, char 
       case -1 : die500sys(rql, 111, "fork") ;
       case 0 :      
       {
+#define NAME "tipideed (nph helper for pid "
         tain deadline ;
         char buf[4096] ;
         buffer b = BUFFER_INIT(&buffer_write, p[1], buf, 4096) ;
-        PROG = "tipidee (nph helper child)" ;
+        size_t m = sizeof(NAME) - 1 ;
+        char progstr[sizeof(NAME) + PID_FMT] ;
+        memcpy(progstr, NAME, m) ;
+        m += pid_fmt(progstr + m, getppid()) ;
+        progstr[m++] = ')' ; progstr[m++] = 0 ;
+        PROG = progstr ;
         tain_add_g(&deadline, &g.cgitto) ;
         close(p[0]) ;
         if (ndelay_on(p[1]) == -1) strerr_diefu1sys(111, "set fd nonblocking") ;
@@ -205,8 +211,8 @@ static inline int run_cgi (tipidee_rql const *rql, char const *const *argv, char
               rstate = 1 ;
               break ;
             }
-            case 400 : die502x(rql, 1, "invalid headers", " from cgi ", argv[0]) ;
-            case 413 : die502x(rql, 1, hdr->n >= TIPIDEE_HEADERS_MAX ? "Too many headers" : "Too much header data", " from cgi ", argv[0]) ;
+            case 400 : die502x(rql, 2, "invalid headers", " from cgi ", argv[0]) ;
+            case 413 : die502x(rql, 2, hdr->n >= TIPIDEE_HEADERS_MAX ? "Too many headers" : "Too much header data", " from cgi ", argv[0]) ;
             case 500 : die500x(rql, 101, "can't happen: ", "avltreen_insert failed", " in do_cgi") ;
             default : die500x(rql, 101, "can't happen: ", "unknown tipidee_headers_parse return code", " in do_cgi") ;
           }
@@ -217,7 +223,7 @@ static inline int run_cgi (tipidee_rql const *rql, char const *const *argv, char
           if (!slurpn(x[0].fd, sa, g.maxcgibody))
           {
             if (error_isagain(errno)) break ;
-            else if (errno == ENOBUFS) die502x(rql, 1, "Too fat body", " from cgi ", argv[0]) ;
+            else if (errno == ENOBUFS) die502x(rql, 2, "Too fat body", " from cgi ", argv[0]) ;
             else die500sys(rql, 111, "read body", " from cgi ", argv[0]) ;
           }
           close(x[0].fd) ;
@@ -243,7 +249,7 @@ static inline int local_redirect (tipidee_rql *rql, char const *loc, char *uribu
   memcpy(hosttmp, rql->uri.host, hostlen + 1) ;
   n = tipidee_uri_parse(uribuf, URI_BUFSIZE, loc, &rql->uri) ;
   if (!n || n + hostlen + 1 > URI_BUFSIZE)
-    die502x(rql, 1, "cgi ", cginame, " returned an invalid ", "Location", " value", " for local redirection") ;
+    die502x(rql, 2, "cgi ", cginame, " returned an invalid ", "Location", " value", " for local redirection") ;
   memcpy(uribuf + n, hosttmp, hostlen + 1) ;
   rql->uri.host = uribuf + n ;
   rql->uri.port = port ;
@@ -297,23 +303,23 @@ static inline int process_cgi_output (tipidee_rql *rql, tipidee_headers const *h
   {
     size_t m = uint_scan(x, &status) ;
     if (!m || (x[m] && x[m] != ' '))
-      die502x(rql, 1, "cgi ", cginame, " returned an invalid ", "Status", " header") ;
+      die502x(rql, 2, "cgi ", cginame, " returned an invalid ", "Status", " header") ;
     reason_phrase = x[m] ? x + m + 1 : "" ;
     if (status >= 300 && status < 399 && !location)
-      die502x(rql, 1, "cgi ", cginame, " returned a 3xx status code without a ", "Location", " header") ;
+      die502x(rql, 2, "cgi ", cginame, " returned a 3xx status code without a ", "Location", " header") ;
     if (status < 100 || status > 999)
-      die502x(rql, 1, "cgi ", cginame, " returned an invalid ", "Status", " value") ;
+      die502x(rql, 2, "cgi ", cginame, " returned an invalid ", "Status", " value") ;
   }
   if (location)
   {
-    if (!location[0]) die502x(rql, 1, "cgi ", cginame, " returned an invalid ", "Location", " header") ;
+    if (!location[0]) die502x(rql, 2, "cgi ", cginame, " returned an invalid ", "Location", " header") ;
     if (location[0] == '/' && location[1] != '/') return local_redirect(rql, location, uribuf, cginame) ;
     if (rbodylen)
     {
       if (!status)
-        die502x(rql, 1, "cgi ", cginame, " didn't output a ", "Status", " header", " for a client redirect response with document") ;
+        die502x(rql, 2, "cgi ", cginame, " didn't output a ", "Status", " header", " for a client redirect response with document") ;
       if (status < 300 || status > 399)
-        die502x(rql, 1, "cgi ", cginame, " returned an invalid ", "Status", " value", " for a client redirect response with document") ;
+        die502x(rql, 2, "cgi ", cginame, " returned an invalid ", "Status", " value", " for a client redirect response with document") ;
     }
     else
     {
@@ -322,7 +328,7 @@ static inline int process_cgi_output (tipidee_rql *rql, tipidee_headers const *h
         char const *key = hdr->buf + hdr->list[i].left ;
         if (!strcasecmp(key, "Location") || !strcasecmp(key, "Status")) continue ;
         if (str_start(key, "X-CGI-")) continue ;
-        die502x(rql, 1, "cgi ", cginame, " returned extra headers", " for a client redirect response without document") ;
+        die502x(rql, 2, "cgi ", cginame, " returned extra headers", " for a client redirect response without document") ;
       }
       if (!status)
       {
@@ -335,16 +341,16 @@ static inline int process_cgi_output (tipidee_rql *rql, tipidee_headers const *h
   {
     if (!status) status = 200 ;
     if (!tipidee_headers_search(hdr, "Content-Type"))
-      die502x(rql, 1, "cgi ", cginame, " didn't output a ", "Content-Type", " header") ;
+      die502x(rql, 2, "cgi ", cginame, " didn't output a ", "Content-Type", " header") ;
   }
   x = tipidee_headers_search(hdr, "Content-Length") ;
   if (x)
   {
     size_t cln ;
     if (!size0_scan(x, &cln))
-      die502x(rql, 1, "cgi ", cginame, " returned an invalid ", "Content-Length", " header") ;
+      die502x(rql, 2, "cgi ", cginame, " returned an invalid ", "Content-Length", " header") ;
     if (cln != rbodylen)
-      die502x(rql, 1, "cgi ", cginame, " returned a mismatching ", "Content-Length", " header") ;
+      die502x(rql, 2, "cgi ", cginame, " returned a mismatching ", "Content-Length", " header") ;
   }
 
   tipidee_response_status(buffer_1, rql, status, reason_phrase) ;

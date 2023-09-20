@@ -42,8 +42,43 @@ occurs that makes it nonsensical to keep the connection open. </li>
 current working directory, one subdirectory for every domain it hosts. </li>
 </ul>
 
+<h2> Common usage </h2>
+
 <p>
- TODO: write this page.
+ tipideed is intended to be run under a TCP super-server such as
+<a href="//skarnet.org/software/s6-networking/s6-tcpserver.html">s6-tcpserver</a>,
+for plain text HTTP, or
+<a href="//skarnet.org/software/s6-networking/s6-tlsserver.html">s6-tlsserver</a>,
+for HTTPS. It delegates to the super-server the job of binding and listening to
+the socket, accepting connections, spawning a separate process to handle a
+given connection, and potentially establishing a TLS tunnel with the client for
+secure communication.
+</p>
+
+<p>
+ As such, a command line for tipideed, running as user <tt>www</tt>, listening
+on address <tt>${ip}</tt>, would typically look like this, for HTTP:
+</p>
+
+<pre>
+     s6-envuidgid www s6-tcpserver -U -- ${ip} 80 s6-tcpserver-access -- tipideed
+</pre>
+
+<p>
+ or, for HTTPS:
+</p>
+
+<pre>
+     s6-envuidgid www env KEYFILE=/path/to/private/key CERTFILE=/path/to/certificate s6-tlsserver -U -- ${ip} 443 tipideed
+</pre>
+
+<p>
+ Most users will want to run these command lines as <em>services</em>, i.e. daemons
+run in the background when the machine starts. The <tt>examples/</tt> subdirectory
+of the tipidee package provides service templates to help you run tipideed under
+<a href="https://wiki.gentoo.org/wiki/OpenRC">OpenRC</a>,
+<a href="//skarnet.org/software/s6/">s6</a> and
+<a href="//skarnet.org/software/s6-rc/">s6-rc</a>.
 </p>
 
 <h2> Exit codes </h2>
@@ -51,10 +86,16 @@ current working directory, one subdirectory for every domain it hosts. </li>
 <dl>
  <dt> 0 </dt> <dd> clean exit. The client closed the connection after a stream of
 HTTP exchanges. </dd>
+ <dt> 1 </dt> <dd> Illicit client behaviour. tipideed exited because it could
+not serve the client in good faith. </dd>
+ <dt> 2 </dt> <dd> Illicit CGI script behaviour. tipideed exited because the invoked
+CGI script made it impossible to continue. Before exiting, tipideed likely has
+sent a 502 (Bad Gateway) response to the client. </dd>
  <dt> 100 </dt> <dd> bad usage. tipideed has been run in an incorrect way: bad command
 line options, or missing environment variables, etc. </dd>
  <dt> 101 </dt> <dd> cannot happen. This signals a bug in tipideed, and comes with an
-error message asking you to report the bug. Please do so. </dd>
+error message asking you to report the bug. Please do so, on the
+<a href="//skarnet.org/lists/#skaware">skaware mailing-list</a>. </dd>
  <dt> 111 </dt> <dd> system call failed. If this happens while serving a request,
 tipideed likely has sent a 500 (Internal Server Error) response to the
 client before exiting. </dd>
@@ -62,15 +103,143 @@ client before exiting. </dd>
 
 <h2> Environment variables </h2>
 
+<h3> Reading - mandatory </h3>
+
+<p>
+ tipideed expects the following variables in its environment, and will exit
+with an error message if they are undefined. When tipideed is run under
+<a href="//skarnet.org/s6-networking/s6-tcpserver.html">s6-tcpserver</a>
+(with <a href="//skarnet.org/s6-networking/s6-tcpserver-access.html">s6-tcpserver-access</a> or
+<a href="//skarnet.org/s6-networking/s6-tlsserver.html">s6-tlsserver</a>,
+these variables are automatically set by the super-server. This is the way
+tipidee gets its network information without having to perform network
+operations itself.
+</p>
+
+<dl>
+ <dt> PROTO </dt>
+ <dd> The network protocol, normally <tt>TCP</tt>. </dd>
+
+ <dt> TCPLOCALIP </dt>
+ <dd> The IP address the server is bound to. It will be passed as <tt>SERVER_ADDR</tt>
+to CGI scripts. </dd>
+
+ <dt> TCPLOCALPORT </dt>
+ <dd> The port the server is bound to. It will be passed as <tt>SERVER_PORT</tt>
+to CGI scripts. </dd>
+
+ <dt> TCPLOCALHOST </dt>
+ <dd> The domain name associated to the local IP address. It will be
+passed as <tt>SERVER_NAME</tt> to CGI scripts. </dd>
+
+ <dt> TCPREMOTEIP </dt>
+ <dd> The IP address of the client. It will be passed as <tt>REMOTE_ADDR</tt>
+to CGI scripts. </dd>
+
+ <dt> TCPREMOTEPORT </dt>
+ <dd> The port of the client socket. It will be passed as <tt>REMOTE_PORT</tt>
+to CGI scripts. </dd>
+</dl>
+
+<h3> Reading - optional </h3>
+
+<p>
+ tipideed can function without these variables, but if they're present, it
+uses them to get more information.
+</p>
+
+<dl>
+ <dt> TCPREMOTEHOST </dt>
+ <dd> The domain name associated to the IP address of the client. It will
+be passed as <tt>REMOTE_HOST</tt> to CGI scripts; if absent, the value of
+<tt>TCPREMOTEIP</tt> will be used instead. </dd>
+
+ <dt> TCPREMOTEINFO </dt>
+ <dd> The name provided by an IDENT server running on the client, if any.
+This is obsolete and not expected to be present; but if present, it will
+be passed as <tt>REMOTE_IDENT</tt> to CGI scripts. </dd>
+
+ <dt> SSL_PROTOCOL </dt>
+ <dd> The version of the TLS protocol used to cipher communications between
+the client and the server. If present, tipideed will assume that the client
+connection is secure, and will pass <tt>HTTPS=on</tt> to CGI scripts;
+otherwise, it will assume it is running plaintext HTTP. </dd>
+</dl>
+
+<h3> Writing </h3>
+
+<p>
+ When spawning a CGI or NPH script, tipideed clears all the previous variables,
+so the passed environment is as close as possible to the environment of the
+super-server; and it adds all the variables that are required by the
+<a href="https://datatracker.ietf.org/doc/html/rfc3875#section-4.1">CGI 1.1
+specification</a>. It does not add PATH_TRANSLATED, which CGI scripts should
+not rely on.
+</p>
+
 <h2> Options </h2>
 
+<dl>
+ <dt> -v <em>verbosity</em> </dt>
+ <dd> The level of log verbosity. This is the same as the <tt>global verbosity</tt>
+setting in the <a href="tipidee.conf.html">configuration file</a>; an explicit
+command line option overrides any setting present in the configuration file.</dd>
+
+ <dt> -f <em>file</em> </dt>
+ <dd> </dd>
+</dl>
+
 <h2> Detailed operation </h2>
+
+<h2> Performance considerations </h2>
+
+<p>
+ On systems that implement
+<a href="https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_spawn.html">posix_spawn()</a>,
+the <a href="//skarnet.org/software/s6-networking/s6-tcpserver.html">s6-tcpserver</a>
+super-server (and the
+<a href="//skarnet.org/software/s6-networking/s6-tlsserver.html">s6-tlsserver</a> one
+as well, since both use the same underlying program) uses it instead of
+<a href="https://pubs.opengroup.org/onlinepubs/9699919799/functions/fork.html">fork()</a>,
+and that partly alleviates the performance penalty usually associated with servers
+that spawn one process per connection.
+</p>
+
+<p>
+ One of tipidee's stated goals is to explore what kind of performance is achievable for
+a fully compliant Web server within the limits of that model. To that effect, tipideed
+is meant to be <em>fast</em>. It should serve static files as fast as any server out
+there, especially on Linux (or other systems supporting
+<a href="https://man7.org/linux/man-pages/man2/splice.2.html">splice())</a> where it
+uses zero-copy transfer. CGI performance should be limited by the performance of the
+CGI script itself, never by tipideed.
+</p>
+
+<p>
+ tipideed itself does not use
+<a href="https://pubs.opengroup.org/onlinepubs/9699919799/functions/fork.html">fork()</a>
+if the system supports
+<a href="https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_spawn.html">posix_spawn()</a>
+&mdash; with one exception, that you will not hit, and if you do, fork() will not
+be the bottleneck. (Can you guess which case it is, without looking at the code?)
+tipideed does not parse its configuration file itself, delegating the task to the
+offline <a href="tipidee-config.html">tipidee-config</a> program and directly mapping
+a binary file instead. To parse a client request, it uses a deterministic finite
+automaton, only reading the request once, and only backtracking in pathological cases.
+This should streamline request processing as much as possible.
+</p>
+
+<p>
+ If you have benchmarks, results of comparative testing of tipideed against
+other Web servers, please share them on the
+<a href="//skarnet.org/lists/#skaware">skaware mailing-list</a>.
+</p>
 
 <h2> Notes </h2>
 
 <ul>
- <li> <tt>tipideed</tt> is pronounced <em>tipi-deed</em>. You can also say
-<em>tipi-dee-dee</em>, but only if you're the type of person who says
+ <li> <tt>tipideed</tt> is pronounced <em>tipi-deed</em>. You can say
+<em>tipi-dee-dee</em>, but only if you're the type of person who also says
 <em>PC computer</em>, <em>NIC card</em> or <em>ATM machine</em>. </li>
 </ul>
 
