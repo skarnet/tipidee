@@ -166,6 +166,7 @@ static inline int run_cgi (tipidee_rql const *rql, char const *const *argv, char
     {
       kill(pid, SIGTERM) ;
       respond_504(rql) ;
+      if (g.verbosity >= 2) strerr_warnw3x("cgi ", argv[0], " timed out") ;
       break ;
     }
     if (x[1].fd >= 0 && x[1].revents & (IOPAUSE_WRITE | IOPAUSE_EXCEPT))
@@ -247,6 +248,7 @@ static inline int local_redirect (tipidee_rql *rql, char const *loc, char *uribu
   rql->uri.host = uribuf + n ;
   rql->uri.port = port ;
   rql->uri.https = ishttps ;
+  if (g.verbosity >= 4) strerr_warni4x("cgi ", cginame, ": local redirect to ", rql->uri.path) ;
   return 1 ;
 }
 
@@ -294,9 +296,9 @@ static inline int process_cgi_output (tipidee_rql *rql, tipidee_headers const *h
   if (x)
   {
     size_t m = uint_scan(x, &status) ;
-    if (!m || x[m] != ' ')
+    if (!m || (x[m] && x[m] != ' '))
       die502x(rql, 1, "cgi ", cginame, " returned an invalid ", "Status", " header") ;
-    reason_phrase = x + m + 1 ;
+    reason_phrase = x[m] ? x + m + 1 : "" ;
     if (status >= 300 && status < 399 && !location)
       die502x(rql, 1, "cgi ", cginame, " returned a 3xx status code without a ", "Location", " header") ;
     if (status < 100 || status > 999)
@@ -318,12 +320,15 @@ static inline int process_cgi_output (tipidee_rql *rql, tipidee_headers const *h
       for (size_t i = 0 ; i < hdr->n ; i++)
       {
         char const *key = hdr->buf + hdr->list[i].left ;
-        if (!strcasecmp(key, "Location")) continue ;
+        if (!strcasecmp(key, "Location") || !strcasecmp(key, "Status")) continue ;
         if (str_start(key, "X-CGI-")) continue ;
-        die502x(rql, 1, "cgi ", cginame, "returned extra headers", " for a client redirect response without document") ;
+        die502x(rql, 1, "cgi ", cginame, " returned extra headers", " for a client redirect response without document") ;
       }
-      status = 302 ;
-      reason_phrase = "Found" ;
+      if (!status)
+      {
+        status = 302 ;
+        reason_phrase = "Found" ;
+      }
     }
   }
   else
@@ -354,6 +359,15 @@ static inline int process_cgi_output (tipidee_rql *rql, tipidee_headers const *h
   }
   if (!buffer_timed_flush_g(buffer_1, &deadline))
     strerr_diefu1sys(111, "write to stdout") ;
+  if (g.verbosity >= 4)
+  {
+    char fmt[UINT_FMT] ;
+    fmt[uint_fmt(fmt, status)] = 0 ;
+    if (status >= 300 && status < 399)
+      strerr_warni6x("cgi ", cginame, ": ", fmt, " client redirect to ", location) ;
+    else
+      strerr_warni6x("cgi ", cginame, ": ", fmt, " ", reason_phrase) ;
+  }
   return 0 ;
 }
 
