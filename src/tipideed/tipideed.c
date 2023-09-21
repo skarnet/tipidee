@@ -135,7 +135,7 @@ static uint32_t get_uint32 (char const *key)
 {
   uint32_t n ;
   if (!tipidee_conf_get_uint32(&g.conf, key, &n))
-    strerr_diefu2sys(100, "read config value for ", key) ;
+    strerr_diefu2sys(102, "read config value for ", key) ;
   return n ;
 }
 
@@ -356,7 +356,7 @@ int main (int argc, char const *const *argv, char const *const *envp)
   g.maxcgibody = get_uint32("G:max_cgi_body_length") ;
   {
     unsigned int n = tipidee_conf_get_argv(&g.conf, "G:index_file", g.indexnames, 16, &g.indexlen) ;
-    if (!n) strerr_dief3x(100, "bad", " config value for ", "G:index_file") ;
+    if (!n) strerr_dief3x(102, "bad", " config value for ", "G:index_file") ;
     g.indexn = n-1 ;
   }
 

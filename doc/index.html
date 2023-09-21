@@ -81,8 +81,11 @@ on what I want from a web server, which is:
 <ul>
  <li> Usability with HTTPS without the need to entangle the code with a
 given TLS library (which means delegating the TLS layer to a super-server
-and not performing the socket work itself) </li>
- <li> Support for HTTP 1.1, not only 1.0 </li>
+and not performing the socket work itself. This is important: tying your
+Web server to a TLS library makes it more difficult to maintain, more
+difficult to secure, more difficult to build, and more difficult to
+package and distribute. </li>
+ <li> Support for HTTP 1.1, with persistent connections, and not only 1.0 </li>
  <li> Support for real CGI, not only NPH </li>
 </ul>
 
@@ -95,8 +98,10 @@ similar sites that need an <em>intermediary</em> web server.
 <h3> And why "tipidee"? </h3>
 
 <p>
- Because <em>h-t-t-p-d</em> is pretty tedious to say out loud.
-Only keeping the last three syllables makes it easier.
+ Because <em>h-t-t-p-d</em> is already pretty tedious to say out loud, and
+other web servers have a nasty habit of <em>adding</em> to it; it's much
+nicer to make it shorter. And yes, you can take that as an indication of what
+is going on with the code, too.
 </p>
 
 <h2> Installation </h2>
@@ -118,9 +123,14 @@ information via environment variables. It also defers to tools such as
 to provide access control and connection fine-tuning. And if you want
 to run an HTTPS server, you'll need something like
 <a href="//skarnet.org/software/s6-networking/s6-tlsserver.html">s6-tlsserver</a>
-to manage the TLS transport layer. So, installing
-<a href="//skarnet.org/software/s6-networking/">s6-networking</a> will make
-your life easier in many ways. </li>
+to manage the TLS transport layer. It <em>will</em> make
+your life easier.
+ <ul>
+  <li> Also, when built with BearSSL,
+<a href="//skarnet.org/software/s6-networking/s6-tlsserver.html">s6-tlsserver</a>
+basically gives you a TLS tunnel <em>for free</em>. Bearly any RAM use.
+Don't take my word for it; try it out for yourself. </li>
+ </ul> </li>
 </ul>
 
 <h3> Licensing </h3>
@@ -180,6 +190,12 @@ the previous versions of tipidee and the current one. </li>
 
 <ul>
 <li><a href="tipidee.conf.html">The <tt>/etc/tipidee.conf</tt> file format</a></li>
+</ul>
+
+<h3> Design notes </h3>
+
+<ul>
+<li> <a href="future.html">Features that may appear in future versions of tipidee</a> </li>
 </ul>
 
 <h2> Related resources </h2>

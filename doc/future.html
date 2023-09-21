@@ -1,0 +1,104 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="Content-Language" content="en" />
+    <title>tipidee: the future</title>
+    <meta name="Description" content="tipidee: the future" />
+    <meta name="Keywords" content="tipidee future features roadmap support extensions" />
+    <!-- <link rel="stylesheet" type="text/css" href="//skarnet.org/default.css" /> -->
+  </head>
+<body>
+
+<p>
+<a href="index.html">tipidee</a><br />
+<a href="//skarnet.org/software/">Software</a><br />
+<a href="//skarnet.org/">skarnet.org</a>
+</p>
+
+<h1> tipidee: the future </h1>
+
+<p>
+ tipidee is fully functional, and you are encouraged to use it; however, it
+is not yet considered <em>complete</em>. There are some optional features
+of HTTP that would be nice to have, and that may be implemented at some point
+down the line.
+</p>
+
+<h2> Ranges </h2>
+
+<p>
+ <a href="https://datatracker.ietf.org/doc/html/rfc9110#section-14">Ranges</a>
+are a useful part of HTTP when you are serving big files and connections may
+be interrupted and restarted: supporting the <tt>Range:</tt> header can save
+bandwidth, if the client only asks for the parts of the files that it's still
+missing.
+</p>
+
+<p>
+ It hasn't been implemented in tipidee yet because parsing the <tt>Range:</tt>
+header is rather complex, and serving parts of files (as opposed to full files
+sequentially) also requires some extra coding that wasn't deemed worth it for
+an initial release.
+</p>
+
+<h2> HTTP Basic Authentication </h2>
+
+<p>
+ HTTP Basic Auth is ubiquitous; and even
+<a href="https://git.busybox.net/busybox/tree/networking/httpd.c#n120">busybox httpd</a>
+implements it. It sounds silly not to have it; it would be good to add to tipidee.
+</p>
+
+<p>
+ However, how to implement HTTP basic auth in a secure way is not entirely obvious.
+Credentials should not be stored under the document root; passwords should not
+be stored in plain text; the credentials database should have more restrictive
+permissions than the configuration database; and the credentials database
+should be easily regenerated.
+</p>
+
+<p>
+ I'm leaning towards a cdb credentials database, distinct from the configuration
+file; but this requires a <em>second</em> offline text file processor, for the
+credentials file, and adding support for a <em>second</em> cdb mapping in various
+places in <a href="tipideed.html">tipideed</a>. That was more complexity than I
+wanted for an initial release; it's not urgent, it can wait.
+</p>
+
+<h2> ETags </h2>
+
+<p>
+<a href="https://datatracker.ietf.org/doc/html/rfc9110#field.etag">ETags</a> are
+unique identifiers for resources that clients can use to cache data, and only
+download resources they do not have. Like ranges, ETags support can save bandwidth.
+</p>
+
+<p>
+ The problem is that creating ETags is pretty resource-intensive on the server
+side. You have to maintain an ETag database, and update it any time a document
+changes; alternatively, you have to dynamically hash a whole resource before
+deciding if you're serving it or not. Both paths are riddled with traps and
+design challenges, and neither is appealing to a server like tipidee aiming at
+simplicity and efficiency. ETag support may come one day, but it won't be soon.
+</p>
+
+<h2> FastCGI </h2>
+
+<p>
+ If tipidee compares to big Web servers performance-wise, which is the expectation,
+it is quite possible that the performance bottleneck becomes the CGI protocol
+itself, i.e. the need to spawn an additional process for a dynamic request.
+In this case, it would be useful to support other methods of communicating with
+dynamic backends.
+</p>
+
+<p>
+ A module system, or embedding language-specific support into
+<a href="tipideed.html">tipideed</a>, is out of the question, because it goes against
+the design principles of tipidee; however, FastCGI support sounds like a possible
+path to more performance.
+</p>
+
+</body>
+</html>

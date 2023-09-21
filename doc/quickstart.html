@@ -54,7 +54,7 @@ two services. Or four if you want to serve on both IPv4 and IPv6 adresses. </li>
 for all the domains you're serving. </li>
  <li> Assuming you want to run the server as user <tt>www</tt>, and your
 local IP address is ${ip}, the basic command line for an HTTP service is:
-<tt>s6-envuidgid www s6-tcpserver -U -- ${ip} 80 s6-tcpserver-access -- tipideed</tt>.
+<tt>s6-envuidgid www s6-tcpserver -U ${ip} 80 s6-tcpserver-access tipideed</tt>.
   <ul>
    <li> <a href="//skarnet.org/software/s6/s6-envuidgid.html">s6-envuidgid</a>
 puts the uid and gid of user <tt>www</tt> into the environment, for <tt>s6-tcpserver</tt>
@@ -125,14 +125,15 @@ IPv4 and IPv6, over HTTP and HTTPS, which makes 8 services. Plus one
 for each of these services. Plus a supervisor for every service and every
 logger &mdash; for a whooping total of 64 long-running processes just for
 its web server functionality; and it's still not even noticeable, the
-amount of resources it consumes is negligible. So, don't worry about it.
+amount of resources it consumes is negligible. So, don't worry about it;
+all your resources are still available for the serving itself.
 </p>
 
 <p>
  Note that this allows you to run different instances of
-<a href="tipideed.html">tipideed</a> with different configurations, if
-you need it. Use the <tt>-f</tt> option to specify a different config
-file for <a href="tipideed.html">tipideed</a>.
+<a href="tipideed.html">tipideed</a>, on different sockets, with different
+configurations, if you need it. Use the <tt>-f</tt> option to specify a
+different config file in your instances.
 </p>
 
 </body>

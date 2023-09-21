@@ -23,7 +23,9 @@
 a web server package: it serves files over HTTP.
 </p>
 
+<div id="interface">
 <h2> Interface </h2>
+</div>
 
 <pre>
      tipideed [ -v <em>verbosity</em> ] [ -f <em>cdbfile</em> ] [ -d <em>basedir</em> ] [ -R ] [ -U ]
@@ -42,7 +44,9 @@ occurs that makes it nonsensical to keep the connection open. </li>
 current working directory, one subdirectory for every domain it hosts. </li>
 </ul>
 
+<div id="commonusage">
 <h2> Common usage </h2>
+</div>
 
 <p>
  tipideed is intended to be run under a TCP super-server such as
@@ -81,11 +85,13 @@ of the tipidee package provides service templates to help you run tipideed under
 <a href="//skarnet.org/software/s6-rc/">s6-rc</a>.
 </p>
 
+<div id="exitcodes">
 <h2> Exit codes </h2>
+</div>
 
 <dl>
- <dt> 0 </dt> <dd> Clean exit. The client closed the connection after a stream of
-HTTP exchanges. </dd>
+ <dt> 0 </dt> <dd> Clean exit. There was a successful stream of HTTP exchanges,
+that the client decided to end. </dd>
  <dt> 1 </dt> <dd> Illicit client behaviour. tipideed exited because it could
 not serve the client in good faith. </dd>
  <dt> 2 </dt> <dd> Illicit CGI script behaviour. tipideed exited because the invoked
@@ -96,12 +102,18 @@ line options, or missing environment variables, etc. </dd>
  <dt> 101 </dt> <dd> Cannot happen. This signals a bug in tipideed, and comes with an
 error message asking you to report the bug. Please do so, on the
 <a href="//skarnet.org/lists/#skaware">skaware mailing-list</a>. </dd>
+ <dt> 102 </dt> <dd> Misconfiguration. tipideed found something in its configuration
+data or in the document layout that it does not like. This can happen, for
+instance, when a document is a symbolic link pointing outside of the server's
+root. </dd>
  <dt> 111 </dt> <dd> System call failed. If this happens while serving a request,
 tipideed likely has sent a 500 (Internal Server Error) response to the
 client before exiting. </dd>
 </dl>
 
+<div id="environment">
 <h2> Environment variables </h2>
+</div>
 
 <h3> Reading - mandatory </h3>
 
@@ -173,11 +185,13 @@ otherwise, it will assume it is running plaintext HTTP. </dd>
 so the passed environment is as close as possible to the environment of the
 super-server; and it adds all the variables that are required by the
 <a href="https://datatracker.ietf.org/doc/html/rfc3875#section-4.1">CGI 1.1
-specification</a>. It does not add PATH_TRANSLATED, which CGI scripts should
-not rely on.
+specification</a>. As an exception, it does not add PATH_TRANSLATED, which
+cannot be used by CGI scripts in a portable way.
 </p>
 
+<div id="options">
 <h2> Options </h2>
+</div>
 
 <dl>
  <dt> -v <em>verbosity</em> </dt>
@@ -218,9 +232,150 @@ the super-server has bound to its socket, and all the subsequent operations,
 including the spawning of tipideed processes, are performed as a normal user. </dd>
 </dl>
 
-<h2> Detailed operation </h2>
+<div id="docroot">
+<h2> Document root </h2>
+</div>
 
+<p>
+ The way to organize your documents so they can be served by tipideed
+may look a little weird, but there's a logic to it.
+</p>
+
+<p>
+ tipideed serves documents from subdirectories of its working directory,
+and these subdirectories are named according to the host <em>and</em>
+the port of the request.
+</p>
+
+<ul>
+ <li> A request for <tt>https://example.com:1234/doc/u/ment</tt>
+will result in a lookup in the filesystem for
+<tt>./example.com:1234/doc/u/ment</tt>. </li>
+ <li> A request for <tt>https://example.com/doc/u/ment</tt>
+will result in a lookup in the filesystem for
+<tt>./example.com:443/doc/u/ment</tt>. </li>
+</ul>
+
+<p>
+The fact that the port is always specified allows you to have
+different document sets for the same host on different ports:
+more flexibility.
+</p>
+
+<p>
+ However, most of the time, you <em>don't</em> want different
+document sets for different ports. You want the same document
+sets for ports 80 and 443, and that's it. And you don't want
+to have both a <tt>domain example.com:80</tt> section and a
+<tt>domain example.com: 443</tt> section in your
+<a href="tipidee.conf.html">/etc/tipidee.conf</a>, with
+duplicate information.
+</p>
+
+<p>
+ That is why you are allowed to make your document roots
+<em>symbolic links</em>, and resource attributes declared in
+the configuration file are always looked up with the
+<em>canonical path</em>. In other words, the common case
+would be:
+</p>
+
+<ul>
+ <li> Have your document root in <tt>./example.com</tt>, a
+real directory. </li>
+ <li> Declare your resource attributes under a
+<tt>domain example.com</tt> section in your configuration file. </li>
+ <li> Have a <tt>./example.com:80</tt> symlink pointing to
+<tt>example.com</tt>, if you want to serve <tt>example.com</tt>
+under plaintext HTTP. </li>
+ <li> Have a <tt>./example.com:80</tt> symlink pointing to
+<tt>example.com</tt>, if you want to serve <tt>example.com</tt>
+under HTTPS. </li>
+</ul>
+
+<p>
+ This system allows you to share documents across virtual hosts
+without fear of misconfiguration. You can symlink any document
+under <tt>example.com</tt> to any name under <tt>example.org</tt>;
+if the path via <tt>example.com</tt> is the canonical path, then
+your resource will still get the correct attributes, defined in a
+<tt>domain example.com</tt> section, even if it is accessed via an
+<tt>example.org</tt> URL. You will not inadvertently expose source
+code for CGI scripts, for instance.
+</p>
+
+<p>
+ You can do wild things with symbolic links. However, anything
+that does not resolve to a file in a document root under tipideed's
+current working directory will be rejected. If an attacker symlinks
+your <tt>/etc/passwd</tt> file, tipideed will keep it safe.
+</p>
+
+
+<div id="details">
+<h2> Detailed operation </h2>
+</div>
+
+<ul>
+ <li> tipideed reads its <a href="tipidee-config.html">compiled</a>
+configuration file. Then:
+ <ul>
+  <li> If the <tt>-d</tt> option has been given, it changes its working directory. </li>
+  <li> If the <tt>-R</tt> option has been given, it chroots to its current directory. </li>
+  <li> If the <tt>-U</tt> option has been given, it drops root privileges. </li>
+ </ul> </li>
+ <li> It checks that its environment is valid, and that its configuration has
+some minimal defaults it can use. </li>
+ <li> tipideed listens to a stream of HTTP requests on its standard input. For every
+HTTP request:
+  <ul>
+   <li> It parses the request line and check it's HTTP/1.0 or 1.1 </li>
+   <li> It parses the headers into a quick access structure </li>
+   <li> It checks header consistency with the request </li>
+   <li> If the method is <tt>OPTIONS *</tt> or <tt>TRACE</tt>, it answers here
+and continues the loop </li>
+   <li> It reads the request body, if any </li>
+   <li> It checks in its configuration if a redirection has been defined for
+the wanted resource or a prefix (by directory) of the wanted resource. If it's
+the case, it answers with that redirection and continues the loop. </li>
+   <li> It looks for a suitable resource in the filesystem, completing the
+request with index files if necessary, or substracting CGI INFO_PATHs if
+necessary </li>
+   <li> It uses the canonical path of the resource in the filesystem to look
+for resource attributes in its configuration. (Is this a CGI script? a NPH
+script? Does it have a customized Content-Type? etc.) </li>
+   <li> If the method is a targeted <tt>OPTIONS</tt>, it answers here and
+continues the loop </li>
+   <li> If the resource is a CGI script:
+    <ul>
+     <li> If it is an NPH script, tipideed execs into the script (possibly
+after spawning a helper child if there is a request body to feed to the script)
+with the appropriate environment;
+and the connection will close when the script exits. </li>
+     <li> Else, tipideed spawns the CGI script as a child with the appropriate
+environment, feeds it the request body if any, reads its output, and answers
+the client. </li>
+     <li> If a problem occurs server-side, the client will receive a 502
+answer ("Bad Gateway"), <em>and</em> tipideed will write an error message to
+its stderr, so that administrators can see what went wrong with their setup.
+tipideed trusts its CGI scripts more than its clients, but it does not give
+them its full trust either &mdash; lots of sites are running third-party
+backends. </li>
+    </ul> </li>
+   <li> Else, the resource is a regular ("static") file, and tipideed serves
+it on its stdout, to the client. </li>
+  </ul> </li>
+ <li> tipideed exits on EOF (when the client closes the connection), or after
+a single HTTP/1.0 request, or when it has answered a request with a
+<tt>Connection: close</tt> header, or when it encounters an error where it is
+likely that the client will have no use for the connection anymore anyway
+and exiting is simpler and cheaper &mdash; in which case tipideed adds
+<tt>Connection: close</tt> to its last answer. </li>
+</ul>
+
+<div id="performance">
 <h2> Performance considerations </h2>
+</div>
 
 <p>
  On systems that implement
@@ -264,12 +419,29 @@ other Web servers, please share them on the
 <a href="//skarnet.org/lists/#skaware">skaware mailing-list</a>.
 </p>
 
+<div id="notes">
 <h2> Notes </h2>
+</div>
 
 <ul>
+ <li> tipideed sometimes answers 400, or even does not answer at all
+(it just exits), when receiving some malformed or weirdly paced
+client requests, despite what the
+<a href="https://datatracker.ietf.org/doc/html/rfc9112">HTTP RFC</a> says.
+This is on purpose. HTTP servers are very much solicited, they can run
+very hot, the Web is a cesspool of bots and bad actors, and every
+legitimate browser knows how to speak HTTP properly and without abusing
+corner cases in the protocol.
+It makes no sense to try to follow the book to the letter, expending
+precious resources, when the client can't even be bothered to pretend
+it's legit. Knowing when to exit early is crucial for good resource
+management. </li>
  <li> <tt>tipideed</tt> is pronounced <em>tipi-deed</em>. You can say
 <em>tipi-dee-dee</em>, but only if you're the type of person who also says
 <em>PC computer</em>, <em>NIC card</em> or <em>ATM machine</em>. </li>
+ <li> <tt>tipidee</tt> is the name of the <em>package</em>, the software suite
+implementing a Web server. <tt>tipideed</tt> is the name of the <em>program</em>
+doing the HTTP serving part. </li>
 </ul>
 
 </body>
