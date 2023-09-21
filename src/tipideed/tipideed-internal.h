@@ -4,6 +4,7 @@
 #define TIPIDEED_INTERNAL_H
 
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <stdint.h>
 
 #include <skalibs/gccattributes.h>
@@ -127,7 +128,8 @@ extern void send_file (int, uint64_t, char const *) ;
 
  /* regular */
 
-extern int respond_regular (tipidee_rql const *, char const *, uint64_t, tipidee_resattr const *) ;
+extern int respond_regular (tipidee_rql const *, char const *, struct stat const *, tipidee_resattr const *) ;
+extern int respond_304 (tipidee_rql const *, char const *, struct stat const *) ;
 
 
  /* cgi */
@@ -141,6 +143,7 @@ extern void log_start (void) ;
 extern void log_and_exit (int) gccattr_noreturn ;
 extern void log_request (tipidee_rql const *) ;
 extern void log_regular (char const *, char const *, int, char const *) ;
+extern void log_304 (char const *) ;
 extern void log_nph (char const *const *, char const *const *) ;
 extern void log_cgi (char const *const *, char const *const *) ;
 

@@ -7,11 +7,11 @@
 #include <skalibs/stralloc.h>
 #include <skalibs/unix-timed.h>
 
-#include <tipidee/body.h>
+#include <tipidee/util.h>
 
 #include <skalibs/posixishard.h>
 
-int tipidee_chunked_read (buffer *b, stralloc *sa, size_t maxlen, tain const *deadline, tain *stamp)
+int tipidee_util_chunked_read (buffer *b, stralloc *sa, size_t maxlen, tain const *deadline, tain *stamp)
 {
   char line[512] ;
   for (;;)

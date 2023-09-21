@@ -3,6 +3,7 @@
 #ifndef TIPIDEE_RESPONSE_H
 #define TIPIDEE_RESPONSE_H
 
+#include <sys/stat.h>
 #include <stddef.h>
 #include <stdint.h>
 
@@ -24,7 +25,10 @@ extern size_t tipidee_response_status (buffer *, tipidee_rql const *, unsigned i
 #define tipidee_response_status_line(b, rql, line) tipidee_response_status(b, rql, 0, (line))
 
 extern size_t tipidee_response_header_date_fmt (char *, size_t, tain const *) ;
-#define tipidee_response_header_date_fmt_g(buf, max) tipidee_response_header_date_fmt(buf, (max), &STAMP)
+extern size_t tipidee_response_header_date (char *, size_t, tain const *) ;
+#define tipidee_response_header_date_g(buf, max) tipidee_response_header_date(buf, (max), &STAMP)
+extern size_t tipidee_response_header_lastmodified (char *, size_t, struct stat const *) ;
+
 extern size_t tipidee_response_header_common_put (buffer *, uint32_t, tain const *) ;
 #define tipidee_response_header_common_put_g(b, options) tipidee_response_header_common_put(b, (options), &STAMP)
 

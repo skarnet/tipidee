@@ -10,7 +10,7 @@
 size_t tipidee_response_header_common_put (buffer *b, uint32_t options, tain const *stamp)
 {
   char fmt[128] ;
-  size_t m = buffer_putnoflush(b, fmt, tipidee_response_header_date_fmt(fmt, 128, stamp)) ;
+  size_t m = buffer_putnoflush(b, fmt, tipidee_response_header_date(fmt, 128, stamp)) ;
   for (tipidee_response_header_builtin const *p = tipidee_response_header_builtin_table ; p->key ; p++)
   {
     m += buffer_putsnoflush(b, p->key) ;

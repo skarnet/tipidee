@@ -1,7 +1,7 @@
 /* ISC license. */
 
-#ifndef TIPIDEE_BODY_H
-#define TIPIDEE_BODY_H
+#ifndef TIPIDEE_UTIL_H
+#define TIPIDEE_UTIL_H
 
 #include <stddef.h>
 #include <stdint.h>
@@ -19,7 +19,9 @@ enum tipidee_transfercoding_e
   TIPIDEE_TRANSFERCODING_UNKNOWN
 } ;
 
-extern int tipidee_chunked_read (buffer *, stralloc *, size_t, tain const *, tain *) ;
-#define tipidee_chunked_read_g(b, sa, max, deadline) tipidee_chunked_read(b, sa, max, (deadline), &STAMP)
+extern int tipidee_util_chunked_read (buffer *, stralloc *, size_t, tain const *, tain *) ;
+#define tipidee_util_chunked_read_g(b, sa, max, deadline) tipidee_util_chunked_read(b, sa, max, (deadline), &STAMP)
+
+extern int tipidee_util_httpdate (char const *, tain *) ;
 
 #endif

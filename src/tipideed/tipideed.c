@@ -1,10 +1,11 @@
 /* ISC license. */
 
+#include <skalibs/bsdsnowflake.h>
+
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
-#include <sys/stat.h>
 
 #include <skalibs/env.h>
 #include <skalibs/uint16.h>
@@ -17,6 +18,7 @@
 #include <skalibs/tai.h>
 #include <skalibs/ip46.h>
 #include <skalibs/sig.h>
+#include <skalibs/stat.h>
 #include <skalibs/stralloc.h>
 #include <skalibs/djbunix.h>
 #include <skalibs/avltreen.h>
@@ -286,8 +288,17 @@ static inline int serve (tipidee_rql *rql, char const *docroot, size_t docrootle
     return respond_options(rql, ra.iscgi) ;
   else if (ra.iscgi)
     return respond_cgi(rql, fn, docrootlen, infopath, uribuf, hdr, &ra, body, bodylen) ;
-  else
-    return respond_regular(rql, fn, st.st_size, &ra) ;
+
+  infopath = tipidee_headers_search(hdr, "If-Modified-Since") ;
+  if (infopath)
+  {
+    tain wanted, actual ;
+    if (tipidee_util_httpdate(infopath, &wanted)
+     && tain_from_timespec(&actual, &st.st_mtim)
+     && tain_less(&actual, &wanted))
+      return respond_304(rql, fn, &st) ;
+  }
+  return respond_regular(rql, fn, &st, &ra) ;
 }
 
 int main (int argc, char const *const *argv, char const *const *envp)
@@ -495,7 +506,7 @@ int main (int argc, char const *const *argv, char const *const *envp)
         }
         case TIPIDEE_TRANSFERCODING_CHUNKED :
         {
-          if (!tipidee_chunked_read_g(buffer_0, &bodysa, g.maxrqbody, &deadline))
+          if (!tipidee_util_chunked_read_g(buffer_0, &bodysa, g.maxrqbody, &deadline))
           {
             if (error_temp(errno)) die500sys(&rql, 111, "decode chunked body") ;
             else if (errno == EMSGSIZE) exit_413(&rql, "Request body too large") ;

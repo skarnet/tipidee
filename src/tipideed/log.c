@@ -44,6 +44,12 @@ void log_regular (char const *fn, char const *sizefmt, int ishead, char const *c
     strerr_warni8x("sending ", ishead ? "headers for " : "", "regular file ", fn, " (", sizefmt, " bytes) with type ", ct) ;
 }
 
+void log_304 (char const *fn)
+{
+  if (g.verbosity >= 2)
+    strerr_warni2x("answering 304 for regular file ", fn) ;
+}
+
 void log_nph (char const *const *argv, char const *const *envp)
 {
   if (g.verbosity >= 2)

@@ -1,4 +1,3 @@
-tipidee_chunked_read.o
 tipidee_conf_free.o
 tipidee_conf_get.o
 tipidee_conf_get_argv.o
@@ -17,8 +16,12 @@ tipidee_method_tostr.o
 tipidee_response_error.o
 tipidee_response_header_builtin.o
 tipidee_response_header_common_put.o
+tipidee_response_header_date.o
 tipidee_response_header_date_fmt.o
+tipidee_response_header_lastmodified.o
 tipidee_response_status.o
 tipidee_rql_read.o
 tipidee_uri_parse.o
+tipidee_util_chunked_read.o
+tipidee_util_httpdate.o
 -lskarnet
