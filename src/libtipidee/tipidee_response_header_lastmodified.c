@@ -2,9 +2,10 @@
 
 #include <skalibs/bsdsnowflake.h>
 
-#include <sys/stat.h>
 #include <errno.h>
 #include <string.h>
+
+#include <skalibs/stat.h>
 
 #include <tipidee/response.h>
 

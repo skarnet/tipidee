@@ -87,6 +87,7 @@ void send_file (int fd, uint64_t n, char const *fn)
 #include <skalibs/buffer.h>
 #include <skalibs/strerr.h>
 #include <skalibs/tai.h>
+#include <skalibs/unix-timed.h>
 
 #include "tipideed-internal.h"
 

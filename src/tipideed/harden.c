@@ -1,7 +1,8 @@
 /* ISC license. */
 
+#undef _POSIX_C_SOURCE
+#undef _XOPEN_SOURCE
 #include <skalibs/sysdeps.h>
-#include <skalibs/nonposix.h>
 
 #include <unistd.h>
 #include <errno.h>
