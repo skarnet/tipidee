@@ -55,6 +55,7 @@ static inline void prep_env (void)
   if (g.cwdlen && !stralloc_0(&g.sa)) dienomem() ;
   if (!stralloc_catb(&g.sa, basevars, sizeof(basevars))) dienomem() ;
   if (x && !stralloc_catb(&g.sa, sslvars, sizeof(sslvars))) dienomem() ;
+  g.ssl = !!x ;
   x = getenv(basevars) ;
   if (!x) strerr_dienotset(100, "PROTO") ;
   {
@@ -141,9 +142,14 @@ static uint32_t get_uint32 (char const *key)
 
 static inline unsigned int indexify (tipidee_rql const *rql, char *s, struct stat *st)
 {
+  unsigned int e = 0 ;
   size_t len = strlen(s) ;
   unsigned int i = 0 ;
-  if (s[len - 1] != '/') s[len++] = '/' ;
+  if (s[len - 1] != '/')
+  {
+    s[len++] = '/' ;
+    e = 308 ;
+  }
   for (; i < g.indexn ; i++)
   {
     strcpy(s + len, g.indexnames[i]) ;
@@ -159,7 +165,8 @@ static inline unsigned int indexify (tipidee_rql const *rql, char *s, struct sta
   }
   if (i >= g.indexn) return 404 ;
   if (S_ISDIR(st->st_mode)) die500x(rql, 103, "bad document hierarchy: ", s, " is a directory") ;
-  return 0 ;
+  if (e == 308) s[len] = 0 ;
+  return e ;
 }
 
 static inline void get_resattr (tipidee_rql const *rql, char const *res, tipidee_resattr *ra)
@@ -214,6 +221,17 @@ static inline void get_resattr (tipidee_rql const *rql, char const *res, tipidee
     ra->content_type = tipidee_conf_get_content_type(&g.conf, sa.s + g.cwdlen) ;
     if (!ra->content_type) die500sys(rql, 111, "get content type for ", sa.s + g.cwdlen) ;
   }
+}
+
+static inline void force_redirect (tipidee_rql const *rql, char const *fn)
+{
+  tipidee_redirection rd = { .sub = 0, .type = 1 } ;
+  size_t len = strlen(fn) ;
+  char location[len + 8 + g.ssl] ;
+  memcpy(location, g.ssl ? "https://" : "http://", 7 + g.ssl) ;
+  memcpy(location + 7 + g.ssl, fn, len + 1) ;
+  rd.location = location ;
+  respond_30x(rql, &rd) ;
 }
 
 static inline int serve (tipidee_rql *rql, char const *docroot, size_t docrootlen, char *uribuf, tipidee_headers const *hdr, char const *body, size_t bodylen)
@@ -271,6 +289,7 @@ static inline int serve (tipidee_rql *rql, char const *docroot, size_t docrootle
       case 403 : respond_403(rql) ; return 0 ;
       case 404 : respond_404(rql) ; return 0 ;
       case 414 : respond_414(rql) ; return 0 ;
+      case 308 : force_redirect(rql, fn) ; return 0 ;
       case 0 : break ;
     }
   }

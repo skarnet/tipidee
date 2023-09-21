@@ -51,6 +51,7 @@ struct global_s
   uint16_t indexn : 4 ;
   uint16_t verbosity : 3 ;
   uint16_t cont : 2 ;
+  uint16_t ssl : 1 ;
 } ;
 #define GLOBAL_ZERO \
 { \
@@ -75,7 +76,8 @@ struct global_s
   .maxcgibody = 0, \
   .indexn = 0, \
   .verbosity = 1, \
-  .cont = 1 \
+  .cont = 1, \
+  .ssl = 0 \
 }
 
 extern struct global_s g ;
