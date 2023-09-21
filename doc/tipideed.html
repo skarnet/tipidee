@@ -339,7 +339,7 @@ and continues the loop </li>
 the wanted resource or a prefix (by directory) of the wanted resource. If it's
 the case, it answers with that redirection and continues the loop. </li>
    <li> It looks for a suitable resource in the filesystem, completing the
-request with index files if necessary, or substracting CGI INFO_PATHs if
+request with index files if necessary, or extracting CGI INFO_PATHs if
 necessary </li>
    <li> It uses the canonical path of the resource in the filesystem to look
 for resource attributes in its configuration. (Is this a CGI script? a NPH

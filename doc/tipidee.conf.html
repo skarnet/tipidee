@@ -583,10 +583,10 @@ while allowing the client to change the request method. You generally should not
    <li> <a href="https://datatracker.ietf.org/doc/html/rfc9110#section-15.4.3"><tt>302</tt></a>: temporary redirection
 while allowing the client to change the request method. You generally should not need this. </li>
   </ul> </li>
- <li> <em>target</em> is the target of the redirection. It should be a full URL starting
-with <tt>http://</tt> or <tt>https://</tt>; it can also be a simple path, indicating a
-local redirection, in which case <a href="tipideed.html">tipideed</a> will process it
-under the requested host. </li>
+ <li> <em>target</em> is the target of the redirection. It must be a full URL starting
+with <tt>http://</tt> or <tt>https://</tt>. (If you want local redirection under the
+same virtual domain, this directive is not what you want: instead, you can make a
+symbolic link in your filesystem.) </li>
  <li> Unlike files or directories given as arguments in other local directives,
 <em>resource</em> does not need to exist in the filesystem.
 <a href="tipideed.html">tipideed</a> processes redirections <em>before</em> looking

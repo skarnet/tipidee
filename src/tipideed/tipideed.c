@@ -140,6 +140,13 @@ static uint32_t get_uint32 (char const *key)
   return n ;
 }
 
+static void inittto (tain *tto, char const *key)
+{
+  uint32_t ms = get_uint32(key) ;
+  if (ms) tain_from_millisecs(tto, ms) ;
+  else *tto = tain_infinite_relative ;
+}
+
 static inline unsigned int indexify (tipidee_rql const *rql, char *s, struct stat *st)
 {
   unsigned int e = 0 ;
@@ -368,9 +375,9 @@ int main (int argc, char const *const *argv, char const *const *envp)
   }
 
   prep_env() ;
-  tain_from_millisecs(&g.readtto, get_uint32("G:read_timeout")) ;
-  tain_from_millisecs(&g.writetto, get_uint32("G:write_timeout")) ;
-  tain_from_millisecs(&g.cgitto, get_uint32("G:cgi_timeout")) ;
+  inittto(&g.readtto, "G:read_timeout") ;
+  inittto(&g.writetto, "G:write_timeout") ;
+  inittto(&g.cgitto, "G:cgi_timeout") ;
   g.maxrqbody = get_uint32("G:max_request_body_length") ;
   g.maxcgibody = get_uint32("G:max_cgi_body_length") ;
   {
