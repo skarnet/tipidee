@@ -103,17 +103,16 @@ void send_file (int fd, uint64_t n, char const *fn)
     ssize_t r ;
     buffer_rpeek(buffer_1, v) ;
     r = allreadv(fd, v, 2) ;
-    if (r > n)
     if (r == -1) strerr_diefu2sys(111, "read from ", fn) ;
     if (!r) strerr_diefu3x(111, "serve ", fn, ": file was truncated") ;
     if (r > n)
     {
       r = n ;
       if (g.verbosity >= 2)
-        strerr_warnw2x("serving elongated file: ", fn)
+        strerr_warnw2x("serving elongated file: ", fn) ;
     }
-    buffer_rseek(b, r) ;
-    tain_add_g(&deadline, g.writetto) ;
+    buffer_rseek(buffer_1, r) ;
+    tain_add_g(&deadline, &g.writetto) ;
     if (!buffer_timed_flush_g(buffer_1, &deadline))
       strerr_diefu1sys(111, "write to stdout") ;
     n -= r ;
