@@ -424,7 +424,7 @@ int main (int argc, char const *const *argv, char const *const *envp)
       default : strerr_dief2x(101, "can't happen: ", "unknown tipidee_rql_read return code") ;
     }
     if (rql.http_major != 1) log_and_exit(1) ;
-    if (rql.http_minor > 2) exit_400(&rql, "Bad HTTP version") ;
+    if (rql.http_minor > 1) exit_400(&rql, "Bad HTTP version") ;
 
     content_length = 0 ;
     tipidee_headers_init(&hdr, hdrbuf, HDR_BUFSIZE) ;
