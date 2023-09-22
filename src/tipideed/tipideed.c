@@ -1,12 +1,14 @@
 /* ISC license. */
 
 #include <skalibs/bsdsnowflake.h>
+#include <skalibs/nonposix.h>
 
 #include <unistd.h>
 #include <string.h>
 #include <stdlib.h>
 #include <errno.h>
 
+#include <skalibs/posixplz.h>
 #include <skalibs/env.h>
 #include <skalibs/uint16.h>
 #include <skalibs/types.h>
@@ -446,8 +448,8 @@ int main (int argc, char const *const *argv, char const *const *envp)
       x = tipidee_headers_search(&hdr, "Connection") ;
       if (x)
       {
-        if (strstr(x, "close")) g.cont = 0 ;
-        else if (strstr(x, "keep-alive")) g.cont = 2 ;
+        if (strcasestr(x, "close")) g.cont = 0 ;
+        else if (strcasestr(x, "keep-alive")) g.cont = 2 ;
       }
     }
 
