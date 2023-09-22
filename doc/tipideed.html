@@ -313,6 +313,12 @@ current working directory will be rejected. If an attacker symlinks
 your <tt>/etc/passwd</tt> file, tipideed will keep it safe.
 </p>
 
+<p>
+ HTTP/1.0 does not have the concepts of virtual hosts. For HTTP/1.0
+requests that do not provide a full URL, tipideed will use a default
+host name of <tt>@</tt> (at), so documents will likely be looked for
+under <tt>@:80</tt> or <tt>@:443</tt>.
+</p>
 
 <div id="details">
 <h2> Detailed operation </h2>
