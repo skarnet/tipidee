@@ -202,7 +202,9 @@ command line option overrides any setting present in the configuration file.</dd
  <dt> -f <em>file</em> </dt>
  <dd> Use <em>file</em> as the compiled configuration database, typically obtained
 by running <tt><a href="tipidee-config.html">tipidee-config</a> -o <em>file</em></tt>.
-The default is <tt>/etc/tipidee.conf.cdb</tt>. </dd>
+The default is <tt>/etc/tipidee.conf.cdb</tt>; <tt>/etc</tt> may be something
+else if the <tt>--sysconfdir</tt> option has been given to configure at
+build time. </dd>
 
  <dt> -d <em>docroot</em> </dt>
  <dd> Change the working directory to <em>docroot</em> before serving. Default

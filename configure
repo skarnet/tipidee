@@ -23,6 +23,7 @@ Fine tuning of the installation directories:
   --libexecdir=DIR              package-scoped executables [EPREFIX/libexec]
   --libdir=DIR                  static library files [PREFIX/lib/$package]
   --includedir=DIR              C header files [PREFIX/include]
+  --sysconfdir=DIR              global configuration files [PREFIX/etc]
 
  If no --prefix option is given, by default libdir (but not dynlibdir) will be
  /usr/lib/$package, and includedir will be /usr/include.
@@ -140,6 +141,7 @@ libexecdir='$exec_prefix/libexec'
 bindir='$exec_prefix/bin'
 libdir='$prefix/lib/$package'
 includedir='$prefix/include'
+sysconfdir='$prefix/etc'
 sysdeps='$prefix/lib/skalibs/sysdeps'
 manualsysdeps=false
 shared=false
@@ -169,6 +171,7 @@ for arg ; do
     --bindir=*) bindir=${arg#*=} ;;
     --libdir=*) libdir=${arg#*=} ;;
     --includedir=*) includedir=${arg#*=} ;;
+    --sysconfdir=*) sysconfdir=${arg#*=} ;;
     --with-sysdeps=*) sysdeps=${arg#*=} manualsysdeps=true ;;
     --with-include=*) var=${arg#*=} ; stripdir var ; addincpath="$addincpath -I$var" ;;
     --with-lib=*) var=${arg#*=} ; stripdir var ; addlibspath="$addlibspath -L$var" ; vpaths="$vpaths $var" ;;
@@ -215,7 +218,7 @@ fi
 
 # Expand installation directories
 stripdir prefix
-for i in exec_prefix dynlibdir libexecdir bindir libdir includedir sysdeps sproot ; do
+for i in exec_prefix dynlibdir libexecdir bindir libdir includedir sysconfdir sysdeps sproot ; do
   eval tmp=\${$i}
   eval $i=$tmp
   stripdir $i
@@ -393,6 +396,7 @@ libexecdir := $libexecdir
 bindir := $bindir
 libdir := $libdir
 includedir := $includedir
+sysconfdir := $sysconfdir
 sysdeps := $sysdeps
 slashpackage := $slashpackage
 sproot := $sproot
@@ -468,6 +472,8 @@ else
   echo "#define ${package_macro_name}_EXTBINPREFIX \"\""
 fi
 echo "#define ${package_macro_name}_LIBEXECPREFIX \"$libexecdir/\""
+echo "#define ${package_macro_name}_SYSCONFPREFIX \"$sysconfdir/\""
+
 echo
 echo "#endif"
 exec 1>&3 3>&-

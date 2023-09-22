@@ -99,25 +99,26 @@ void send_file (int fd, uint64_t n, char const *fn)
 {
   tain deadline ;
   struct iovec v[2] ;
-  while (n)
+  ssize_t r ;
+  if (!n) goto flushit ;  /* I know, I know, but do-while SUCKS */
+ fillit:
+  buffer_wpeek(buffer_1, v) ;
+  r = allreadv(fd, v, 2) ;
+  if (r == -1) strerr_diefu2sys(111, "read from ", fn) ;
+  if (!r) strerr_diefu3x(111, "serve ", fn, ": file was truncated") ;
+  if (r > n)
   {
-    ssize_t r ;
-    buffer_rpeek(buffer_1, v) ;
-    r = allreadv(fd, v, 2) ;
-    if (r == -1) strerr_diefu2sys(111, "read from ", fn) ;
-    if (!r) strerr_diefu3x(111, "serve ", fn, ": file was truncated") ;
-    if (r > n)
-    {
-      r = n ;
-      if (g.verbosity >= 2)
-        strerr_warnw2x("serving elongated file: ", fn) ;
-    }
-    buffer_rseek(buffer_1, r) ;
-    tain_add_g(&deadline, &g.writetto) ;
-    if (!buffer_timed_flush_g(buffer_1, &deadline))
-      strerr_diefu1sys(111, "write to stdout") ;
-    n -= r ;
+    r = n ;
+    if (g.verbosity >= 2)
+      strerr_warnw2x("serving elongated file: ", fn) ;
   }
+  buffer_wseek(buffer_1, r) ;
+  n -= r ;
+ flushit:
+  tain_add_g(&deadline, &g.writetto) ;
+  if (!buffer_timed_flush_g(buffer_1, &deadline))
+    strerr_diefu1sys(111, "write to stdout") ;
+  if (n) goto fillit ;
 }
 
 #endif

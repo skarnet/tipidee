@@ -335,7 +335,7 @@ int main (int argc, char const *const *argv, char const *const *envp)
   PROG = progstr ;
 
   {
-    char const *conffile = "/etc/tipidee.conf.cdb" ;
+    char const *conffile = TIPIDEE_SYSCONFPREFIX "tipidee.conf.cdb" ;
     char const *newroot = 0 ;
     unsigned int h = 0 ;
     int gotv = 0 ;

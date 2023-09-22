@@ -87,8 +87,8 @@ static inline void conf_output (char const *ofile, unsigned int omode)
 
 int main (int argc, char const *const *argv, char const *const *envp)
 {
-  char const *ifile = "/etc/tipidee.conf" ;
-  char const *ofile = "/etc/tipidee.conf.cdb" ;
+  char const *ifile = TIPIDEE_SYSCONFPREFIX "tipidee.conf" ;
+  char const *ofile = TIPIDEE_SYSCONFPREFIX "tipidee.conf.cdb" ;
   unsigned int omode = 0644 ;
 
   PROG = "tipidee-config" ;
