@@ -102,7 +102,6 @@ static inline int do_nph (tipidee_rql const *rql, char const *const *argv, char 
 static inline int do_nph (tipidee_rql const *rql, char const *const *argv, char const *const *envp, char const *body, size_t bodylen)
 {
   int p[2] ;
-  log_nph(argv, envp) ;
   if (pipe(p) == -1) die500sys(rql, 111, "pipe") ;
   if (bodylen)
   {
@@ -134,6 +133,7 @@ static inline int do_nph (tipidee_rql const *rql, char const *const *argv, char 
   }
   close(p[1]) ;
   if (fd_move(0, p[0]) == -1) die500sys(rql, 111, "fd_move") ;
+  log_nph(argv, envp) ;
   exec_e(argv, envp) ;
   die500sys(rql, errno == ENOENT ? 127 : 126, "exec nph ", argv[0]) ;
 }
@@ -365,7 +365,7 @@ static inline int process_cgi_output (tipidee_rql *rql, tipidee_headers const *h
   }
   if (!buffer_timed_flush_g(buffer_1, &deadline))
     strerr_diefu1sys(111, "write to stdout") ;
-  if (g.verbosity >= 4)
+  if (g.verbosity >= 2)
   {
     char fmt[UINT_FMT] ;
     fmt[uint_fmt(fmt, status)] = 0 ;

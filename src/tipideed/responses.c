@@ -2,6 +2,7 @@
 
 #include <unistd.h>
 
+#include <skalibs/types.h>
 #include <skalibs/buffer.h>
 #include <skalibs/strerr.h>
 #include <skalibs/tai.h>
@@ -15,8 +16,11 @@
 void response_error (tipidee_rql const *rql, char const *rsl, char const *text, int doclose)
 {
   tain deadline ;
+  char ans[4] = "???" ;
+  memcpy(ans, rsl, 3) ;
   tipidee_response_error(buffer_1, rql, rsl, text, doclose || !g.cont) ;
   tain_add_g(&deadline, &g.writetto) ;
+  log_response(ans, 0) ;
   if (!buffer_timed_flush_g(buffer_1, &deadline))
     strerr_diefu1sys(111, "write to stdout") ;
 }
@@ -52,6 +56,8 @@ void respond_30x (tipidee_rql const *rql, tipidee_redirection const *rd)
 {
   static char const *rsl[4] = { "307 Temporary Redirect", "308 Permanent Redirect", "302 Found", "301 Moved Permanently" } ;
   tain deadline ;
+  char ans[4] = "30x" ;
+  memcpy(ans, rsl[rd->type], 3) ;
   tipidee_response_status_line(buffer_1, rql, rsl[rd->type]) ;
   tipidee_response_header_common_put_g(buffer_1, 0) ;
   buffer_putsnoflush(buffer_1, "Content-Length: 0\r\nLocation: ") ;
@@ -59,6 +65,7 @@ void respond_30x (tipidee_rql const *rql, tipidee_redirection const *rd)
   if (rd->sub) buffer_putsnoflush(buffer_1, rd->sub) ;
   buffer_putnoflush(buffer_1, "\r\n\r\n", 4) ;
   tain_add_g(&deadline, &g.writetto) ;
+  log_response(ans, 0) ;
   if (!buffer_timed_flush_g(buffer_1, &deadline))
     strerr_diefu1sys(111, "write to stdout") ;
 }

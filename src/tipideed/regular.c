@@ -70,7 +70,7 @@ int respond_304 (tipidee_rql const *rql, char const *fn, struct stat const *st)
     if (l) n += buffer_putnoflush(buffer_1, fmt, l) ;
   }
   n += buffer_putnoflush(buffer_1, "\r\n", 2) ;
-  log_304(fn) ;
+  log_response("304", fn) ;
   tain_add_g(&deadline, &g.writetto) ;
   if (!buffer_timed_flush_g(buffer_1, &deadline))
     strerr_diefu1sys(111, "write to stdout") ;
