@@ -10,7 +10,7 @@
 #include <skalibs/error.h>
 #include <skalibs/avltreen.h>
 #include <skalibs/unix-timed.h>
-// #include <skalibs/lolstdio.h>
+#include <skalibs/lolstdio.h>
 
 #include <tipidee/headers.h>
 
@@ -126,7 +126,7 @@ static int tipidee_headers_parse_with (buffer *b, tipidee_headers *hdr, get1_fun
     if (!(*next)(b, &cur, data))
       return errno == ETIMEDOUT ? 408 : error_isagain(errno) ? -2 : -1 ;
     c = table[*state][cclass(cur)] ;
-/*
+
    {
 
       char s[2] = { cur, 0 } ;
@@ -143,7 +143,7 @@ static int tipidee_headers_parse_with (buffer *b, tipidee_headers *hdr, get1_fun
         c & 0x0100 ? "p" : ""
       ) ;
     }
-*/
+
     *state = c & 0x0f ;
     if (c & 0x4000) { if (hdr->len >= hdr->max) return 413 ; hdr->buf[hdr->len++] = ' ' ; }
     if (c & 0x2000) hdr->len-- ;
@@ -155,12 +155,14 @@ static int tipidee_headers_parse_with (buffer *b, tipidee_headers *hdr, get1_fun
       hdr->list[hdr->n] = *header ;
       if (needs_processing(hdr->buf + header->left))
       {
-//      LOLDEBUG("tipidee_headers_parse_with: n: adding header %u - key %zu (%s), value %zu (%s)", hdr->n, header->left, hdr->buf + header->left, header->right, hdr->buf + header->right) ;
+        LOLDEBUG("tipidee_headers_parse_with: n: adding header %u - key %zu (%s), value %zu (%s)", hdr->n, header->left, hdr->buf + header->left, header->right, hdr->buf + header->right) ;
         if (avltreen_search(&hdr->map, hdr->buf + header->left, &prev))
         {
           size_t start = hdr->list[prev+1].left ;
+          LOLDEBUG("  found at %u (next start is %zu), needs to collate", prev, start) ;
           if (prev+1 == hdr->n)
           {
+            LOLDEBUG("  consecutive headers -> concatenating") ;
             hdr->buf[start - 1] = ',' ;
             hdr->buf[start] = ' ' ;
             memcpy(hdr->buf + start + 1, hdr->buf + header->right, hdr->len - header->right) ;
@@ -170,6 +172,7 @@ static int tipidee_headers_parse_with (buffer *b, tipidee_headers *hdr, get1_fun
             size_t len = header->left - start ;
             size_t offset = hdr->len - header->right + 1 ;
             char tmp[len] ;
+            LOLDEBUG("  not consecutive: len is %zu, offset is %zu", len, offset) ;
             memcpy(tmp, hdr->buf + start, len) ;
             hdr->buf[start - 1] = ',' ;
             hdr->buf[start] = ' ' ;
