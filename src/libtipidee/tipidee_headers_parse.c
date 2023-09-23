@@ -165,7 +165,7 @@ static int tipidee_headers_parse_with (buffer *b, tipidee_headers *hdr, get1_fun
             LOLDEBUG("  consecutive headers -> concatenating") ;
             hdr->buf[start - 1] = ',' ;
             hdr->buf[start] = ' ' ;
-            memcpy(hdr->buf + start + 1, hdr->buf + header->right, hdr->len - header->right) ;
+            memmove(hdr->buf + start + 1, hdr->buf + header->right, hdr->len - header->right) ;
           }
           else
           {
@@ -176,7 +176,7 @@ static int tipidee_headers_parse_with (buffer *b, tipidee_headers *hdr, get1_fun
             memcpy(tmp, hdr->buf + start, len) ;
             hdr->buf[start - 1] = ',' ;
             hdr->buf[start] = ' ' ;
-            memcpy(hdr->buf + start + 1, hdr->buf + header->right, hdr->len - header->right) ;
+            memmove(hdr->buf + start + 1, hdr->buf + header->right, hdr->len - header->right) ;
             memcpy(hdr->buf + start + offset, tmp, len) ;
             for (uint32_t i = prev + 1 ; i < hdr->n ; i++)
             {
