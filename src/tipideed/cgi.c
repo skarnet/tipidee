@@ -305,8 +305,8 @@ static inline int process_cgi_output (tipidee_rql *rql, tipidee_headers const *h
     if (!m || (x[m] && x[m] != ' '))
       die502x(rql, 2, "cgi ", cginame, " returned an invalid ", "Status", " header") ;
     reason_phrase = x[m] ? x + m + 1 : "" ;
-    if (status >= 300 && status < 399 && !location)
-      die502x(rql, 2, "cgi ", cginame, " returned a 3xx status code without a ", "Location", " header") ;
+    if (!location && (status == 301 || status == 302 || status == 307 || status == 308))
+      die502x(rql, 2, "cgi ", cginame, " returned a redirection status code without a ", "Location", " header") ;
     if (status < 100 || status > 999)
       die502x(rql, 2, "cgi ", cginame, " returned an invalid ", "Status", " value") ;
   }
