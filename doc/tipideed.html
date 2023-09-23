@@ -37,8 +37,8 @@ to fulfill them, sending answers to stdout, and logs to stderr. </li>
  <li> tipideed only speaks plaintext HTTP. It supports HTTPS, but the TLS layer
 must be handled upstream by a program such as
 <a href="//skarnet.org/software/s6-networking/s6-tlsd.html">s6-tlsd</a>. </li>
- <li> tipideed stays alive until the client closes the connection or (in
-HTTP 1.1) sends a request with a <tt>Connection: close</tt> header, or an error
+ <li> tipideed stays alive until the client closes the connection, or times out,
+or (in HTTP 1.1) sends a request with a <tt>Connection: close</tt> header; or an error
 occurs that makes it nonsensical to keep the connection open. </li>
  <li> By default, the documents it serves must be in subdirectories of its
 current working directory, one subdirectory for every domain it hosts. </li>
@@ -91,7 +91,9 @@ of the tipidee package provides service templates to help you run tipideed under
 
 <dl>
  <dt> 0 </dt> <dd> Clean exit. There was a successful stream of HTTP exchanges,
-that the client decided to end. </dd>
+that the client decided to end &mdash; including by being inactive long enough
+that tipideed closes the connection on its own initiative, which is permitted
+by HTTP. </dd>
  <dt> 1 </dt> <dd> Illicit client behaviour. tipideed exited because it could
 not serve the client in good faith. </dd>
  <dt> 2 </dt> <dd> Illicit CGI script behaviour. tipideed exited because the invoked
@@ -121,7 +123,7 @@ client before exiting. </dd>
  tipideed expects the following variables in its environment, and will exit
 with an error message if they are undefined. When tipideed is run under
 <a href="//skarnet.org/s6-networking/s6-tcpserver.html">s6-tcpserver</a>
-(with <a href="//skarnet.org/s6-networking/s6-tcpserver-access.html">s6-tcpserver-access</a> or
+(with <a href="//skarnet.org/s6-networking/s6-tcpserver-access.html">s6-tcpserver-access</a>) or
 <a href="//skarnet.org/s6-networking/s6-tlsserver.html">s6-tlsserver</a>,
 these variables are automatically set by the super-server. This is the way
 tipidee gets its network information without having to perform network
@@ -373,8 +375,9 @@ backends. </li>
    <li> Else, the resource is a regular ("static") file, and tipideed serves
 it on its stdout, to the client. </li>
   </ul> </li>
- <li> tipideed exits on EOF (when the client closes the connection), or after
-a single HTTP/1.0 request, or when it has answered a request with a
+ <li> tipideed exits on EOF (when the client closes the connection), or when
+the client times out before sending a request, or after tipideed receives a
+single HTTP/1.0 request, or when it has answered a request with a
 <tt>Connection: close</tt> header, or when it encounters an error where it is
 likely that the client will have no use for the connection anymore anyway
 and exiting is simpler and cheaper &mdash; in which case tipideed adds
