@@ -456,7 +456,7 @@ int main (int argc, char const *const *argv, char const *const *envp)
     x = tipidee_headers_search(&hdr, "Transfer-Encoding") ;
     if (x)
     {
-      if (strcmp(x, "chunked")) exit_400(&rql, "unsupported Transfer-Encoding") ;
+      if (strcasecmp(x, "chunked")) exit_400(&rql, "unsupported Transfer-Encoding") ;
       else tcoding = TIPIDEE_TRANSFERCODING_CHUNKED ;
     }
     else
