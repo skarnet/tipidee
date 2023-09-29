@@ -263,11 +263,12 @@ static inline void print_cgi_headers (tipidee_headers const *hdr, size_t rbodyle
   static char const *const nope_table[] =
   {
     "Connection",
+    "Content-Length",
     "Date",
     "Status",
-    "Content-Length",
     0
   } ;
+  char fmt[SIZE_FMT] ;
   for (size_t i = 0 ; i < hdr->n ; i++)
   {
     char const *key = hdr->buf + hdr->list[i].left ;
@@ -281,14 +282,10 @@ static inline void print_cgi_headers (tipidee_headers const *hdr, size_t rbodyle
     buffer_putsnoflush(buffer_1, hdr->buf + hdr->list[i].right) ;
     buffer_putnoflush(buffer_1, "\r\n", 2) ;
   }
-  if (rbodylen)
-  {
-    char fmt[SIZE_FMT] ;
-    fmt[size_fmt(fmt, rbodylen)] = 0 ;
-    buffer_putsnoflush(buffer_1, "Content-Length: ") ;
-    buffer_putsnoflush(buffer_1, fmt) ;
-    buffer_putnoflush(buffer_1, "\r\n", 2) ;
-  }
+  fmt[size_fmt(fmt, rbodylen)] = 0 ;
+  buffer_putsnoflush(buffer_1, "Content-Length: ") ;
+  buffer_putsnoflush(buffer_1, fmt) ;
+  buffer_putnoflush(buffer_1, "\r\n", 2) ;
 }
 
 static inline int process_cgi_output (tipidee_rql *rql, tipidee_headers const *hdr, char const *rbody, size_t rbodylen, char *uribuf, char const *cginame)
