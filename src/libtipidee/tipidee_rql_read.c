@@ -1,5 +1,6 @@
 /* ISC license. */
 
+#include <errno.h>
 #include <stdint.h>
 #include <string.h>
 #include <strings.h>
@@ -8,7 +9,6 @@
 #include <skalibs/bytestr.h>
 #include <skalibs/buffer.h>
 #include <skalibs/unix-timed.h>
-// #include <skalibs/lolstdio.h>
 
 #include <tipidee/method.h>
 #include <tipidee/uri.h>
@@ -66,12 +66,11 @@ static inline int get_version (char const *in, tipidee_rql *rql)
 int tipidee_rql_read (buffer *b, char *buf, size_t max, size_t *w, tipidee_rql *rql, tain const *deadline, tain *stamp)
 {
   size_t pos[3] = { 0 } ;
-  if (timed_getlnmax(b, buf, max, &pos[0], '\n', deadline, stamp) <= 0) return -1 ;
+  if (timed_getlnmax(b, buf, max, &pos[0], '\n', deadline, stamp) == -1)
+    return errno == ETIMEDOUT ? 99 : -1 ;
   buf[--pos[0]] = 0 ;
   if (buf[pos[0] - 1] == '\r') buf[--pos[0]] = 0 ;
-//  LOLDEBUG("tipidee_rql_read: timed_getlnmax: len is %zu, line is %s", pos[0], buf) ;
   if (!rql_tokenize(buf, pos)) return 400 ;
-//  LOLDEBUG("tipidee_rql_read: method: %s, version: %s, uri to parse: %s", buf + pos[0], buf + pos[2], buf + pos[1]) ;
   rql->m = tipidee_method_tonum(buf + pos[0]) ;
   if (rql->m == TIPIDEE_METHOD_UNKNOWN) return 400 ;
   if (!get_version(buf + pos[2], rql)) return 400 ;

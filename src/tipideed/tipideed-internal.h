@@ -33,21 +33,22 @@ struct global_s
   stralloc sa ;
   size_t envlen ;
   size_t localip ;
-  size_t localhost ;
   size_t localport ;
-  size_t localportlen ;
+  size_t localhost ;
   size_t remoteip ;
-  size_t remotehost ;
   size_t remoteport ;
+  size_t remotehost ;
   size_t cwdlen ;
   size_t indexlen ;
   tain readtto ;
   tain writetto ;
   tain cgitto ;
+  char const *defaulthost ;
   char const *indexnames[16] ;
   int p[2] ;
   uint32_t maxrqbody ;
   uint32_t maxcgibody ;
+  uint16_t defaultport ;
   uint16_t indexn : 4 ;
   uint16_t verbosity : 3 ;
   uint16_t cont : 2 ;
@@ -59,21 +60,22 @@ struct global_s
   .sa = STRALLOC_ZERO, \
   .envlen = 0, \
   .localip = 0, \
-  .localhost = 0, \
   .localport = 0, \
-  .localportlen = 0, \
+  .localhost = 0, \
   .remoteip = 0, \
-  .remotehost = 0, \
   .remoteport = 0, \
+  .remotehost = 0, \
   .cwdlen = 1, \
   .indexlen = 0, \
   .readtto = TAIN_ZERO, \
   .writetto = TAIN_ZERO, \
   .cgitto = TAIN_ZERO, \
+  .defaulthost = "@", \
   .indexnames = { 0 }, \
   .p = { -1, -1 }, \
   .maxrqbody = 0, \
   .maxcgibody = 0, \
+  .defaultport = 0, \
   .indexn = 0, \
   .verbosity = 1, \
   .cont = 1, \

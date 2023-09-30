@@ -65,6 +65,7 @@ static inline void modify_env (tipidee_rql const *rql, tipidee_headers const *hd
   if (rql->uri.query) addenv(rql, "QUERY_STRING", rql->uri.query) ;
   else delenv(rql, "QUERY_STRING") ;
   addenv(rql, "SCRIPT_NAME", script) ;
+  addenv(rql, "SERVER_NAME", rql->uri.host) ;
   
   for (size_t i = 0 ; i < hdr->n ; i++)
   {
@@ -83,7 +84,7 @@ static inline void modify_env (tipidee_rql const *rql, tipidee_headers const *hd
       }
     }
     else if (!strcasecmp(key, "Content-Type")) { addenv(rql, "CONTENT_TYPE", val) ; got |= 2 ; }
-    else if (!strcasecmp(key, "Content-Length") || !strcasecmp(key, "Connection")) ;
+    else if (!strcasecmp(key, "Content-Length") || !strcasecmp(key, "Connection") || !strcasecmp(key, "Host")) ;
     else
     {
       size_t len = strlen(key), pos = g.sa.len + 5 ;

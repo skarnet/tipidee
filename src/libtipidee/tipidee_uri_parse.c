@@ -154,7 +154,7 @@ size_t tipidee_uri_parse (char *out, size_t max, char const *in, tipidee_uri *ur
     if (c & 0x4000) host = out + w ;
     if (c & 0x2000) { if (w >= max) return 0 ; out[w++] = 0 ; }
     if (c & 0x1000) mark = w ;
-    if (c & 0x0800) { if (!uint160_scan(out + mark, &port)) return 0 ; w = mark ; }
+    if (c & 0x0800) { if (!uint160_scan(out + mark, &port) || !port) return 0 ; w = mark ; }
     if (c & 0x0400) path = out + w ;
     if (c & 0x0200) { if (w >= max) return 0 ; out[w++] = *in ; }
     if (c & 0x0100) query = out + w ;

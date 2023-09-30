@@ -50,24 +50,36 @@ static inline void prep_env (void)
   static char const basevars[] = "PROTO\0TCPCONNNUM\0GATEWAY_INTERFACE=CGI/1.1\0SERVER_PROTOCOL=HTTP/1.1\0SERVER_SOFTWARE=tipidee/" TIPIDEE_VERSION ;
   static char const sslvars[] = "SSL_PROTOCOL\0SSL_CIPHER\0SSL_TLS_SNI_SERVERNAME\0SSL_PEER_CERT_HASH\0SSL_PEER_CERT_SUBJECT\0HTTPS=on" ;
   char const *x = getenv("SSL_PROTOCOL") ;
-  if (!stralloc_readyplus(&g.sa, 320)) dienomem() ;
+  size_t protolen ;
   if (sagetcwd(&g.sa) == -1) strerr_diefu1sys(111, "getcwd") ;
   if (g.sa.len == 1) g.sa.len = 0 ;
   g.cwdlen = g.sa.len ;
-  if (g.cwdlen && !stralloc_0(&g.sa)) dienomem() ;
-  if (!stralloc_catb(&g.sa, basevars, sizeof(basevars))) dienomem() ;
-  if (x && !stralloc_catb(&g.sa, sslvars, sizeof(sslvars))) dienomem() ;
+  if (!stralloc_readyplus(&g.sa, 220 + sizeof(basevars) + sizeof(sslvars))) dienomem() ;
+  if (g.cwdlen) stralloc_0(&g.sa) ;
+  stralloc_catb(&g.sa, basevars, sizeof(basevars)) ;
+  if (x) stralloc_catb(&g.sa, sslvars, sizeof(sslvars)) ;
   g.ssl = !!x ;
   x = getenv(basevars) ;
-  if (!x) strerr_dienotset(100, "PROTO") ;
+  protolen = strlen(x) ;
+  if (protolen > 1000) strerr_dieinvalid(100, "PROTO") ;
+  if (!x) strerr_dienotset(100, "PROTO")  ;
   {
-    size_t protolen = strlen(x) ;
     size_t m ;
     ip46 ip ;
     uint16_t port ;
     char fmt[IP46_FMT] ;
     char var[protolen + 11] ;
     memcpy(var, x, protolen) ;
+
+    memcpy(var + protolen, "LOCALPORT", 10) ;
+    x = getenv(var) ;
+    if (!x) strerr_dienotset(100, var) ;
+    if (!uint160_scan(x, &g.defaultport)) strerr_dieinvalid(100, var) ;
+    if (!stralloc_catb(&g.sa, var, protolen + 10)
+     || !stralloc_catb(&g.sa, "SERVER_PORT=", 12)) dienomem() ;
+    g.localport = g.sa.len ;
+    m = uint16_fmt(fmt, g.defaultport) ; fmt[m++] = 0 ;
+    if (!stralloc_catb(&g.sa, fmt, m)) dienomem() ;
 
     memcpy(var + protolen, "LOCALIP", 8) ;
     x = getenv(var) ;
@@ -81,21 +93,21 @@ static inline void prep_env (void)
 
     memcpy(var + protolen, "LOCALHOST", 10) ;
     x = getenv(var) ;
-    if (!x) strerr_dienotset(100, var) ;
-    if (!stralloc_catb(&g.sa, var, protolen + 10)
-     || !stralloc_catb(&g.sa, "SERVER_NAME=", 12)) dienomem() ;
-    g.localhost = g.sa.len ;
-    if (!stralloc_cats(&g.sa, x) || !stralloc_0(&g.sa)) dienomem() ;
+    if (x)
+    {
+      if (!stralloc_catb(&g.sa, var, protolen + 10)) dienomem() ;
+      g.defaulthost = x ;
+    }
 
-    memcpy(var + protolen, "LOCALPORT", 10) ;
+    memcpy(var + protolen, "REMOTEPORT", 11) ;
     x = getenv(var) ;
     if (!x) strerr_dienotset(100, var) ;
     if (!uint160_scan(x, &port)) strerr_dieinvalid(100, var) ;
-    if (!stralloc_catb(&g.sa, var, protolen + 10)
-     || !stralloc_catb(&g.sa, "SERVER_PORT=", 12)) dienomem() ;
-    g.localport = g.sa.len ;
-    g.localportlen = uint16_fmt(fmt, port) ; fmt[g.localportlen] = 0 ;
-    if (!stralloc_catb(&g.sa, fmt, g.localportlen + 1)) dienomem() ;
+    if (!stralloc_catb(&g.sa, var, protolen + 11)
+     || !stralloc_catb(&g.sa, "REMOTE_PORT=", 12)) dienomem() ;
+    g.remoteport = g.sa.len ;
+    m = uint16_fmt(fmt, port) ; fmt[m++] = 0 ;
+    if (!stralloc_catb(&g.sa, fmt, m)) dienomem() ;
 
     memcpy(var + protolen, "REMOTEIP", 9) ;
     x = getenv(var) ;
@@ -112,18 +124,18 @@ static inline void prep_env (void)
     if ((x && !stralloc_catb(&g.sa, var, protolen + 11))
      || !stralloc_catb(&g.sa, "REMOTE_HOST=", 12)) dienomem() ;
     g.remotehost = g.sa.len ;
-    if (!stralloc_cats(&g.sa, x ? x : fmt)
-     || !stralloc_0(&g.sa)) dienomem() ;
-
-    memcpy(var + protolen, "REMOTEPORT", 11) ;
-    x = getenv(var) ;
-    if (!x) strerr_dienotset(100, var) ;
-    if (!uint160_scan(x, &port)) strerr_dieinvalid(100, var) ;
-    if (!stralloc_catb(&g.sa, var, protolen + 11)
-     || !stralloc_catb(&g.sa, "REMOTE_PORT=", 12)) dienomem() ;
-    g.remoteport = g.sa.len ;
-    m = uint16_fmt(fmt, port) ; fmt[m++] = 0 ;
-    if (!stralloc_catb(&g.sa, fmt, m)) dienomem() ;
+    if (x)
+    {
+      if (!stralloc_cats(&g.sa, x)) dienomem() ;
+    }
+    else
+    {
+      if (!stralloc_readyplus(&g.sa, m + 2)) dienomem() ;
+      if (ip46_is6(&ip)) stralloc_catb(&g.sa, "[", 1) ;
+      stralloc_catb(&g.sa, g.sa.s + g.remoteip, m) ;
+      if (ip46_is6(&ip)) stralloc_catb(&g.sa, "]", 1) ;
+    }
+    if (!stralloc_0(&g.sa)) dienomem() ;
 
     memcpy(var + protolen, "REMOTEINFO", 11) ;
     x = getenv(var) ;
@@ -243,9 +255,10 @@ static inline void force_redirect (tipidee_rql const *rql, char const *fn)
   respond_30x(rql, &rd) ;
 }
 
-static inline int serve (tipidee_rql *rql, char const *docroot, size_t docrootlen, char *uribuf, tipidee_headers const *hdr, char const *body, size_t bodylen)
+static inline int serve (tipidee_rql *rql, char const *docroot, char *uribuf, tipidee_headers const *hdr, char const *body, size_t bodylen)
 {
   tipidee_resattr ra = TIPIDEE_RESATTR_ZERO ;
+  size_t docrootlen = strlen(docroot) ;
   size_t pathlen = strlen(rql->uri.path) ;
   char const *infopath = 0 ;
   struct stat st ;
@@ -420,8 +433,9 @@ int main (int argc, char const *const *argv, char const *const *envp)
     e = tipidee_rql_read_g(buffer_0, uribuf, URI_BUFSIZE, &content_length, &rql, &deadline) ;
     switch (e)
     {
-      case -1 : log_and_exit(1) ;  /* Timeout, malicious client, or shitty client */
+      case -1 : log_and_exit(1) ;  /* Malicious or shitty client */
       case 0 : break ;
+      case 99 : g.cont = 0 ; continue ;  /* timeout, it's ok */
       case 400 : exit_400(&rql, "Syntax error in request line") ;
       default : strerr_dief2x(101, "can't happen: ", "unknown tipidee_rql_read return code") ;
     }
@@ -442,7 +456,7 @@ int main (int argc, char const *const *argv, char const *const *envp)
       default : die500x(&rql, 101, "can't happen: ", "unknown tipidee_headers_parse return code") ;
     }
 
-    if (rql.http_minor == 0) g.cont = 0 ;
+    if (!rql.http_minor) g.cont = 0 ;
     else
     {
       x = tipidee_headers_search(&hdr, "Connection") ;
@@ -490,7 +504,7 @@ int main (int argc, char const *const *argv, char const *const *envp)
       default : die500x(&rql, 101, "can't happen: unknown HTTP method") ;
     }
 
-    if (!rql.uri.host)
+    if (rql.http_minor)
     {
       x = tipidee_headers_search(&hdr, "Host") ;
       if (x)
@@ -504,17 +518,18 @@ int main (int argc, char const *const *argv, char const *const *envp)
         if (!*x || *x == '.') exit_400(&rql, "Invalid Host header") ;
         rql.uri.host = x ;
       }
-      else if (!rql.http_minor) rql.uri.host = "@" ;
-      else exit_400(&rql, "Missing Host header") ;
+      else if (!rql.uri.host) exit_400(&rql, "Missing Host header") ;
     }
+    else if (!rql.uri.host) rql.uri.host = g.defaulthost ;
+    if (!rql.uri.port) rql.uri.port = g.defaultport ;
 
     {
       size_t hostlen = strlen(rql.uri.host) ;
-      char docroot[hostlen + g.localportlen + 2] ;
+      char docroot[hostlen + UINT16_FMT + 1] ;
       if (rql.uri.host[hostlen - 1] == '.') hostlen-- ;
       memcpy(docroot, rql.uri.host, hostlen) ;
       docroot[hostlen] = ':' ;
-      memcpy(docroot + hostlen + 1, g.sa.s + g.localport, g.localportlen + 1) ;
+      docroot[hostlen + 1 + uint16_fmt(docroot + hostlen + 1, rql.uri.port)] = 0 ;
 
      /* All good. Read the body if any */
 
@@ -550,7 +565,7 @@ int main (int argc, char const *const *argv, char const *const *envp)
 
      /* And serve the resource. The loop is in case of CGI local-redirection. */
 
-      while (serve(&rql, docroot, hostlen + 1 + g.localportlen, uribuf, &hdr, bodysa.s, bodysa.len))
+      while (serve(&rql, docroot, uribuf, &hdr, bodysa.s, bodysa.len))
         if (localredirs++ >= MAX_LOCALREDIRS)
           die502x(&rql, 2, "too many local redirections - possible loop involving path ", rql.uri.path) ;
     }

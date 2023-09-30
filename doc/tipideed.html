@@ -138,14 +138,6 @@ operations itself.
  <dd> The IP address the server is bound to. It will be passed as <tt>SERVER_ADDR</tt>
 to CGI scripts. </dd>
 
- <dt> TCPLOCALPORT </dt>
- <dd> The port the server is bound to. It will be passed as <tt>SERVER_PORT</tt>
-to CGI scripts. </dd>
-
- <dt> TCPLOCALHOST </dt>
- <dd> The domain name associated to the local IP address. It will be
-passed as <tt>SERVER_NAME</tt> to CGI scripts. </dd>
-
  <dt> TCPREMOTEIP </dt>
  <dd> The IP address of the client. It will be passed as <tt>REMOTE_ADDR</tt>
 to CGI scripts. </dd>
@@ -163,6 +155,19 @@ uses them to get more information.
 </p>
 
 <dl>
+ <dt> TCPLOCALHOST </dt>
+ <dd> The default domain name associated to the local IP address. It will be
+passed as <tt>SERVER_NAME</tt> to CGI scripts when the requested URI does
+not mention a Host, i.e. in HTTP/1.0 requests. If this variable is absent,
+the default will be set to the local IP address itself (between square
+brackets if IPv6). </dd>
+
+ <dt> TCPLOCALPORT </dt>
+ <dd> The port the server is bound to. It will be passed as <tt>SERVER_PORT</tt>
+to CGI scripts unless the requested URI explicitly mentions a different port.
+If this variable is absent, the default will be set to 80 in case of HTTP or
+443 in the case of HTTPS. </dd>
+
  <dt> TCPREMOTEHOST </dt>
  <dd> The domain name associated to the IP address of the client. It will
 be passed as <tt>REMOTE_HOST</tt> to CGI scripts; if absent, the value of
@@ -377,11 +382,11 @@ it on its stdout, to the client. </li>
   </ul> </li>
  <li> tipideed exits on EOF (when the client closes the connection), or when
 the client times out before sending a request, or after tipideed receives a
-single HTTP/1.0 request, or when it has answered a request with a
-<tt>Connection: close</tt> header, or when it encounters an error where it is
-likely that the client will have no use for the connection anymore anyway
-and exiting is simpler and cheaper &mdash; in which case tipideed adds
-<tt>Connection: close</tt> to its last answer. </li>
+single HTTP/1.0 request, or when it has executed into an NPH script, or when
+it has answered a request with a <tt>Connection: close</tt> header. It also
+exits when it encounters an error making it likely that the client will have
+no use for the connection anymore anyway and exiting is simpler and cheaper;
+in which case tipideed adds <tt>Connection: close</tt> to its last answer. </li>
 </ul>
 
 <div id="performance">
