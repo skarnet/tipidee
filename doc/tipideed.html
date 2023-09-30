@@ -158,9 +158,9 @@ uses them to get more information.
  <dt> TCPLOCALHOST </dt>
  <dd> The default domain name associated to the local IP address. It will be
 passed as <tt>SERVER_NAME</tt> to CGI scripts when the requested URI does
-not mention a Host, i.e. in HTTP/1.0 requests. If this variable is absent,
-the default will be set to the local IP address itself (between square
-brackets if IPv6). </dd>
+not mention a Host, i.e. in HTTP/1.0 requests without a full request URL.
+If this variable is absent, the default will be set to the local IP address
+itself (between square brackets if IPv6). </dd>
 
  <dt> TCPLOCALPORT </dt>
  <dd> The port the server is bound to. It will be passed as <tt>SERVER_PORT</tt>
@@ -322,9 +322,17 @@ your <tt>/etc/passwd</tt> file, tipideed will keep it safe.
 
 <p>
  HTTP/1.0 does not have the concepts of virtual hosts. For HTTP/1.0
-requests that do not provide a full URL, tipideed will use a default
-host name of <tt>@</tt> (at), so documents will likely be looked for
-under <tt>@:80</tt> or <tt>@:443</tt>.
+requests that do not provide a full URL, tipideed will use the value
+it reads from the TCPLOCALHOST variable, which is normally the result
+of a reverse DNS lookup on the server's address. You can override the
+lookup and provide your own value by giving the <tt>-l</tt> option to
+<a href="//skarnet.org/software/s6-networking/s6-tcpserver-access.html">s6-tcpserver-access</a> or
+<a href="//skarnet.org/software/s6-networking/s6-tlsserver.html">s6-tlsserver</a>.
+If TCPLOCALHOST does not exist or is empty, a fallback value of
+<tt>@</tt> (at), will be used. So if you aren't calling
+<a href="//skarnet.org/software/s6-networking/s6-tcpserver-access.html">s6-tcpserver-access</a>
+at all, your documents will most likely be accessible for HTTP/1.0 clients under
+<tt>@:80</tt> or <tt>@:443</tt>.
 </p>
 
 <div id="details">

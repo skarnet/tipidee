@@ -116,17 +116,17 @@ is going on with the code, too.
 requirement if you link against the shared version of the skalibs
 library. </li>
  <li> Recommended at run-time: <a href="//skarnet.org/software/s6-networking/">s6-networking</a> version
-2.5.1.4 or later. It's not a strict requirement, but tipidee relies
-on a super-server to listen to the network and provide connection
+2.6.0.0 or later. It's not a strict requirement, but tipidee relies on a super-server such as
+<a href="//skarnet.org/software/s6-networking/s6-tcpserver.html">s6-tcpserver</a>
+to listen to the network and provide connection
 information via environment variables. It also defers to tools such as
 <a href="//skarnet.org/software/s6-networking/s6-tcpserver-access.html">s6-tcpserver-access</a>
 to provide access control and connection fine-tuning. And if you want
 to run an HTTPS server, you'll need something like
 <a href="//skarnet.org/software/s6-networking/s6-tlsserver.html">s6-tlsserver</a>
-to manage the TLS transport layer. It <em>will</em> make
-your life easier.
+to manage the TLS transport layer. It <em>will</em> make your life easier.
  <ul>
-  <li> Also, when built with BearSSL,
+  <li> When built with BearSSL,
 <a href="//skarnet.org/software/s6-networking/s6-tlsserver.html">s6-tlsserver</a>
 basically gives you a TLS tunnel <em>for free</em>. Bearly any RAM use.
 Don't take my word for it; try it out for yourself. </li>
