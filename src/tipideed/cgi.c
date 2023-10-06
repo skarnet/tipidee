@@ -66,6 +66,11 @@ static inline void modify_env (tipidee_rql const *rql, tipidee_headers const *hd
   else delenv(rql, "QUERY_STRING") ;
   addenv(rql, "SCRIPT_NAME", script) ;
   addenv(rql, "SERVER_NAME", rql->uri.host) ;
+  {
+    char proto[9] = "HTTP/1.1" ;
+    if (!rql->http_minor) proto[7] = '0' ;
+    addenv(rql, "SERVER_PROTOCOL", proto) ;
+  }
   
   for (size_t i = 0 ; i < hdr->n ; i++)
   {

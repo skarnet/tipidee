@@ -47,7 +47,7 @@ static void sigchld_handler (int sig)
 
 static inline void prep_env (void)
 {
-  static char const basevars[] = "PROTO\0TCPCONNNUM\0GATEWAY_INTERFACE=CGI/1.1\0SERVER_PROTOCOL=HTTP/1.1\0SERVER_SOFTWARE=tipidee/" TIPIDEE_VERSION ;
+  static char const basevars[] = "PROTO\0TCPCONNNUM\0GATEWAY_INTERFACE=CGI/1.1\0SERVER_SOFTWARE=tipidee/" TIPIDEE_VERSION ;
   static char const sslvars[] = "SSL_PROTOCOL\0SSL_CIPHER\0SSL_TLS_SNI_SERVERNAME\0SSL_PEER_CERT_HASH\0SSL_PEER_CERT_SUBJECT\0HTTPS=on" ;
   char const *x = getenv("SSL_PROTOCOL") ;
   size_t protolen ;
@@ -500,7 +500,7 @@ int main (int argc, char const *const *argv, char const *const *envp)
       case TIPIDEE_METHOD_DELETE : exit_405(&rql, 1) ;
       case TIPIDEE_METHOD_TRACE : respond_trace(hdrbuf, &rql, &hdr) ; continue ;
       case TIPIDEE_METHOD_CONNECT : exit_501(&rql, "CONNECT method unsupported") ;
-      case TIPIDEE_METHOD_PRI : exit_501(&rql, "PRI method attempted with HTTP/1.1") ;
+      case TIPIDEE_METHOD_PRI : exit_501(&rql, "PRI method attempted with HTTP version 1") ;
       default : die500x(&rql, 101, "can't happen: unknown HTTP method") ;
     }
 
