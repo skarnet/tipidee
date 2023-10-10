@@ -10,9 +10,12 @@ tipidee_headers_get_content_length.o
 tipidee_headers_init.o
 tipidee_headers_parse.o
 tipidee_headers_search.o
-tipidee_method_conv_table.o
-tipidee_method_tonum.o
-tipidee_method_tostr.o
+tipidee_log_answer.o
+tipidee_log_exit.o
+tipidee_log_resource.o
+tipidee_log_request.o
+tipidee_log_start.o
+tipidee_method.o
 tipidee_response_error.o
 tipidee_response_header_builtin.o
 tipidee_response_header_common_put.o
