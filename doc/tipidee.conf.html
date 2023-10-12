@@ -375,7 +375,7 @@ TCPREMOTEIP otherwise. Make sure to invoke
 <a href="tipideed.html">tipideed</a> in order to get meaningful values for this field.
 This keyword has no effect when given without the <tt>start</tt> keyword. </dd>
  <dt> <tt>host_as_prefix</tt> </dt> <dd> Prepend all <tt>request</tt>, <tt>resource</tt> and <tt>answer</tt>
-lines with a <tt>host <em>host</em><tt> field. This field will not be repeated in the <tt>request</tt>
+lines with a <tt>host <em>host</em></tt> field. This field will not be repeated in the <tt>request</tt>
 line, so it changes the order of the fields. <em>host</em> is the virtual host the request is addressed
 to. <tt>host_as_prefix</tt> is useful when you want to log entries for different virtual hosts to
 different locations. For instance, if you're using
@@ -391,11 +391,11 @@ receives a request from its client. The line looks like <tt>request <em>method</
 http <em>version</em></tt>. The path is decoded, but if there are non-printable characters in it, they are
 encoded as hexadecimal values <tt>\0xab</tt>. If the request line includes a query, a <tt>query <em>query</em></tt> field
 is added before the <tt>http</tt> field. </dd>
- <dt> <tt>referrer</tt> </dt> <dd> Add a <tt>referrer "<em>referrer</em>" field to the <tt>request</tt> line, for
+ <dt> <tt>referrer</tt> </dt> <dd> Add a <tt>referrer "<em>referrer</em>"</tt> field to the <tt>request</tt> line, for
 requests that include a <tt>Referrer:</tt> header. <em>referrer</em> is quoted like <em>path</em>, to avoid
 malicious clients messing with log lines.
 This keyword has no effect when given without the <tt>request</tt> keyword. </dd>
- <dt> <tt>user-agent</tt> </dt> <dd> Add a <tt>user-agent "<em>user-agent</em>" field to the <tt>request</tt> line, for
+ <dt> <tt>user-agent</tt> </dt> <dd> Add a <tt>user-agent "<em>user-agent</em>"</tt> field to the <tt>request</tt> line, for
 requests that include a <tt>User-Agent:</tt> header. <em>user-agent</em> is quoted like <em>path</em>, to avoid
 malicious clients messing with log lines.
 This keyword has no effect when given without the <tt>request</tt> keyword. </dd>
