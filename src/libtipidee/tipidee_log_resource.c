@@ -1,5 +1,7 @@
 /* ISC license. */
 
+#include <stddef.h>
+
 #include <skalibs/strerr.h>
 
 #include <tipidee/log.h>
@@ -14,7 +16,7 @@ void tipidee_log_resource (uint32_t v, tipidee_rql const *rql, char const *docro
     a[m++] = " host " ;
     a[m++] = rql->uri.host ;
   }
-  a[m++] = " docroot " ;
+  a[m++] = " resource docroot " ;
   a[m++] = docroot ;
   a[m++] = " file " ;
   a[m++] = file ;

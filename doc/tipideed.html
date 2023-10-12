@@ -28,7 +28,7 @@ a web server package: it serves files over HTTP.
 </div>
 
 <pre>
-     tipideed [ -v <em>verbosity</em> ] [ -f <em>cdbfile</em> ] [ -d <em>basedir</em> ] [ -R ] [ -U ]
+     tipideed [ -f <em>cdbfile</em> ] [ -d <em>basedir</em> ] [ -R ] [ -U ]
 </pre>
 
 <ul>
@@ -201,11 +201,6 @@ cannot be used by CGI scripts in a portable way.
 </div>
 
 <dl>
- <dt> -v <em>verbosity</em> </dt>
- <dd> The level of log verbosity. This is the same as the <tt>global verbosity</tt>
-setting in the <a href="tipidee.conf.html#verbosity">configuration file</a>; an explicit
-command line option overrides any setting present in the configuration file.</dd>
-
  <dt> -f <em>file</em> </dt>
  <dd> Use <em>file</em> as the compiled configuration database, typically obtained
 by running <tt><a href="tipidee-config.html">tipidee-config</a> -o <em>file</em></tt>.
@@ -334,6 +329,40 @@ If TCPLOCALHOST does not exist or is empty, a fallback value of
 at all, your documents will most likely be accessible for HTTP/1.0 clients under
 <tt>@:80</tt> or <tt>@:443</tt>.
 </p>
+
+<div id="logging">
+<h2> Logging </h2>
+</div>
+
+<ul>
+ <li> tipideed uses stderr for all its logging. All its log lines are prefixed
+with "<tt>tipideed: pid <em>pid</em>: </tt>". </li>
+ <li> The log lines continue with "<tt>fatal: </tt>" for fatal error messages (meaning
+that tipideed exits right after writing the message), or "<tt>warning: </tt>" for
+warnings (meaning that tipideed continues operating after writing the message).
+In normal operation, you should not see any fatal or warning line. </li>
+ <li> In normal operation, tipidee can log informational lines, and the continuing
+prefix is "<tt>info: </tt>". It can potentially log:
+  <ul>
+   <li> One line when it starts (i.e. a client has connected) </li>
+   <li> Up to three lines for every request:
+    <ul>
+     <li> One when the request is received </li>
+     <li> One when a suitable resource is found </li>
+     <li> One when an answer is sent </li>
+    </ul> </li>
+   <li> One line when it exits normally </li>
+  </ul> </li>
+ <li> What informational lines to log is configured via the
+<a href="tipidee.conf.html#log"><tt>log</tt></a> directive in the
+<a href="tipidee.conf.html">configuration file</a>. By default, only
+a minimal request line and an answer line are printed. </li>
+ <li> The log format is designed to be readable by a human, but still
+easily processable by automation. For instance, the regular prefix structure
+makes it easy for <a href="//skarnet.org/software/s6/s6-log.html">s6-log</a>
+to select different lines to send them to various backends for archiving or
+processing. </li>
+</ul>
 
 <div id="details">
 <h2> Detailed operation </h2>

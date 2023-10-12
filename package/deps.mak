@@ -10,8 +10,8 @@ src/include/tipidee/tipidee.h: src/include/tipidee/conf.h src/include/tipidee/co
 src/tipideed/tipideed-internal.h: src/include/tipidee/tipidee.h
 src/config/confnode.o src/config/confnode.lo: src/config/confnode.c src/config/tipidee-config-internal.h
 src/config/conftree.o src/config/conftree.lo: src/config/conftree.c src/config/tipidee-config-internal.h
-src/config/defaults.o src/config/defaults.lo: src/config/defaults.c src/config/tipidee-config-internal.h
-src/config/lexparse.o src/config/lexparse.lo: src/config/lexparse.c src/config/tipidee-config-internal.h src/include/tipidee/config.h
+src/config/defaults.o src/config/defaults.lo: src/config/defaults.c src/config/tipidee-config-internal.h src/include/tipidee/log.h
+src/config/lexparse.o src/config/lexparse.lo: src/config/lexparse.c src/config/tipidee-config-internal.h src/include/tipidee/config.h src/include/tipidee/log.h
 src/config/tipidee-config-preprocess.o src/config/tipidee-config-preprocess.lo: src/config/tipidee-config-preprocess.c
 src/config/tipidee-config.o src/config/tipidee-config.lo: src/config/tipidee-config.c src/config/tipidee-config-internal.h src/include/tipidee/config.h
 src/libtipidee/tipidee_conf_free.o src/libtipidee/tipidee_conf_free.lo: src/libtipidee/tipidee_conf_free.c src/include/tipidee/conf.h

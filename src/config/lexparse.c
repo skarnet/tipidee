@@ -12,10 +12,12 @@
 #include <skalibs/genalloc.h>
 #include <skalibs/skamisc.h>
 
+#include <tipidee/log.h>
 #include <tipidee/config.h>
 #include "tipidee-config-internal.h"
 
 #define dietoobig() strerr_diefu1sys(100, "read configuration")
+#define BSEARCH(type, key, array) bsearch(key, (array), sizeof(array)/sizeof(type), sizeof(type), (int (*)(void const *, void const *))&strcmp)
 
 typedef struct mdt_s mdt, *mdt_ref ;
 struct mdt_s
@@ -33,15 +35,17 @@ struct globalkey_s
   uint32_t type ;
 } ;
 
-static int globalkey_cmp (void const *a, void const *b)
+struct logkey_s
 {
-  return strcmp((char const *)a, ((struct globalkey_s const *)b)->name) ;
-}
+  char const *name ;
+  uint32_t value ;
+} ;
 
 enum token_e
 {
   T_BANG,
   T_GLOBAL,
+  T_LOG,
   T_CONTENTTYPE,
   T_DOMAIN,
   T_NPHPREFIX,
@@ -61,10 +65,6 @@ struct directive_s
   enum token_e token ;
 } ;
 
-static int directive_cmp (void const *a, void const *b)
-{
-  return strcmp((char const *)a, ((struct directive_s const *)b)->s) ;
-}
 
 static void check_unique (char const *key, mdt const *md)
 {
@@ -101,7 +101,7 @@ static inline void parse_global (char const *s, size_t const *word, size_t n, md
   struct globalkey_s const *gl ;
   if (n < 2)
     strerr_dief8x(1, "too ", "few", " arguments to directive ", "global", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
-  gl = bsearch(s + word[0], globalkeys, sizeof(globalkeys)/sizeof(struct globalkey_s), sizeof(struct globalkey_s), &globalkey_cmp) ;
+  gl = BSEARCH(struct globalkey_s, s + word[0], globalkeys) ;
   if (!gl) strerr_dief6x(1, "unrecognized global setting ", s + word[0], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   switch (gl->type)
   {
@@ -128,6 +128,39 @@ static inline void parse_global (char const *s, size_t const *word, size_t n, md
       break ;
     }
   }
+}
+
+static inline void parse_log (char const *s, size_t const *word, size_t n, mdt const *md)
+{
+  static struct logkey_s const logkeys[] =
+  {
+    { .name = "answer", .value = TIPIDEE_LOG_ANSWER },
+    { .name = "debug", .value = TIPIDEE_LOG_DEBUG },
+    { .name = "host_as_prefix", .value = TIPIDEE_LOG_HOSTASPREFIX },
+    { .name = "hostname", .value = TIPIDEE_LOG_CLIENTHOST },
+    { .name = "ip", .value = TIPIDEE_LOG_CLIENTIP },
+    { .name = "nothing", .value = 0 },
+    { .name = "referrer", .value = TIPIDEE_LOG_REFERRER },
+    { .name = "request", .value = TIPIDEE_LOG_REQUEST },
+    { .name = "resource", .value = TIPIDEE_LOG_RESOURCE },
+    { .name = "response_size", .value = TIPIDEE_LOG_SIZE },
+    { .name = "start", .value = TIPIDEE_LOG_START },
+    { .name = "user-agent", .value = TIPIDEE_LOG_UA }
+  } ;
+  uint32_t v = 0 ;
+  char pack[4] ;
+  if (!n)
+    strerr_dief8x(1, "too ", "few", " arguments to directive ", "log", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+  for (size_t i = 0 ; i < n ; i++)
+  {
+    struct logkey_s const *l = BSEARCH(struct logkey_s, s + word[i], logkeys) ;
+    if (!l) strerr_dief6x(1, "unrecognized log setting ", s + word[i], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    if (l->value) v |= l->value ;
+    else if (n == 1) v = 0 ;
+    else strerr_dief5x(1, "log nothing cannot be mixed with other log values", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+  }
+  uint32_pack_big(pack, v) ;
+  add_unique("G:logv", pack, 4, md) ;
 }
 
 static inline void parse_contenttype (char const *s, size_t const *word, size_t n, mdt const *md)
@@ -295,6 +328,7 @@ static inline void process_line (char const *s, size_t const *word, size_t n, st
     { .s = "domain", .token = T_DOMAIN },
     { .s = "file-type", .token = T_FILETYPE },
     { .s = "global", .token = T_GLOBAL },
+    { .s = "log", .token = T_LOG },
     { .s = "no-auth", .token = T_NOAUTH },
     { .s = "noncgi", .token = T_NONCGI },
     { .s = "nonnph", .token = T_NONNPH },
@@ -306,7 +340,7 @@ static inline void process_line (char const *s, size_t const *word, size_t n, st
   char const *word0 ;
   if (!n--) return ;
   word0 = s + *word++ ;
-  directive = bsearch(word0, directives, sizeof(directives)/sizeof(struct directive_s), sizeof(struct directive_s), &directive_cmp) ;
+  directive = BSEARCH(struct directive_s, word0, directives) ;
   if (!directive)
     strerr_dief6x(1, "unrecognized word ", word0, " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   switch (directive->token)
@@ -327,6 +361,9 @@ static inline void process_line (char const *s, size_t const *word, size_t n, st
     }
     case T_GLOBAL :
       parse_global(s, word, n, md) ;
+      break ;
+    case T_LOG :
+      parse_log(s, word, n, md) ;
       break ;
     case T_CONTENTTYPE :
       parse_contenttype(s, word, n, md) ;

@@ -322,6 +322,97 @@ only the <tt>index.html</tt> file will be looked up when a resource resolves
 to a directory. </li>
 </ul>
 
+<div id="log">
+<h3> The <tt>log</tt> directive </h3>
+</div>
+
+<p>
+ <tt>log</tt> is also a global directive, but is introduced by the
+keyword <tt>log</tt>, without prepending <tt>global</tt>. It allows
+the user to control what will appear in
+<a href="tipideed.html">tipideed</a>'s log output.
+</p>
+
+<p>
+ <code> log nothing </code> <br>
+ <code> log <em>keyword1</em> <em>keyword2</em> ... </code>
+</p>
+
+<ul>
+ <li> <a href="tipideed.html">tipideed</a> writes all its logs to stderr.
+It prints fatal error messages
+with the prefix "<tt>tipideed: pid <em>pid</em>: fatal: </tt>",
+and warning messages
+with the prefix "<tt>tipideed: pid <em>pid</em>: warning: </tt>".
+In normal operation, if everything goes well, you should never see
+any of these. </li>
+ <li> Depending on what the <tt>log</tt> directive says, it also prints
+informational messages related to what it's doing. These informational
+messages all have the prefix "<tt>tipideed: pid <em>pid</em>: info: </tt>". </li>
+ <li> If no <tt>log</tt> directive has been provided, the default is
+<tt>log request answer size</tt>. </li>
+</ul>
+
+<p>
+ Here are the informational log lines printed by <a href="tipideed.html">tipideed</a>,
+depending on the keywords in the <tt>log</tt> directive:
+</p>
+
+<dl>
+ <dt> <tt>nothing</tt> </dt> <dd> Don't log anything else than warning and error messages. This
+keyword cannot be given with other keywords. </dd>
+ <dt> <tt>start</tt> </dt> <dd> Log a <tt>start</tt> line when <a href="tipideed.html">tipideed</a> starts
+ and an <tt>exit <em>exitcode</em> line when it exits. </dd>
+ <dt> <tt>ip</tt> </dt> <dd> Add an <tt>ip <em>client_ip</em></tt> field to the <tt>start</tt> line.
+This is potentially PII, so make sure to stay compliant with your local laws if you activate it. 
+<em>client_ip</em> is read from the TCPREMOTEIP environment variable.
+This keyword has no effect when given without the <tt>start</tt> keyword. </dd>
+ <dt> <tt>hostname</tt> </dt> <dd> Add a <tt>host <em>client_hostname</em> </tt> field to the <tt>start</tt> line.
+This is potentially PII, so make sure to stay compliant with your local laws if you activate it. 
+<em>client_hostname</em> is read from the TCPREMOTEHOST environment variable if it exists, or made up from
+TCPREMOTEIP otherwise. Make sure to invoke
+<a href="//skarnet.org/software/s6-networking/s6-tcpserver-access.html">s6-tcpserver-access</a> before
+<a href="tipideed.html">tipideed</a> in order to get meaningful values for this field.
+This keyword has no effect when given without the <tt>start</tt> keyword. </dd>
+ <dt> <tt>host_as_prefix</tt> </dt> <dd> Prepend all <tt>request</tt>, <tt>resource</tt> and <tt>answer</tt>
+lines with a <tt>host <em>host</em><tt> field. This field will not be repeated in the <tt>request</tt>
+line, so it changes the order of the fields. <em>host</em> is the virtual host the request is addressed
+to. <tt>host_as_prefix</tt> is useful when you want to log entries for different virtual hosts to
+different locations. For instance, if you're using
+<a href="//skarnet.org/software/s6/s6-log.html">s6-log</a>, and want entries for <tt>example.com</tt> and
+<tt>example.org</tt> to be logged to different backends, you would use the <tt>host_as_prefix</tt> directive,
+and use <code>- +"^tipidee: pid [[:digit:]]*: info: host example\\.com " </code> to select <tt>example.com</tt>-related
+lines, and <code>- +"^tipidee: pid [[:digit:]]*: info: host example\\.org " </code>
+to select <tt>example.org</tt>-related lines. Note that warning and error messages would still need an additional
+backend, as well as <tt>start</tt> and <tt>exit</tt> lines if you add the <tt>start</tt> directive
+to your <tt>log</tt> configuration. </dd>
+ <dt> <tt>request</tt> </dt> <dd> Log a <tt>request</tt> line when <a href="tipideed.html">tipideed</a>
+receives a request from its client. The line looks like <tt>request <em>method</em> host <em>host</em> path "<em>path</em>"
+http <em>version</em></tt>. The path is decoded, but if there are non-printable characters in it, they are
+encoded as hexadecimal values <tt>\0xab</tt>. If the request line includes a query, a <tt>query <em>query</em></tt> field
+is added before the <tt>http</tt> field. </dd>
+ <dt> <tt>referrer</tt> </dt> <dd> Add a <tt>referrer "<em>referrer</em>" field to the <tt>request</tt> line, for
+requests that include a <tt>Referrer:</tt> header. <em>referrer</em> is quoted like <em>path</em>, to avoid
+malicious clients messing with log lines.
+This keyword has no effect when given without the <tt>request</tt> keyword. </dd>
+ <dt> <tt>user-agent</tt> </dt> <dd> Add a <tt>user-agent "<em>user-agent</em>" field to the <tt>request</tt> line, for
+requests that include a <tt>User-Agent:</tt> header. <em>user-agent</em> is quoted like <em>path</em>, to avoid
+malicious clients messing with log lines.
+This keyword has no effect when given without the <tt>request</tt> keyword. </dd>
+ <dt> <tt>resource</tt> </dt> <dd> Log a <tt>resource</tt> line when <a href="tipideed.html">tipideed</a>
+has found a resource corresponding to the URI and is willing to serve it. The line looks like
+<tt>resource docroot <em>docroot</em> file <em>file</em> type <em>type</em></tt>. <em>docroot</em> is
+the document root of the virtual host; <em>file</em> is the path to the served file; <em>type</em>
+is <tt>nph</tt> for an NPH script, <tt>cgi</tt> for a CGI script, or the Content-Type for a regular file. </dd>
+ <dt> <tt>answer</tt> </dt> <dd> Log an <tt>answer</tt> line when <a href="tipideed.html">tipideed</a>
+answers the currently processed request. The line looks like <tt>answer <em>status</em></tt>, where <em>status</em> is
+the 3-digit status code returned to the client. </dd>
+ <dt> <tt>size</tt> </dt> <dd> Add a <tt>size <em>size</em></tt> field to the <tt>answer</tt> line,
+containing the Content-Length of the answer.
+This keyword has no effect when given without the <tt>answer</tt> keyword. </dd>
+ <dt> <tt>debug</tt> </dt> <dd> Log debug information. You should not need this in regular use. </dd>
+</ul>
+
 <div id="content-type">
 <h3> The <tt>content-type</tt> directive </h3>
 </div>

@@ -6,6 +6,7 @@
 #include <sys/types.h>
 #include <stdint.h>
 
+#include <skalibs/strerr.h>
 #include <skalibs/stralloc.h>
 
 #include <tipidee/rql.h>
@@ -20,6 +21,7 @@
 #define TIPIDEE_LOG_CLIENTIP 0x0200
 #define TIPIDEE_LOG_CLIENTHOST 0x0400
 #define TIPIDEE_LOG_HOSTASPREFIX 0x1000
+#define TIPIDEE_LOG_DEBUG 0x10000
 
 #define TIPIDEE_LOG_DEFAULT (TIPIDEE_LOG_REQUEST | TIPIDEE_LOG_ANSWER | TIPIDEE_LOG_SIZE)
 
@@ -38,5 +40,7 @@ extern void tipidee_log_exit (uint32_t, unsigned int) ;
 extern void tipidee_log_request (uint32_t, tipidee_rql const *, char const *, char const *, stralloc *) ;
 extern void tipidee_log_resource (uint32_t, tipidee_rql const *, char const *, char const *, tipidee_resattr const *) ;
 extern void tipidee_log_answer (uint32_t, tipidee_rql const *, unsigned int, off_t) ;
+
+#define tipidee_log_debug(v, ...) do { if ((v) & TIPIDEE_LOG_DEBUG) strerr_warn(PROG, ": debug: ", __VA_ARGS__) ; } while (0)
 
 #endif
