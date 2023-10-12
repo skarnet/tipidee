@@ -8,17 +8,26 @@
 
 #include <tipidee/log.h>
 
-void tipidee_log_answer (uint32_t v, unsigned int status, off_t size)
+void tipidee_log_answer (uint32_t v, tipidee_rql const *rql, unsigned int status, off_t size)
 {
+  char const *a[6] = { PROG, ": info:" } ;
+  size_t m = 2 ;
   char fmtstatus[UINT_FMT] ;
+  char fmtsize[UINT64_FMT] ;
   if (!(v & TIPIDEE_LOG_ANSWER)) return ;
+  if (v & TIPIDEE_LOG_HOSTASPREFIX)
+  {
+    a[m++] = " host " ;
+    a[m++] = rql->uri.host ;
+  }
   fmtstatus[uint_fmt(fmtstatus, status)] = 0 ;
+  a[m++] = " answer " ;
+  a[m++] = fmtstatus ;
   if (size)
   {
-    char fmtsize[UINT64_FMT] ;
     fmtsize[uint64_fmt(fmtsize, size)] = 0 ;
-    strerr_warni4x("answer ", fmtstatus, " size ", fmtsize) ;
+    a[m++] = " size " ;
+    a[m++] = fmtsize ;
   }
-  else
-    strerr_warni2x("answer ", fmtstatus) ;
+  strerr_warnv(a, m) ;
 }

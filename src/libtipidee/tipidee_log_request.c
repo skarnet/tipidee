@@ -11,8 +11,8 @@
 
 void tipidee_log_request (uint32_t v, tipidee_rql const *rql, char const *referrer, char const *ua, stralloc *sa)
 {
-  char const *a[14] = { "info: request " } ;
-  size_t m = 1 ;
+  char const *a[16] = { PROG, ": info:" } ;
+  size_t m = 2 ;
   size_t start = sa->len ;
   size_t refpos = start, uapos = start ;
   if (!(v & TIPIDEE_LOG_REQUEST)) return ;
@@ -27,9 +27,18 @@ void tipidee_log_request (uint32_t v, tipidee_rql const *rql, char const *referr
     uapos = sa->len ;
     if (!string_quotes(sa, ua) || !stralloc_0(sa)) goto err ;
   }
+  if (v & TIPIDEE_LOG_HOSTASPREFIX)
+  {
+    a[m++] = " host " ;
+    a[m++] = rql->uri.host ;
+  }
+  a[m++] = " request " ;
   a[m++] = tipidee_method_tostr(rql->m) ;
-  a[m++] = " host " ;
-  a[m++] = rql->uri.host ;
+  if (!(v & TIPIDEE_LOG_HOSTASPREFIX))
+  {
+    a[m++] = " host " ;
+    a[m++] = rql->uri.host ;
+  }
   a[m++] = " path " ;
   a[m++] = sa->s + start ;
   if (rql->uri.query)

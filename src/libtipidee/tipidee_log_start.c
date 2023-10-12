@@ -8,8 +8,8 @@
 
 void tipidee_log_start (uint32_t v, char const *ip, char const *host)
 {
-  char const *a[5] = { "info: start" } ;
-  size_t m = 1 ;
+  char const *a[6] = { PROG, ": info: start" } ;
+  size_t m = 2 ;
   if (!(v & TIPIDEE_LOG_START)) return ;
   if (v & TIPIDEE_LOG_CLIENTIP)
   {

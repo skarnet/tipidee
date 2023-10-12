@@ -19,6 +19,7 @@
 #define TIPIDEE_LOG_START 0x100
 #define TIPIDEE_LOG_CLIENTIP 0x0200
 #define TIPIDEE_LOG_CLIENTHOST 0x0400
+#define TIPIDEE_LOG_HOSTASPREFIX 0x1000
 
 #define TIPIDEE_LOG_DEFAULT (TIPIDEE_LOG_REQUEST | TIPIDEE_LOG_ANSWER | TIPIDEE_LOG_SIZE)
 
@@ -35,7 +36,7 @@ extern void tipidee_log_start (uint32_t, char const *, char const *) ;
 extern void tipidee_log_exit (uint32_t, unsigned int) ;
 
 extern void tipidee_log_request (uint32_t, tipidee_rql const *, char const *, char const *, stralloc *) ;
-extern void tipidee_log_resource (uint32_t, char const *, char const *, tipidee_resattr const *) ;
-extern void tipidee_log_answer (uint32_t, unsigned int, off_t) ;
+extern void tipidee_log_resource (uint32_t, tipidee_rql const *, char const *, char const *, tipidee_resattr const *) ;
+extern void tipidee_log_answer (uint32_t, tipidee_rql const *, unsigned int, off_t) ;
 
 #endif
