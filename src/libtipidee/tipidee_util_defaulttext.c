@@ -30,6 +30,7 @@ static struct blah_s const data[] =
   { .status = 413, .reason = "Content Too Large", .text = "Too much data in the request body." },
   { .status = 414, .reason = "URI Too Long", .text = "The request URI had an oversized component." },
   { .status = 416, .reason = "Range Not Satisfiable", .text = 0 },
+  { .status = 420, .reason = "Blaze It", .text = "The client's request was obviously done under influence." },
   { .status = 500, .reason = "Internal Server Error", .text = "There was a server-side issue while processing your request. Sorry." },
   { .status = 501, .reason = "Not Implemented", .text = "The server does not implement this method." },
   { .status = 502, .reason = "Bad Gateway", .text = "There was an issue with the backend while processing your request. Sorry." },
