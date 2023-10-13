@@ -29,6 +29,6 @@ void confnode_start (confnode *node, char const *key, size_t filepos, uint32_t l
 void confnode_add (confnode *node, char const *s, size_t len)
 {
   if (!stralloc_catb(&g.storage, s, len)) dienomem() ;
-  if (g.storage.len >= UINT32_MAX) strerr_diefu1x(100, "add node to configuration tree: too much data") ;
+  if (g.storage.len >= UINT32_MAX) diestorage() ;
   node->datalen += len ;
 }

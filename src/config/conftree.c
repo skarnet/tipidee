@@ -34,7 +34,6 @@ static struct nodestore_s nodestore = \
   .tree = AVLTREE_INIT(8, 3, 8, &confnode_dtok, &confnode_cmp, &nodestore.set) \
 } ;
 
-
 confnode const *conftree_search (char const *key)
 {
   uint32_t i ;
@@ -64,14 +63,13 @@ void conftree_update (confnode const *node)
 static int confnode_write (uint32_t d, unsigned int h, void *data)
 {
   confnode *node = GENSETDYN_P(confnode, &nodestore.set, d) ;
-  cdbmaker *cm = data ;
   (void)h ;
   if ((g.storage.s[node->key] & ~0x20) == 'A')
   {
     g.storage.s[++node->data] |= '@' ;
     node->datalen-- ;
   }
-  return cdbmake_add(cm, g.storage.s + node->key, node->keylen, g.storage.s + node->data, node->datalen) ;
+  return cdbmake_add((cdbmaker *)data, g.storage.s + node->key, node->keylen, g.storage.s + node->data, node->datalen) ;
 }
 
 int conftree_write (cdbmaker *cm)
