@@ -9,14 +9,14 @@
 #include <tipidee/rql.h>
 #include <tipidee/response.h>
 
-size_t tipidee_response_error (buffer *b, tipidee_rql const *rql, char const *rsl, char const *text, uint32_t options)
+size_t tipidee_response_error (buffer *b, tipidee_rql const *rql, unsigned int status, char const *rsl, char const *text, uint32_t options)
 {
   size_t n = 0 ;
   static char const txt1[] = "<html>\n<head><title>" ;
   static char const txt2[] = "</title></head>\n<body>\n<h1> " ;
   static char const txt3[] = " </h1>\n<p>\n" ;
   static char const txt4[] = "\n</p>\n</body>\n</html>\n" ;
-  n += tipidee_response_status_line(b, rql, rsl) ;
+  n += tipidee_response_status(b, rql, status, rsl) ;
   n += tipidee_response_header_common_put_g(buffer_1, options) ;
   if (!(options & 2))
   {

@@ -1,6 +1,5 @@
 * Globals
 
-G:verbosity -> 4 bytes
 G:read_timeout -> 4 bytes	exit if waiting on client input for read_timeout ms
 G:write_timeout -> 4 bytes	die if waiting on flush to client for write_timeout ms
 G:cgi_timeout -> 4 bytes	504 if CGI hasn't finished answering / die if NPH hasn't finished reading

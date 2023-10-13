@@ -16,14 +16,13 @@ struct defaults_s
 
 #define REC(k, v, n) { .key = (k), .value = (v), .vlen = (n) }
 #define RECS(k, v) REC(k, v, sizeof(v))
-#define RECU32(k, v) REC(k, (char const *)(uint32_t)UINT32_BIG(v), 4)
+#define RECU32(k, u) { .key = (k), .value = (char const [4]){ UINT32_BIG(u) >> 24 & 0xffu, UINT32_BIG(u) >> 16 & 0xffu, UINT32_BIG(u) >> 8 & 0xffu, UINT32_BIG(u) & 0xffu }, .vlen = 4 }
 
-struct defaults_s const defaults[] =
+static struct defaults_s const defaults[] =
 {
-  RECU32("G:verbosity", 1),
-  RECU32("G:read_timeout", 0),
-  RECU32("G:write_timeout", 0),
-  RECU32("G:cgi_timeout", 0),
+  RECS("G:read_timeout", "\0\0\0"),
+  RECS("G:write_timeout", "\0\0\0"),
+  RECS("G:cgi_timeout", "\0\0\0"),
   RECU32("G:max_request_body_length", 8192),
   RECU32("G:max_cgi_body_length", 4194304),
   RECS("G:index_file", "index.html"),

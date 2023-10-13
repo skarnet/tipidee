@@ -1,6 +1,5 @@
 cgi.o
 harden.o
-log.o
 options.o
 regular.o
 responses.o

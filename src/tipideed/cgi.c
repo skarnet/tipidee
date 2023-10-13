@@ -139,7 +139,6 @@ static inline int do_nph (tipidee_rql const *rql, char const *const *argv, char 
   }
   close(p[1]) ;
   if (fd_move(0, p[0]) == -1) die500sys(rql, 111, "fd_move") ;
-  log_nph(argv, envp) ;
   exec_e(argv, envp) ;
   die500sys(rql, errno == ENOENT ? 127 : 126, "exec nph ", argv[0]) ;
 }
@@ -155,7 +154,6 @@ static inline int run_cgi (tipidee_rql const *rql, char const *const *argv, char
   uint32_t parserstate = 0 ;
   buffer b ;
   char buf[4096] ;
-  log_cgi(argv, envp) ;
   {
     int fd[2] = { 0, 1 } ;
     pid = child_spawn2(argv[0], argv, envp, fd) ;
@@ -178,7 +176,7 @@ static inline int run_cgi (tipidee_rql const *rql, char const *const *argv, char
     {
       kill(pid, SIGTERM) ;
       respond_504(rql) ;
-      if (g.verbosity >= 2) strerr_warnw3x("cgi ", argv[0], " timed out") ;
+      strerr_warnw3x("cgi ", argv[0], " timed out") ;
       break ;
     }
     if (x[1].fd >= 0 && x[1].revents & (IOPAUSE_WRITE | IOPAUSE_EXCEPT))
@@ -186,7 +184,7 @@ static inline int run_cgi (tipidee_rql const *rql, char const *const *argv, char
       size_t len = allwrite(x[1].fd, body + bodyw, bodylen - bodyw) ;
       if (!len)
       {
-        if (g.verbosity) strerr_warnwu2sys("write request body to cgi ", argv[0]) ;
+        strerr_warnwu2sys("write request body to cgi ", argv[0]) ;
         bodyw = bodylen ;
       }
       else bodyw += len ;
@@ -260,7 +258,7 @@ static inline int local_redirect (tipidee_rql *rql, char const *loc, char *uribu
   rql->uri.host = uribuf + n ;
   rql->uri.port = port ;
   rql->uri.https = ishttps ;
-  if (g.verbosity >= 4) strerr_warni4x("cgi ", cginame, ": local redirect to ", rql->uri.path) ;
+  tipidee_log_debug(g.logv, "cgi ", cginame, ": local redirect to ", rql->uri.path) ;
   return 1 ;
 }
 
@@ -361,6 +359,7 @@ static inline int process_cgi_output (tipidee_rql *rql, tipidee_headers const *h
   print_cgi_headers(hdr, rbodylen) ;
   if (buffer_timed_put_g(buffer_1, "\r\n", 2, &deadline) < 2)
     strerr_diefu1sys(111, "write to stdout") ;
+  tipidee_log_answer(g.logv, rql, status, rbodylen) ;
   if (rbodylen)
   {
     if (buffer_timed_put_g(buffer_1, rbody, rbodylen, &deadline) < rbodylen)
@@ -368,15 +367,6 @@ static inline int process_cgi_output (tipidee_rql *rql, tipidee_headers const *h
   }
   if (!buffer_timed_flush_g(buffer_1, &deadline))
     strerr_diefu1sys(111, "write to stdout") ;
-  if (g.verbosity >= 2)
-  {
-    char fmt[UINT_FMT] ;
-    fmt[uint_fmt(fmt, status)] = 0 ;
-    if (status >= 300 && status < 399)
-      strerr_warni6x("cgi ", cginame, ": ", fmt, " client redirect to ", location) ;
-    else
-      strerr_warni6x("cgi ", cginame, ": ", fmt, " ", reason_phrase) ;
-  }
   return 0 ;
 }
 

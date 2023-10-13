@@ -91,15 +91,14 @@ of the tipidee package provides service templates to help you run tipideed under
 
 <dl>
  <dt> 0 </dt> <dd> Clean exit. There was a successful stream of HTTP exchanges,
-that the client decided to end &mdash; including by being inactive long enough
-that tipideed closes the connection on its own initiative, which is permitted
-by HTTP. </dd>
+that either tipideed or the client decided to end in a way that is
+permitted by HTTP. </dd>
  <dt> 1 </dt> <dd> Illicit client behaviour. tipideed exited because it could
 not serve the client in good faith. </dd>
  <dt> 2 </dt> <dd> Illicit CGI script behaviour. tipideed exited because the invoked
 CGI script made it impossible to continue. Before exiting, tipideed likely has
 sent a 502 (Bad Gateway) response to the client. </dd>
- <dt> 100 </dt> <dd> Bad usage. tipideed has been run in an incorrect way: bad command
+ <dt> 100 </dt> <dd> Bad usage. tipideed was run in an incorrect way: bad command
 line options, or missing environment variables, etc. </dd>
  <dt> 101 </dt> <dd> Cannot happen. This signals a bug in tipideed, and comes with an
 error message asking you to report the bug. Please do so, on the
@@ -108,9 +107,8 @@ error message asking you to report the bug. Please do so, on the
 data or in the document layout that it does not like. This can happen, for
 instance, when a document is a symbolic link pointing outside of the server's
 root. </dd>
- <dt> 111 </dt> <dd> System call failed. If this happens while serving a request,
-tipideed likely has sent a 500 (Internal Server Error) response to the
-client before exiting. </dd>
+ <dt> 111 </dt> <dd> System call failed. This usually signals a problem with the
+underlying system. </dd>
 </dl>
 
 <div id="environment">

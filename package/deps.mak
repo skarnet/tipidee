@@ -3,10 +3,10 @@
 #
 
 src/include/tipidee/conf.h: src/include/tipidee/uri.h
-src/include/tipidee/log.h: src/include/tipidee/rql.h
+src/include/tipidee/log.h: src/include/tipidee/headers.h src/include/tipidee/rql.h
 src/include/tipidee/response.h: src/include/tipidee/rql.h
 src/include/tipidee/rql.h: src/include/tipidee/method.h src/include/tipidee/uri.h
-src/include/tipidee/tipidee.h: src/include/tipidee/conf.h src/include/tipidee/config.h src/include/tipidee/headers.h src/include/tipidee/method.h src/include/tipidee/response.h src/include/tipidee/rql.h src/include/tipidee/uri.h src/include/tipidee/util.h
+src/include/tipidee/tipidee.h: src/include/tipidee/conf.h src/include/tipidee/config.h src/include/tipidee/headers.h src/include/tipidee/log.h src/include/tipidee/method.h src/include/tipidee/response.h src/include/tipidee/rql.h src/include/tipidee/uri.h src/include/tipidee/util.h
 src/tipideed/tipideed-internal.h: src/include/tipidee/tipidee.h
 src/config/confnode.o src/config/confnode.lo: src/config/confnode.c src/config/tipidee-config-internal.h
 src/config/conftree.o src/config/conftree.lo: src/config/conftree.c src/config/tipidee-config-internal.h
@@ -28,7 +28,7 @@ src/libtipidee/tipidee_headers_parse.o src/libtipidee/tipidee_headers_parse.lo: 
 src/libtipidee/tipidee_headers_search.o src/libtipidee/tipidee_headers_search.lo: src/libtipidee/tipidee_headers_search.c src/include/tipidee/headers.h
 src/libtipidee/tipidee_log_answer.o src/libtipidee/tipidee_log_answer.lo: src/libtipidee/tipidee_log_answer.c src/include/tipidee/log.h
 src/libtipidee/tipidee_log_exit.o src/libtipidee/tipidee_log_exit.lo: src/libtipidee/tipidee_log_exit.c src/include/tipidee/log.h
-src/libtipidee/tipidee_log_request.o src/libtipidee/tipidee_log_request.lo: src/libtipidee/tipidee_log_request.c src/include/tipidee/log.h src/include/tipidee/method.h
+src/libtipidee/tipidee_log_request.o src/libtipidee/tipidee_log_request.lo: src/libtipidee/tipidee_log_request.c src/include/tipidee/headers.h src/include/tipidee/log.h src/include/tipidee/method.h
 src/libtipidee/tipidee_log_resource.o src/libtipidee/tipidee_log_resource.lo: src/libtipidee/tipidee_log_resource.c src/include/tipidee/log.h
 src/libtipidee/tipidee_log_start.o src/libtipidee/tipidee_log_start.lo: src/libtipidee/tipidee_log_start.c src/include/tipidee/log.h
 src/libtipidee/tipidee_method.o src/libtipidee/tipidee_method.lo: src/libtipidee/tipidee_method.c src/include/tipidee/method.h
@@ -46,13 +46,12 @@ src/libtipidee/tipidee_util_defaulttext.o src/libtipidee/tipidee_util_defaulttex
 src/libtipidee/tipidee_util_httpdate.o src/libtipidee/tipidee_util_httpdate.lo: src/libtipidee/tipidee_util_httpdate.c src/include/tipidee/util.h
 src/tipideed/cgi.o src/tipideed/cgi.lo: src/tipideed/cgi.c src/include/tipidee/headers.h src/include/tipidee/method.h src/include/tipidee/response.h src/include/tipidee/uri.h src/tipideed/tipideed-internal.h
 src/tipideed/harden.o src/tipideed/harden.lo: src/tipideed/harden.c src/tipideed/tipideed-internal.h
-src/tipideed/log.o src/tipideed/log.lo: src/tipideed/log.c src/include/tipidee/method.h src/tipideed/tipideed-internal.h
-src/tipideed/options.o src/tipideed/options.lo: src/tipideed/options.c src/include/tipidee/response.h src/tipideed/tipideed-internal.h
-src/tipideed/regular.o src/tipideed/regular.lo: src/tipideed/regular.c src/include/tipidee/method.h src/include/tipidee/response.h src/tipideed/tipideed-internal.h
-src/tipideed/responses.o src/tipideed/responses.lo: src/tipideed/responses.c src/include/tipidee/response.h src/include/tipidee/rql.h src/tipideed/tipideed-internal.h
+src/tipideed/options.o src/tipideed/options.lo: src/tipideed/options.c src/include/tipidee/log.h src/include/tipidee/response.h src/tipideed/tipideed-internal.h
+src/tipideed/regular.o src/tipideed/regular.lo: src/tipideed/regular.c src/include/tipidee/log.h src/include/tipidee/method.h src/include/tipidee/response.h src/tipideed/tipideed-internal.h
+src/tipideed/responses.o src/tipideed/responses.lo: src/tipideed/responses.c src/include/tipidee/log.h src/include/tipidee/response.h src/include/tipidee/rql.h src/tipideed/tipideed-internal.h
 src/tipideed/send_file.o src/tipideed/send_file.lo: src/tipideed/send_file.c src/tipideed/tipideed-internal.h
 src/tipideed/tipideed.o src/tipideed/tipideed.lo: src/tipideed/tipideed.c src/include/tipidee/tipidee.h src/tipideed/tipideed-internal.h
-src/tipideed/trace.o src/tipideed/trace.lo: src/tipideed/trace.c src/include/tipidee/method.h src/include/tipidee/response.h src/tipideed/tipideed-internal.h
+src/tipideed/trace.o src/tipideed/trace.lo: src/tipideed/trace.c src/include/tipidee/log.h src/include/tipidee/method.h src/include/tipidee/response.h src/tipideed/tipideed-internal.h
 
 tipidee-config: EXTRA_LIBS := -lskarnet ${SPAWN_LIB}
 tipidee-config: src/config/tipidee-config.o src/config/confnode.o src/config/conftree.o src/config/defaults.o src/config/lexparse.o
@@ -66,5 +65,5 @@ endif
 libtipidee.so.xyzzy: EXTRA_LIBS := -lskarnet
 libtipidee.so.xyzzy: src/libtipidee/tipidee_conf_free.lo src/libtipidee/tipidee_conf_get.lo src/libtipidee/tipidee_conf_get_argv.lo src/libtipidee/tipidee_conf_get_content_type.lo src/libtipidee/tipidee_conf_get_redirection.lo src/libtipidee/tipidee_conf_get_string.lo src/libtipidee/tipidee_conf_get_uint32.lo src/libtipidee/tipidee_conf_init.lo src/libtipidee/tipidee_headers_get_content_length.lo src/libtipidee/tipidee_headers_init.lo src/libtipidee/tipidee_headers_parse.lo src/libtipidee/tipidee_headers_search.lo src/libtipidee/tipidee_log_answer.lo src/libtipidee/tipidee_log_exit.lo src/libtipidee/tipidee_log_resource.lo src/libtipidee/tipidee_log_request.lo src/libtipidee/tipidee_log_start.lo src/libtipidee/tipidee_method.lo src/libtipidee/tipidee_response_error.lo src/libtipidee/tipidee_response_header_builtin.lo src/libtipidee/tipidee_response_header_common_put.lo src/libtipidee/tipidee_response_header_date.lo src/libtipidee/tipidee_response_header_date_fmt.lo src/libtipidee/tipidee_response_header_lastmodified.lo src/libtipidee/tipidee_response_status.lo src/libtipidee/tipidee_rql_read.lo src/libtipidee/tipidee_uri_parse.lo src/libtipidee/tipidee_util_chunked_read.lo src/libtipidee/tipidee_util_defaulttext.lo src/libtipidee/tipidee_util_httpdate.lo
 tipideed: EXTRA_LIBS := -lskarnet
-tipideed: src/tipideed/tipideed.o src/tipideed/cgi.o src/tipideed/harden.o src/tipideed/log.o src/tipideed/options.o src/tipideed/regular.o src/tipideed/responses.o src/tipideed/send_file.o src/tipideed/tipideed.o src/tipideed/trace.o libtipidee.a.xyzzy
+tipideed: src/tipideed/tipideed.o src/tipideed/cgi.o src/tipideed/harden.o src/tipideed/options.o src/tipideed/regular.o src/tipideed/responses.o src/tipideed/send_file.o src/tipideed/tipideed.o src/tipideed/trace.o libtipidee.a.xyzzy
 INTERNAL_LIBS :=

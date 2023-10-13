@@ -10,6 +10,7 @@
 
 #include <tipidee/method.h>
 #include <tipidee/response.h>
+#include <tipidee/log.h>
 #include "tipideed-internal.h"
 
 int respond_trace (char const *buf, tipidee_rql const *rql, tipidee_headers const *hdr)
@@ -17,7 +18,7 @@ int respond_trace (char const *buf, tipidee_rql const *rql, tipidee_headers cons
   tain deadline ;
   size_t cl = 0 ;
   char fmt[SIZE_FMT] ;
-  tipidee_response_status_line(buffer_1, rql, "200 OK") ;
+  tipidee_response_status(buffer_1, rql, 200, "OK") ;
   tipidee_response_header_common_put_g(buffer_1, 0) ;
   buffer_putsnoflush(buffer_1, "Content-Type: message/http\r\nContent-Length: ") ;
   cl += strlen(tipidee_method_tostr(rql->m)) + 1;
@@ -48,6 +49,7 @@ int respond_trace (char const *buf, tipidee_rql const *rql, tipidee_headers cons
   buffer_putnoflush(buffer_1, ".", 1) ;
   buffer_putnoflush(buffer_1, fmt, uint_fmt(fmt, rql->http_minor)) ;
   buffer_putsnoflush(buffer_1, "\r\n") ;
+  tipidee_log_answer(g.logv, rql, 200, cl) ;
   for (size_t i = 0 ; i < hdr->n ; i++)
   {
     size_t len = strlen(buf + hdr->list[i].left) ;

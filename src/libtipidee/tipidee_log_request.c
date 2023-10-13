@@ -7,25 +7,34 @@
 #include <skalibs/skamisc.h>
 
 #include <tipidee/method.h>
+#include <tipidee/headers.h>
 #include <tipidee/log.h>
 
-void tipidee_log_request (uint32_t v, tipidee_rql const *rql, char const *referrer, char const *ua, stralloc *sa)
+void tipidee_log_request (uint32_t v, tipidee_rql const *rql, tipidee_headers const *hdr, stralloc *sa)
 {
   char const *a[16] = { PROG, ": info:" } ;
   size_t m = 2 ;
-  size_t start = sa->len ;
-  size_t refpos = start, uapos = start ;
+  size_t start = sa->len ;  /* assert: not zero */
+  size_t refpos = 0, uapos = 0 ;
   if (!(v & TIPIDEE_LOG_REQUEST)) return ;
   if (!string_quotes(sa, rql->uri.path)) goto eerr ;
   if (v & TIPIDEE_LOG_REFERRER)
   {
-    refpos = sa->len ;
-    if (!string_quotes(sa, referrer) || !stralloc_0(sa)) goto err ;
+    char const *x = tipidee_headers_search(hdr, "Referrer") ;
+    if (x)
+    {
+      refpos = sa->len ;
+      if (!string_quotes(sa, x) || !stralloc_0(sa)) goto err ;
+    }
   }
   if (v & TIPIDEE_LOG_UA)
   {
-    uapos = sa->len ;
-    if (!string_quotes(sa, ua) || !stralloc_0(sa)) goto err ;
+    char const *x = tipidee_headers_search(hdr, "User-Agent") ;
+    if (x)
+    {
+      uapos = sa->len ;
+      if (!string_quotes(sa, x) || !stralloc_0(sa)) goto err ;
+    }
   }
   if (v & TIPIDEE_LOG_HOSTASPREFIX)
   {
@@ -48,12 +57,12 @@ void tipidee_log_request (uint32_t v, tipidee_rql const *rql, char const *referr
   }
   a[m++] = " http 1." ;
   a[m++] = rql->http_minor ? "1" : "0" ;
-  if (v & TIPIDEE_LOG_REFERRER)
+  if (refpos)
   {
     a[m++] = " referrer " ;
     a[m++] = sa->s + refpos ;
   }
-  if (v & TIPIDEE_LOG_UA)
+  if (uapos)
   {
     a[m++] = " user-agent " ;
     a[m++] = sa->s + uapos ;

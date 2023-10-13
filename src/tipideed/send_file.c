@@ -68,8 +68,7 @@ void send_file (int fd, uint64_t n, char const *fn)
     else if (si.n > n)
     {
       si.n = n ;
-      if (g.verbosity >= 2)
-        strerr_warnw2x("serving elongated file: ", fn) ;
+      strerr_warnw2x("serving elongated file: ", fn) ;
     }
     n -= si.n ;
     if (!n) si.last = 1 ;
@@ -109,8 +108,7 @@ void send_file (int fd, uint64_t n, char const *fn)
   if (r > n)
   {
     r = n ;
-    if (g.verbosity >= 2)
-      strerr_warnw2x("serving elongated file: ", fn) ;
+    strerr_warnw2x("serving elongated file: ", fn) ;
   }
   buffer_wseek(buffer_1, r) ;
   n -= r ;

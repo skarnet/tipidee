@@ -348,14 +348,20 @@ In normal operation, if everything goes well, you should never see
 any of these. </li>
  <li> Depending on what the <tt>log</tt> directive says, it also prints
 informational messages related to what it's doing. These informational
-messages all have the prefix "<tt>tipideed: pid <em>pid</em>: info: </tt>". </li>
+messages all have the prefix "<tt>tipideed: pid <em>pid</em>: info: </tt>".
+  <ul>
+   <li> One line when <a href="tipideed.html">tipideed</a> starts and one
+when it exits, if the <tt>log</tt> directive includes the <tt>start</tt> keyword. </li>
+   <li> Up to three lines per client request, controlled by the <tt>request</tt>,
+<tt>resource</tt> and <tt>answer</tt> keywords. If you have a CGI script outputting
+local redirections (which is rare), there may be several <tt>resource</tt> lines. </li>
+  </ul> </li>
  <li> If no <tt>log</tt> directive has been provided, the default is
-<tt>log request answer size</tt>. </li>
+<tt>log request answer answer_size</tt>. </li>
 </ul>
 
 <p>
- Here are the informational log lines printed by <a href="tipideed.html">tipideed</a>,
-depending on the keywords in the <tt>log</tt> directive:
+ Here is the full list of keywords and what they do:
 </p>
 
 <dl>
@@ -375,17 +381,17 @@ TCPREMOTEIP otherwise. Make sure to invoke
 <a href="tipideed.html">tipideed</a> in order to get meaningful values for this field.
 This keyword has no effect when given without the <tt>start</tt> keyword. </dd>
  <dt> <tt>host_as_prefix</tt> </dt> <dd> Prepend all <tt>request</tt>, <tt>resource</tt> and <tt>answer</tt>
-lines with a <tt>host <em>host</em></tt> field. This field will not be repeated in the <tt>request</tt>
-line, so it changes the order of the fields. <em>host</em> is the virtual host the request is addressed
+lines with a <tt>host <em>host</em></tt> field. (This field will not be repeated in the <tt>request</tt>
+line, so it changes the order of the fields in that line.) <em>host</em> is the virtual host the request is addressed
 to. <tt>host_as_prefix</tt> is useful when you want to log entries for different virtual hosts to
-different locations. For instance, if you're using
+different locations: for instance, if you're using
 <a href="//skarnet.org/software/s6/s6-log.html">s6-log</a>, and want entries for <tt>example.com</tt> and
 <tt>example.org</tt> to be logged to different backends, you would use the <tt>host_as_prefix</tt> directive,
-and use <code>- +"^tipidee: pid [[:digit:]]*: info: host example\\.com " </code> to select <tt>example.com</tt>-related
-lines, and <code>- +"^tipidee: pid [[:digit:]]*: info: host example\\.org " </code>
+and use <code>- +"^tipidee: pid [[:digit:]]*: info: host example\\.com " </code> in your logging script
+to select <tt>example.com</tt>-related lines, and
+<code>- +"^tipidee: pid [[:digit:]]*: info: host example\\.org " </code>
 to select <tt>example.org</tt>-related lines. Note that warning and error messages would still need an additional
-backend, as well as <tt>start</tt> and <tt>exit</tt> lines if you add the <tt>start</tt> directive
-to your <tt>log</tt> configuration. </dd>
+backend, as well as potential <tt>start</tt> and <tt>exit</tt> lines. </dd>
  <dt> <tt>request</tt> </dt> <dd> Log a <tt>request</tt> line when <a href="tipideed.html">tipideed</a>
 receives a request from its client. The line looks like <tt>request <em>method</em> host <em>host</em> path "<em>path</em>"
 http <em>version</em></tt>. The path is decoded, but if there are non-printable characters in it, they are
@@ -403,11 +409,15 @@ This keyword has no effect when given without the <tt>request</tt> keyword. </dd
 has found a resource corresponding to the URI and is willing to serve it. The line looks like
 <tt>resource docroot <em>docroot</em> file <em>file</em> type <em>type</em></tt>. <em>docroot</em> is
 the document root of the virtual host; <em>file</em> is the path to the served file; <em>type</em>
-is <tt>nph</tt> for an NPH script, <tt>cgi</tt> for a CGI script, or the Content-Type for a regular file. </dd>
+is <tt>nph</tt> for an NPH script, <tt>cgi</tt> for a CGI script, or the Content-Type for a regular file.
+If a served CGI script outputs a local redirection, several <tt>resource</tt> lines may appear for
+a single request. </dd>
  <dt> <tt>answer</tt> </dt> <dd> Log an <tt>answer</tt> line when <a href="tipideed.html">tipideed</a>
 answers the currently processed request. The line looks like <tt>answer <em>status</em></tt>, where <em>status</em> is
-the 3-digit status code returned to the client. </dd>
- <dt> <tt>size</tt> </dt> <dd> Add a <tt>size <em>size</em></tt> field to the <tt>answer</tt> line,
+the 3-digit status code returned to the client. Note that there will be no <tt>answer</tt> line
+when a NPH script is being run (because <a href="tipideed.html">tipideed</a> execs into the
+NPH script). </dd>
+ <dt> <tt>answer_size</tt> </dt> <dd> Add a <tt>size <em>size</em></tt> field to the <tt>answer</tt> line,
 containing the Content-Length of the answer.
 This keyword has no effect when given without the <tt>answer</tt> keyword. </dd>
  <dt> <tt>debug</tt> </dt> <dd> Log debug information. You should not need this in regular use. </dd>

@@ -17,7 +17,6 @@
 #include "tipidee-config-internal.h"
 
 #define dietoobig() strerr_diefu1sys(100, "read configuration")
-#define BSEARCH(type, key, array) bsearch(key, (array), sizeof(array)/sizeof(type), sizeof(type), (int (*)(void const *, void const *))&strcmp)
 
 typedef struct mdt_s mdt, *mdt_ref ;
 struct mdt_s
@@ -65,6 +64,11 @@ struct directive_s
   enum token_e token ;
 } ;
 
+static int keycmp (void const *a, void const *b)
+{
+  return strcmp((char const *)a, ((struct directive_s const *)b)->s) ;
+}
+#define BSEARCH(type, key, array) bsearch(key, (array), sizeof(array)/sizeof(type), sizeof(type), (int (*)(void const *, void const *))&keycmp)
 
 static void check_unique (char const *key, mdt const *md)
 {
@@ -95,7 +99,6 @@ static inline void parse_global (char const *s, size_t const *word, size_t n, md
     { .name = "max_cgi_body_length", .key = "G:max_cgi_body_length", .type = 0 },
     { .name = "max_request_body_length", .key = "G:max_request_body_length", .type = 0 },
     { .name = "read_timeout", .key = "G:read_timeout", .type = 0 },
-    { .name = "verbosity", .key = "G:verbosity", .type = 0 },
     { .name = "write_timeout", .key = "G:write_timeout", .type = 0 }
   } ;
   struct globalkey_s const *gl ;
@@ -135,6 +138,7 @@ static inline void parse_log (char const *s, size_t const *word, size_t n, mdt c
   static struct logkey_s const logkeys[] =
   {
     { .name = "answer", .value = TIPIDEE_LOG_ANSWER },
+    { .name = "answer_size", .value = TIPIDEE_LOG_SIZE },
     { .name = "debug", .value = TIPIDEE_LOG_DEBUG },
     { .name = "host_as_prefix", .value = TIPIDEE_LOG_HOSTASPREFIX },
     { .name = "hostname", .value = TIPIDEE_LOG_CLIENTHOST },
@@ -143,7 +147,6 @@ static inline void parse_log (char const *s, size_t const *word, size_t n, mdt c
     { .name = "referrer", .value = TIPIDEE_LOG_REFERRER },
     { .name = "request", .value = TIPIDEE_LOG_REQUEST },
     { .name = "resource", .value = TIPIDEE_LOG_RESOURCE },
-    { .name = "response_size", .value = TIPIDEE_LOG_SIZE },
     { .name = "start", .value = TIPIDEE_LOG_START },
     { .name = "user-agent", .value = TIPIDEE_LOG_UA }
   } ;
@@ -159,6 +162,7 @@ static inline void parse_log (char const *s, size_t const *word, size_t n, mdt c
     else if (n == 1) v = 0 ;
     else strerr_dief5x(1, "log nothing cannot be mixed with other log values", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   }
+  
   uint32_pack_big(pack, v) ;
   add_unique("G:logv", pack, 4, md) ;
 }

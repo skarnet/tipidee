@@ -8,7 +8,7 @@
 
 #include <tipidee/log.h>
 
-void tipidee_log_answer (uint32_t v, tipidee_rql const *rql, unsigned int status, off_t size)
+void tipidee_log_answer (uint32_t v, tipidee_rql const *rql, unsigned int status, uint64_t size)
 {
   char const *a[6] = { PROG, ": info:" } ;
   size_t m = 2 ;
