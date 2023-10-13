@@ -6,7 +6,6 @@
 #include <skalibs/cdb.h>
 
 #include <tipidee/conf.h>
-#include <tipidee/log.h>
 
 int tipidee_conf_get (tipidee_conf const *conf, char const *key, cdb_data *data)
 {
