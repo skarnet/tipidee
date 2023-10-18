@@ -3,11 +3,13 @@
 #ifndef TIPIDEE_RESPONSE_H
 #define TIPIDEE_RESPONSE_H
 
-#include <sys/stat.h>
+#include <skalibs/bsdsnowflake.h>
+
 #include <stddef.h>
 #include <stdint.h>
 
 #include <skalibs/gccattributes.h>
+#include <skalibs/stat.h>
 #include <skalibs/buffer.h>
 #include <skalibs/strerr.h>
 #include <skalibs/tai.h>
@@ -31,7 +33,11 @@ extern size_t tipidee_response_header_lastmodified (char *, size_t, struct stat 
 extern size_t tipidee_response_header_common_put (buffer *, uint32_t, tain const *) ;
 #define tipidee_response_header_common_put_g(b, options) tipidee_response_header_common_put(b, (options), &STAMP)
 
-extern size_t tipidee_response_error (buffer *, tipidee_rql const *, unsigned int, char const *, char const *, uint32_t) ;
+size_t tipidee_response_file (buffer *, tipidee_rql const *, unsigned int, char const *, struct stat const *, char const *, uint32_t, tain const *) ;
+#define tipidee_response_file_g(b, rql, status, reason, st, ct, options) tipidee_response_file(b, rql, status, reason, st, ct, (options), &STAMP)
+
+extern size_t tipidee_response_error_nofile (buffer *, tipidee_rql const *, unsigned int, char const *, char const *, uint32_t, tain const *) ;
+#define tipidee_response_error_nofile_g(b, rql, status, reason, text, options) tipidee_response_error_nofile(b, rql, status, reason, text, (options), &STAMP)
 
 extern tipidee_response_header_builtin const *tipidee_response_header_builtin_table ;
 extern char const *tipidee_response_header_builtin_search (char const *) ;

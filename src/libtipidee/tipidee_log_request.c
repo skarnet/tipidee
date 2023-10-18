@@ -17,7 +17,7 @@ void tipidee_log_request (uint32_t v, tipidee_rql const *rql, tipidee_headers co
   size_t start = sa->len ;  /* assert: not zero */
   size_t refpos = 0, uapos = 0 ;
   if (!(v & TIPIDEE_LOG_REQUEST)) return ;
-  if (!string_quotes(sa, rql->uri.path)) goto eerr ;
+  if (!string_quotes(sa, rql->uri.path) || !stralloc_0(sa)) goto eerr ;
   if (v & TIPIDEE_LOG_REFERRER)
   {
     char const *x = tipidee_headers_search(hdr, "Referrer") ;

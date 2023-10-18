@@ -2,6 +2,7 @@ tipidee_conf_free.o
 tipidee_conf_get.o
 tipidee_conf_get_argv.o
 tipidee_conf_get_content_type.o
+tipidee_conf_get_errorfile.o
 tipidee_conf_get_redirection.o
 tipidee_conf_get_string.o
 tipidee_conf_get_uint32.o
@@ -16,7 +17,8 @@ tipidee_log_resource.o
 tipidee_log_request.o
 tipidee_log_start.o
 tipidee_method.o
-tipidee_response_error.o
+tipidee_response_error_nofile.o
+tipidee_response_file.o
 tipidee_response_header_builtin.o
 tipidee_response_header_common_put.o
 tipidee_response_header_date.o

@@ -120,8 +120,8 @@ underlying system. </dd>
 <p>
  tipideed expects the following variables in its environment, and will exit
 with an error message if they are undefined. When tipideed is run under
-<a href="//skarnet.org/s6-networking/s6-tcpserver.html">s6-tcpserver</a> or
-<a href="//skarnet.org/s6-networking/s6-tlsserver.html">s6-tlsserver</a>,
+<a href="//skarnet.org/software/s6-networking/s6-tcpserver.html">s6-tcpserver</a> or
+<a href="//skarnet.org/software/s6-networking/s6-tlsserver.html">s6-tlsserver</a>,
 these variables are automatically set by the super-server. This is the way
 tipidee gets its network information without having to perform network
 operations itself.
@@ -153,11 +153,11 @@ to CGI scripts. </dd>
 <p>
  tipideed can function without these variables, but if they're present, it
 uses them to get more information. They're typically obtained by calling
-<a href="//skarnet.org/s6-networking/s6-tcpserver-access.html">s6-tcpserver-access</a>
+<a href="//skarnet.org/software/s6-networking/s6-tcpserver-access.html">s6-tcpserver-access</a>
 before tipideed in the
-<a href="//skarnet.org/s6-networking/s6-tcpserver.html">s6-tcpserver</a>
+<a href="//skarnet.org/software/s6-networking/s6-tcpserver.html">s6-tcpserver</a>
 command line.
-(For HTTPS, <a href="//skarnet.org/s6-networking/s6-tlsserver.html">s6-tlsserver</a>
+(For HTTPS, <a href="//skarnet.org/software/s6-networking/s6-tlsserver.html">s6-tlsserver</a>
 calls it implicitly.)
 </p>
 

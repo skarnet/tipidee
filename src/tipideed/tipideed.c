@@ -45,7 +45,7 @@ static void sigchld_handler (int sig)
   wait_reap() ;
 }
 
-static inline void log_and_exit (int e)
+void log_and_exit (int e)
 {
   tipidee_log_exit(g.logv, e) ;
   _exit(e) ;
@@ -164,7 +164,7 @@ static void inittto (tain *tto, char const *key)
   else *tto = tain_infinite_relative ;
 }
 
-static inline unsigned int indexify (tipidee_rql const *rql, char *s, struct stat *st)
+static inline unsigned int indexify (tipidee_rql const *rql, char const *docroot, char *s, struct stat *st)
 {
   unsigned int e = 0 ;
   size_t len = strlen(s) ;
@@ -184,22 +184,22 @@ static inline unsigned int indexify (tipidee_rql const *rql, char *s, struct sta
       case ENAMETOOLONG : return 414 ;
       case ENOTDIR : return 404 ;
       case ENOENT : continue ;
-      default : die500sys(rql, 111, "stat ", s) ;
+      default : die500sys(rql, 111, docroot, "stat ", s) ;
     }
   }
   if (i >= g.indexn) return 404 ;
-  if (S_ISDIR(st->st_mode)) die500x(rql, 103, "bad document hierarchy: ", s, " is a directory") ;
+  if (S_ISDIR(st->st_mode)) die500x(rql, 102, docroot, "bad document hierarchy: ", s, " is a directory") ;
   if (e == 308) s[len] = 0 ;
   return e ;
 }
 
-static inline void get_resattr (tipidee_rql const *rql, char const *res, tipidee_resattr *ra)
+static inline void get_resattr (tipidee_rql const *rql, char const *docroot, char const *res, tipidee_resattr *ra)
 {
   static stralloc sa = STRALLOC_ZERO ;
   sa.len = 0 ;
-  if (sarealpath(&sa, res) == -1 || !stralloc_0(&sa)) die500sys(rql, 111, "realpath ", res) ;
+  if (sarealpath(&sa, res) == -1 || !stralloc_0(&sa)) die500sys(rql, 111, docroot, "realpath ", res) ;
   if (strncmp(sa.s, g.sa.s, g.cwdlen) || sa.s[g.cwdlen] != '/')
-    die500x(rql, 102, "resource ", res, " points outside of the server's root") ;
+    die500x(rql, 102, docroot, "resource ", res, " points outside of the server's root") ;
 
   {
     char const *attr = 0 ;
@@ -211,7 +211,7 @@ static inline void get_resattr (tipidee_rql const *rql, char const *res, tipidee
     errno = ENOENT ;
     while (!attr)
     {
-      if (errno != ENOENT) die500x(rql, 102, "invalid configuration data for ", key) ;
+      if (errno != ENOENT) die500x(rql, 102, docroot, "invalid configuration data for ", key) ;
       while (len > 2 && key[len] != '/') len-- ;
       if (len <= 2) break ;
       key[len--] = 0 ;
@@ -220,7 +220,7 @@ static inline void get_resattr (tipidee_rql const *rql, char const *res, tipidee
     }
     if (attr)
     {
-      if (*attr < '@' || *attr > 'G') die500x(rql, 102, "invalid configuration data for ", key) ;
+      if (*attr < '@' || *attr > 'G') die500x(rql, 102, docroot, "invalid configuration data for ", key) ;
       ra->iscgi = *attr & ~'@' & 1 ;
       if (attr[1]) ra->content_type = attr + 1 ;
       if (ra->iscgi)
@@ -243,7 +243,7 @@ static inline void get_resattr (tipidee_rql const *rql, char const *res, tipidee
   if (!ra->iscgi && !ra->content_type)
   {
     ra->content_type = tipidee_conf_get_content_type(&g.conf, sa.s + g.cwdlen) ;
-    if (!ra->content_type) die500sys(rql, 111, "get content type for ", sa.s + g.cwdlen) ;
+    if (!ra->content_type) die500sys(rql, 111, docroot, "get content type for ", sa.s + g.cwdlen) ;
   }
 }
 
@@ -276,7 +276,7 @@ static inline int serve (tipidee_rql *rql, char const *docroot, char *uribuf, ti
   {
     tipidee_redirection rd = TIPIDEE_REDIRECTION_ZERO ;
     int e = tipidee_conf_get_redirection(&g.conf, docroot, docrootlen, rql->uri.path, &rd) ;
-    if (e == -1) die500sys(rql, 111, "get redirection data for ", fn) ;
+    if (e == -1) die500sys(rql, 111, docroot, "get redirection data for ", fn) ;
     if (e)
     {
       respond_30x(rql, &rd) ;
@@ -292,49 +292,49 @@ static inline int serve (tipidee_rql *rql, char const *docroot, char *uribuf, ti
     for (;;)
     {
       while (fn[pos] != '/') pos-- ;
-      if (pos <= docrootlen) { respond_404(rql) ; return 0 ; }
+      if (pos <= docrootlen) { respond_404(rql, docroot) ; return 0 ; }
       fn[pos] = 0 ;
       if (stat(fn, &st) == 0) break ;
       switch (errno)
       {
         case ENOTDIR :
         case ENOENT : fn[pos--] = '/' ; break ;
-        case EACCES : respond_403(rql) ; return 0 ;
-        case ENAMETOOLONG : respond_414(rql) ; return 0 ;
-        default : die500sys(rql, 111, "stat ", fn) ;
+        case EACCES : respond_403(rql, docroot) ; return 0 ;
+        case ENAMETOOLONG : respond_414(rql, docroot) ; return 0 ;
+        default : die500sys(rql, 111, docroot, "stat ", fn) ;
       }
     }
     infopath = fn + pos + 1 ;
   }
   if (S_ISDIR(st.st_mode))
   {
-    if (infopath) { respond_404(rql) ; return 0 ; }
-    switch (indexify(rql, fn, &st))
+    if (infopath) { respond_404(rql, docroot) ; return 0 ; }
+    switch (indexify(rql, docroot, fn, &st))
     {
-      case 403 : respond_403(rql) ; return 0 ;
-      case 404 : respond_404(rql) ; return 0 ;
-      case 414 : respond_414(rql) ; return 0 ;
+      case 403 : respond_403(rql, docroot) ; return 0 ;
+      case 404 : respond_404(rql, docroot) ; return 0 ;
+      case 414 : respond_414(rql, docroot) ; return 0 ;
       case 308 : force_redirect(rql, fn) ; return 0 ;
       case 0 : break ;
     }
   }
-  LOLDEBUG("serve: %s with %s %s, docroot %s", fn, infopath ? "infopath" : "no", infopath ? infopath : "infopath", docroot) ;
+  tipidee_log_debug(g.logv, "serve: docroot ", docroot, " file ", fn, " infopath ", infopath ? infopath : "(none)") ;
 
-  get_resattr(rql, fn, &ra) ;
+  get_resattr(rql, docroot, fn, &ra) ;
 
   if (!ra.iscgi)
   {
-    if (infopath) { respond_404(rql) ; return 0 ; }
-    if (rql->m == TIPIDEE_METHOD_POST) exit_405(rql, 0) ;
+    if (infopath) { respond_404(rql, docroot) ; return 0 ; }
+    if (rql->m == TIPIDEE_METHOD_POST) exit_405(rql) ;
   }
 
   if (rql->m == TIPIDEE_METHOD_OPTIONS)
     return respond_options(rql, 2 | ra.iscgi) ;
 
-  tipidee_log_resource(g.logv, rql, docroot, fn, &ra) ;
+  tipidee_log_resource(g.logv, rql, fn, &ra, infopath) ;
 
   if (ra.iscgi)
-    return respond_cgi(rql, fn, docrootlen, infopath, uribuf, hdr, &ra, body, bodylen) ;
+    return respond_cgi(rql, docroot, fn, docrootlen, infopath, uribuf, hdr, &ra, body, bodylen) ;
 
   infopath = tipidee_headers_search(hdr, "If-Modified-Since") ;
   if (infopath)
@@ -345,7 +345,7 @@ static inline int serve (tipidee_rql *rql, char const *docroot, char *uribuf, ti
      && tain_less(&actual, &wanted))
       return respond_304(rql, fn, &st) ;
   }
-  return respond_regular(rql, fn, &st, &ra) ;
+  return respond_regular(rql, docroot, fn, &st, &ra) ;
 }
 
 int main (int argc, char const *const *argv, char const *const *envp)
@@ -403,6 +403,8 @@ int main (int argc, char const *const *argv, char const *const *envp)
     init_splice_pipe() ;
     if (!sig_catch(SIGCHLD, &sigchld_handler))
       strerr_diefu1sys(111, "set SIGCHLD handler") ;
+    if (!sig_altignore(SIGPIPE))
+      strerr_diefu1sys(111, "ignore SIGPIPE") ;
     if (!tain_now_set_stopwatch_g())
       strerr_diefu1sys(111, "initialize clock") ;
     tipidee_log_start(g.logv, g.sa.s + remoteip, g.sa.s + remotehost) ;
@@ -430,14 +432,15 @@ int main (int argc, char const *const *argv, char const *const *envp)
     e = tipidee_rql_read_g(buffer_0, uribuf, URI_BUFSIZE, &content_length, &rql, &deadline) ;
     switch (e)
     {
-      case -1 : log_and_exit(1) ;  /* Malicious or shitty client */
+      case -1 : log_and_exit(1) ;  /* bad client */
       case 0 : break ;
-      case 99 : g.cont = 0 ; continue ;  /* timeout, it's ok */
-      case 400 : preexit_400(&rql, "Syntax error in request line") ;
+      case 98 :  /* client exited */
+      case 99 : g.cont = 0 ; continue ;  /* timeout */
+      case 400 : eexit_400(&rql, "Syntax error in request line") ;
       default : strerr_dief2x(101, "can't happen: ", "unknown tipidee_rql_read return code") ;
     }
     if (rql.http_major != 1) log_and_exit(1) ;
-    if (rql.http_minor > 1) preexit_400(&rql, "Bad HTTP version") ;
+    if (rql.http_minor > 1) eexit_400(&rql, "Bad HTTP version") ;
 
     content_length = 0 ;
     tipidee_headers_init(&hdr, hdrbuf, HDR_BUFSIZE) ;
@@ -446,9 +449,9 @@ int main (int argc, char const *const *argv, char const *const *envp)
     {
       case -1 : log_and_exit(1) ;  /* connection issue, client timeout, etc. */
       case 0 : break ;
-      case 400 : preexit_400(&rql, "Syntax error in headers") ;
-      case 408 : preexit_408(&rql) ;  /* timeout */
-      case 413 : preexit_413(&rql, hdr.n >= TIPIDEE_HEADERS_MAX ? "Too many headers" : "Too much header data") ;
+      case 400 : eexit_400(&rql, "Syntax error in headers") ;
+      case 408 : eexit_408(&rql) ;  /* timeout */
+      case 413 : eexit_413(&rql, hdr.n >= TIPIDEE_HEADERS_MAX ? "Too many headers" : "Too much header data") ;
       case 500 : strerr_dief2x(101, "can't happen: ", "avltreen_insert failed") ;
       default : strerr_dief2x(101, "can't happen: ", "unknown tipidee_headers_parse return code") ;
     }
@@ -467,7 +470,7 @@ int main (int argc, char const *const *argv, char const *const *envp)
     x = tipidee_headers_search(&hdr, "Transfer-Encoding") ;
     if (x)
     {
-      if (strcasecmp(x, "chunked")) preexit_400(&rql, "unsupported Transfer-Encoding") ;
+      if (strcasecmp(x, "chunked")) eexit_400(&rql, "unsupported Transfer-Encoding") ;
       else tcoding = TIPIDEE_TRANSFERCODING_CHUNKED ;
     }
     else
@@ -475,7 +478,7 @@ int main (int argc, char const *const *argv, char const *const *envp)
       x = tipidee_headers_search(&hdr, "Content-Length") ;
       if (x)
       {
-        if (!size_scan(x, &content_length)) preexit_400(&rql, "Invalid Content-Length") ;
+        if (!size_scan(x, &content_length)) eexit_400(&rql, "Invalid Content-Length") ;
         else if (content_length) tcoding = TIPIDEE_TRANSFERCODING_FIXED ;
         else tcoding = TIPIDEE_TRANSFERCODING_NONE ;
       }
@@ -483,7 +486,7 @@ int main (int argc, char const *const *argv, char const *const *envp)
     }
 
     if (tcoding != TIPIDEE_TRANSFERCODING_NONE && rql.m != TIPIDEE_METHOD_POST)
-      preexit_400(&rql, "only POST requests can have an entity body") ;
+      eexit_400(&rql, "only POST requests can have an entity body") ;
 
     switch (rql.m)
     {
@@ -495,9 +498,9 @@ int main (int argc, char const *const *argv, char const *const *envp)
         if (!rql.uri.path) { respond_options(&rql, 1) ; continue ; }
         break ;
       case TIPIDEE_METHOD_PUT :
-      case TIPIDEE_METHOD_DELETE : exit_405(&rql, 3) ;
-      case TIPIDEE_METHOD_CONNECT : preexit_501(&rql, "CONNECT method unsupported") ;
-      case TIPIDEE_METHOD_PRI : preexit_501(&rql, "PRI method attempted with HTTP version 1") ;
+      case TIPIDEE_METHOD_DELETE : eexit_405(&rql) ;
+      case TIPIDEE_METHOD_CONNECT : eexit_501(&rql, "CONNECT method unsupported") ;
+      case TIPIDEE_METHOD_PRI : eexit_501(&rql, "PRI method attempted with HTTP version 1") ;
       default : strerr_dief2x(101, "can't happen: ", "unknown HTTP method") ;
     }
 
@@ -509,13 +512,13 @@ int main (int argc, char const *const *argv, char const *const *envp)
         char *p = strchr(x, ':') ;
         if (p)
         {
-          if (!uint160_scan(p+1, &rql.uri.port)) preexit_400(&rql, "Invalid Host header") ;
+          if (!uint160_scan(p+1, &rql.uri.port)) eexit_400(&rql, "Invalid Host header") ;
           *p = 0 ;
         }
-        if (!*x || *x == '.') preexit_400(&rql, "Invalid Host header") ;
+        if (!*x || *x == '.') eexit_400(&rql, "Invalid Host header") ;
         rql.uri.host = x ;
       }
-      else if (!rql.uri.host) preexit_400(&rql, "Missing Host header") ;
+      else if (!rql.uri.host) eexit_400(&rql, "Missing Host header") ;
     }
     else if (!rql.uri.host) rql.uri.host = g.defaulthost ;
     if (!rql.uri.port) rql.uri.port = g.defaultport ;
@@ -541,12 +544,12 @@ int main (int argc, char const *const *argv, char const *const *envp)
       {
         case TIPIDEE_TRANSFERCODING_FIXED :
         {
-          if (content_length > g.maxrqbody) exit_413(&rql, "Request body too large") ;
-          if (!stralloc_ready(&bodysa, content_length)) die500sys(&rql, 111, "stralloc_ready") ;
+          if (content_length > g.maxrqbody) exit_413(&rql, docroot) ;
+          if (!stralloc_ready(&bodysa, content_length)) die500sys(&rql, 111, docroot, "stralloc_ready") ;
           if (buffer_timed_get_g(buffer_0, bodysa.s, content_length, &deadline) < content_length)
           {
-            if (errno == ETIMEDOUT) exit_408(&rql) ;
-            else exit_400(&rql, "Request body does not match Content-Length") ;
+            if (errno == ETIMEDOUT) exit_408(&rql, docroot) ;
+            else exit_400(&rql, docroot) ;
           }
           bodysa.len = content_length ;
           break ;
@@ -555,9 +558,9 @@ int main (int argc, char const *const *argv, char const *const *envp)
         {
           if (!tipidee_util_chunked_read_g(buffer_0, &bodysa, g.maxrqbody, &deadline))
           {
-            if (error_temp(errno)) die500sys(&rql, 111, "decode chunked body") ;
-            else if (errno == EMSGSIZE) exit_413(&rql, "Request body too large") ;
-            else exit_400(&rql, "Invalid chunked body") ;
+            if (error_temp(errno)) die500sys(&rql, 111, docroot, "decode chunked body") ;
+            else if (errno == EMSGSIZE) exit_413(&rql, docroot) ;
+            else exit_400(&rql, docroot) ;
           }
           break ;
         }
@@ -569,8 +572,9 @@ int main (int argc, char const *const *argv, char const *const *envp)
 
       while (serve(&rql, docroot, uribuf, &hdr, bodysa.s, bodysa.len))
         if (localredirs++ >= MAX_LOCALREDIRS)
-          die502x(&rql, 2, "too many local redirections - possible loop involving path ", rql.uri.path) ;
+          die502x(&rql, 2, docroot, "too many local redirections - possible loop involving path ", rql.uri.path) ;
     }
   }
+
   log_and_exit(0) ;
 }

@@ -407,9 +407,12 @@ malicious clients messing with log lines.
 This keyword has no effect when given without the <tt>request</tt> keyword. </dd>
  <dt> <tt>resource</tt> </dt> <dd> Log a <tt>resource</tt> line when <a href="tipideed.html">tipideed</a>
 has found a resource corresponding to the URI and is willing to serve it. The line looks like
-<tt>resource docroot <em>docroot</em> file <em>file</em> type <em>type</em></tt>. <em>docroot</em> is
-the document root of the virtual host; <em>file</em> is the path to the served file; <em>type</em>
+<tt>resource <em>file</em> type <em>type</em></tt>.
+<em>file</em> is the path to the served file; the first component of that path is always
+the document root of the virtual host. <em>type</em>
 is <tt>nph</tt> for an NPH script, <tt>cgi</tt> for a CGI script, or the Content-Type for a regular file.
+If it's a CGI or NPH script being called with a non-empty PATH_INFO, an additional <tt>path_info <em>path_info</em></tt>
+field is added to the log line.
 If a served CGI script outputs a local redirection, several <tt>resource</tt> lines may appear for
 a single request. </dd>
  <dt> <tt>answer</tt> </dt> <dd> Log an <tt>answer</tt> line when <a href="tipideed.html">tipideed</a>

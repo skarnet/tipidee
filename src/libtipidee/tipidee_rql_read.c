@@ -66,8 +66,9 @@ static inline int get_version (char const *in, tipidee_rql *rql)
 int tipidee_rql_read (buffer *b, char *buf, size_t max, size_t *w, tipidee_rql *rql, tain const *deadline, tain *stamp)
 {
   size_t pos[3] = { 0 } ;
-  if (timed_getlnmax(b, buf, max, &pos[0], '\n', deadline, stamp) == -1)
-    return errno == ETIMEDOUT ? 99 : -1 ;
+  ssize_t r = timed_getlnmax(b, buf, max, &pos[0], '\n', deadline, stamp) ;
+  if (r == -1) return errno == ETIMEDOUT ? 99 : -1 ;
+  if (!r) return 98 ;
   buf[--pos[0]] = 0 ;
   if (buf[pos[0] - 1] == '\r') buf[--pos[0]] = 0 ;
   if (!rql_tokenize(buf, pos)) return 400 ;

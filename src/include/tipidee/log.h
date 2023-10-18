@@ -39,7 +39,7 @@ extern void tipidee_log_start (uint32_t, char const *, char const *) ;
 extern void tipidee_log_exit (uint32_t, unsigned int) ;
 
 extern void tipidee_log_request (uint32_t, tipidee_rql const *, tipidee_headers const *, stralloc *) ;
-extern void tipidee_log_resource (uint32_t, tipidee_rql const *, char const *, char const *, tipidee_resattr const *) ;
+extern void tipidee_log_resource (uint32_t, tipidee_rql const *, char const *, tipidee_resattr const *, char const *) ;
 extern void tipidee_log_answer (uint32_t, tipidee_rql const *, unsigned int, uint64_t) ;
 
 #define tipidee_log_debug(v, ...) do { if ((v) & TIPIDEE_LOG_DEBUG) strerr_warn(PROG, ": debug: ", __VA_ARGS__) ; } while (0)

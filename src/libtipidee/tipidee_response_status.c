@@ -5,7 +5,7 @@
 
 #include <tipidee/response.h>
 
-size_t tipidee_response_status (buffer *b, tipidee_rql const *rql, unsigned int status, char const *line)
+size_t tipidee_response_status (buffer *b, tipidee_rql const *rql, unsigned int status, char const *reason)
 {
   size_t n = 0 ;
   char fmt[UINT_FMT] ;
@@ -16,7 +16,7 @@ size_t tipidee_response_status (buffer *b, tipidee_rql const *rql, unsigned int 
   n += buffer_putnoflush(b, " ", 1) ;
   n += buffer_putnoflush(b, fmt, uint_fmt(fmt, status)) ;
   n += buffer_putnoflush(b, " ", 1) ;
-  n += buffer_putsnoflush(b, line) ;
+  n += buffer_putsnoflush(b, reason) ;
   n += buffer_putnoflush(b, "\r\n", 2) ;
   return n ;
 }

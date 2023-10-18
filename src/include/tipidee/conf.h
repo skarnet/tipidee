@@ -40,5 +40,6 @@ extern unsigned int tipidee_conf_get_argv (tipidee_conf const *, char const *, c
 extern char const *tipidee_conf_get_docroot (tipidee_conf const *, tipidee_uri const *, uint16_t) ;
 extern int tipidee_conf_get_redirection (tipidee_conf const *, char const *, size_t, char const *, tipidee_redirection *) ;
 extern char const *tipidee_conf_get_content_type (tipidee_conf const *, char const *) ;
+extern char const *tipidee_conf_get_errorfile (tipidee_conf const *, char const *, unsigned int) ;
 
 #endif
