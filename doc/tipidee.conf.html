@@ -149,28 +149,6 @@ serving. The directive name is <tt>global</tt>, and it takes two arguments: the
 name and the value of a setting.
 </p>
 
-<div id="verbosity">
-<h4> <tt>verbosity</tt> </h4>
-</div>
-
-<p>
- <code> global verbosity <em>v</em> </code>
-</p>
-
-<ul>
- <li> <em>v</em> is a non-negative integer, describing the level of verbosity that
-<a href="tipideed.html">tipideed</a> will write to its stderr with. </li>
- <li> 0 means only error messages will be printed. </li>
- <li> 1 is the default; it means error messages and warnings will be printed. </li>
- <li> 2 is more verbose, also printing a summary of every HTTP request. </li>
- <li> 3 is like 2 but also prints personally identifiable client information,
-such as its IP address. </li>
- <li> 4 prints a lot of details for every request. </li>
- <li> 5 or more is debugging output. </li>
- <li> The configuration file setting can be overwritten by a <tt>-v</tt>
-option on the <a href="tipideed.html">tipideed</a> command line. </li>
-</ul>
-
 <div id="read_timeout">
 <h4> <tt>read_timeout</tt> </h4>
 </div>
