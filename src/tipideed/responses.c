@@ -2,6 +2,7 @@
 
 #include <skalibs/bsdsnowflake.h>
 
+#include <string.h>
 #include <unistd.h>
 
 #include <skalibs/stat.h>
@@ -56,13 +57,12 @@ void response_error (tipidee_rql const *rql, char const *docroot, unsigned int s
   if (file)
   {
     int fd ;
-    if (file[0] == '/')
-    {
-      char fmt[UINT_FMT] ;
-      fmt[uint_fmt(fmt, status)] = 0 ;
-      strerr_dief4x(102, "bad configuration: absolute path for custom ", fmt, " file: ", file) ;
-    }
-    fd = open_read(file) ;
+    if (sarealpath(&g.sa, file) == -1 || !stralloc_0(&g.sa))
+      die500sys(rql, 111, docroot, "realpath ", file) ;
+    if (strncmp(g.sa.s + salen, g.sa.s, g.cwdlen) || g.sa.s[salen + g.cwdlen] != '/')
+      die500x(rql, 102, docroot, "custom response file ", file, " points outside of the server's root") ;
+    fd = open_read(g.sa.s + salen + g.cwdlen + 1) ;
+    g.sa.len = salen ;
     if (fd == -1) strerr_warnwu3sys("open ", "custom response file ", file) ;
     else
     {
@@ -79,9 +79,9 @@ void response_error (tipidee_rql const *rql, char const *docroot, unsigned int s
       }
       else
       {
-        tipidee_response_file_g(buffer_1, rql, status, dt.reason, &st, tipidee_conf_get_content_type(&g.conf, file), options) ;
+        tipidee_response_file_g(buffer_1, rql, status, dt.reason, &st, tipidee_conf_get_content_type(&g.conf, g.sa.s + salen + g.cwdlen + 1), options) ;
         tipidee_log_answer(g.logv, rql, status, st.st_size) ;
-        send_file(fd, st.st_size, file) ;
+        send_file(fd, st.st_size, g.sa.s + salen + g.cwdlen + 1) ;
         fd_close(fd) ;
         return ;
       }
