@@ -8,6 +8,7 @@
 #include <skalibs/types.h>
 #include <skalibs/buffer.h>
 #include <skalibs/strerr.h>
+#include <skalibs/stralloc.h>
 #include <skalibs/tai.h>
 #include <skalibs/djbunix.h>
 #include <skalibs/unix-timed.h>
@@ -37,7 +38,14 @@ void response_error (tipidee_rql const *rql, char const *docroot, unsigned int s
 {
   tain deadline ;
   tipidee_defaulttext dt ;
-  char const *file = tipidee_conf_get_errorfile(&g.conf, docroot, status) ;
+  char const *file ;
+  size_t salen = g.sa.len ;
+  if (sarealpath(&g.sa, docroot) == -1 || !stralloc_0(&g.sa))
+      die500sys(rql, 111, docroot, "realpath ", docroot) ;
+  if (strncmp(g.sa.s + salen, g.sa.s, g.cwdlen) || g.sa.s[salen + g.cwdlen] != '/')
+    die500x(rql, 102, docroot, "docroot ", docroot, " points outside of the server's root") ;
+  file = tipidee_conf_get_errorfile(&g.conf, g.sa.s + salen + g.cwdlen + 1, status) ;
+  g.sa.len = salen ;
   if (!tipidee_util_defaulttext(status, &dt))
   {
     char fmt[UINT_FMT] ;
@@ -47,20 +55,27 @@ void response_error (tipidee_rql const *rql, char const *docroot, unsigned int s
 
   if (file)
   {
-    int fd = open_read(file) ;
-    if (fd == -1) strerr_warnwu3sys("open ", "custom error file ", file) ;
+    int fd ;
+    if (file[0] == '/')
+    {
+      char fmt[UINT_FMT] ;
+      fmt[uint_fmt(fmt, status)] = 0 ;
+      strerr_dief4x(102, "bad configuration: absolute path for custom ", fmt, " file: ", file) ;
+    }
+    fd = open_read(file) ;
+    if (fd == -1) strerr_warnwu3sys("open ", "custom response file ", file) ;
     else
     {
       struct stat st ;
       if (fstat(fd, &st) == -1)
       {
         fd_close(fd) ;
-        strerr_warnwu3sys("stat ", "custom error file ", file) ;
+        strerr_warnwu3sys("stat ", "custom response file ", file) ;
       }
       else if (!S_ISREG(st.st_mode))
       {
         fd_close(fd) ;
-        strerr_warnw3x("custom error file ", file, " is not a regular file") ;
+        strerr_warnw3x("custom response file ", file, " is not a regular file") ;
       }
       else
       {

@@ -195,18 +195,17 @@ static inline unsigned int indexify (tipidee_rql const *rql, char const *docroot
 
 static inline void get_resattr (tipidee_rql const *rql, char const *docroot, char const *res, tipidee_resattr *ra)
 {
-  static stralloc sa = STRALLOC_ZERO ;
-  sa.len = 0 ;
-  if (sarealpath(&sa, res) == -1 || !stralloc_0(&sa)) die500sys(rql, 111, docroot, "realpath ", res) ;
-  if (strncmp(sa.s, g.sa.s, g.cwdlen) || sa.s[g.cwdlen] != '/')
+  size_t pos = g.sa.len ;
+  if (sarealpath(&g.sa, res) == -1 || !stralloc_0(&g.sa)) die500sys(rql, 111, docroot, "realpath ", res) ;
+  if (strncmp(g.sa.s + pos, g.sa.s, g.cwdlen) || g.sa.s[pos + g.cwdlen] != '/')
     die500x(rql, 102, docroot, "resource ", res, " points outside of the server's root") ;
 
   {
     char const *attr = 0 ;
-    size_t len = sa.len - g.cwdlen + 1 ;
+    size_t len = g.sa.len - pos - g.cwdlen + 1 ;
     char key[len + 1] ;
     key[0] = 'A' ; key[1] = ':' ;
-    memcpy(key + 2, sa.s + 1 + g.cwdlen, sa.len - 1 - g.cwdlen) ;
+    memcpy(key + 2, g.sa.s + pos + 1 + g.cwdlen, len - 2) ;
     key[len] = '/' ;
     errno = ENOENT ;
     while (!attr)
@@ -233,18 +232,18 @@ static inline void get_resattr (tipidee_rql const *rql, char const *docroot, cha
         nphprefix = tipidee_conf_get_string(&g.conf, key) ;
         if (nphprefix)
         {
-          char const *base = strrchr(sa.s + g.cwdlen, '/') ;
+          char const *base = strrchr(g.sa.s + pos + g.cwdlen, '/') ;
           if (str_start(base + 1, nphprefix)) ra->isnph = 1 ;
         }
       }
     }
   }
-
   if (!ra->iscgi && !ra->content_type)
   {
-    ra->content_type = tipidee_conf_get_content_type(&g.conf, sa.s + g.cwdlen) ;
-    if (!ra->content_type) die500sys(rql, 111, docroot, "get content type for ", sa.s + g.cwdlen) ;
+    ra->content_type = tipidee_conf_get_content_type(&g.conf, g.sa.s + pos + g.cwdlen) ;
+    if (!ra->content_type) die500sys(rql, 111, docroot, "get content type for ", g.sa.s + pos + g.cwdlen) ;
   }
+  g.sa.len = pos ;
 }
 
 static inline void force_redirect (tipidee_rql const *rql, char const *fn)

@@ -447,7 +447,7 @@ to clients with the <tt>Content-Type: <em>type</em></tt> header.
  <li> Example: <tt>content-type text/html .html .htm</tt> means that files
 ending in <tt>.html</tt> or <tt>.htm</tt> should be served as <tt>text/html</tt>.
  <li> tipidee already comes with a
-<a href="https://git.skarnet.org/cgi-bin/cgit.cgi/tipidee/tree/src/config/defaults.c#n26">large
+<a href="https://git.skarnet.org/cgi-bin/cgit.cgi/tipidee/tree/src/config/defaults.c#n19">large
 list</a> of default Content-Type mappings; this directive should only be necessary if you're
 serving files with uncommon extensions or have specific needs. </li>
 </ul>
@@ -703,6 +703,49 @@ or not <tt>/home/www/docs/example.com:80</tt> is a real directory; the redirecti
 will <em>only</em> apply to requests received on port 80 (and not, for instance, to
 requests received on port 443). But if you declare a redirection under the
 <tt>example.com</tt> domain, it will apply to requests received on <em>any</em> port. </li>
+</ul>
+
+<div id="custom-response">
+<h4> <tt>custom-response</tt> </h4>
+</div>
+
+<p>
+ <code> custom-response <em>status</em> <em>file</em> </code>
+</p>
+
+<ul>
+ <li> <tt>custom-response</tt> allows you to customize the contents of HTTP error
+responses for the current domain. </li>
+ <li> <em>status</em> is the 3-digit HTTP response code you want to specify a custom response for. </li>
+ <li> <em>file</em> is the file containing the body of the HTTP response that will be
+sent to the client if <a href="tipideed.html">tipideed</a> finds that it must answer
+with a <em>status</em> code.
+  <ul>
+   <li> <em>file</em> is used relative to tipideed's working directory (even if
+it is given absolute). It does not have to be under the current domain's document root:
+it is <strong>not a resource</strong>, and is not handled as such.
+However, <em>file</em> cannot go up the filesystem hierarchy: it will always
+be under tipideed's working directory. </li>
+   <li> The Content-Type for <em>file</em> is determined by its extension,
+and mappings you add via <tt>content-type</tt> directives will work. However,
+since <em>file</em> is not a resource, <tt>file-type</tt>
+directives will not work, even if <em>file</em> is under the current virtual
+domain's document root. Don't try to be smart with this. Just name your
+custom files <tt>e404.html</tt> or something. </li>
+  </ul> </li>
+ <li> The instruction is only valid for <em>status</em> responses to requests
+targetting the current domain. You can specify another <tt>custom-response</tt>,
+or even the same one, after the next <tt>domain</tt> directive. </li>
+ <li> An example: <tt>custom-response 404 /errors/404.html</tt> under
+a <tt>domain example.com</tt> line will mean that the <tt>errors/404.html</tt>
+file will be served as the text/html body of any "404 Not Found" response
+tipideed may send to requests addressed to <tt>example.com</tt>. The
+<tt>errors</tt> subdirectory is at the same level as the <tt>example.com</tt>
+subdirectory. </li>
+ <li> If tipideed cannot open <em>file</em>, it will log a warning message
+and answer the client with a basic builtin response. </li>
+ <li> Not every HTTP status code is used by tipideed. Nothing will happen
+if you define custom responses for codes that aren't used. </li>
 </ul>
 
 </body>

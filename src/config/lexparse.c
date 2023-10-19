@@ -55,7 +55,8 @@ enum token_e
   T_NONNPH,
   T_BASICAUTH,
   T_NOAUTH,
-  T_FILETYPE
+  T_FILETYPE,
+  T_CUSTOMRESPONSE
 } ;
 
 struct directive_s
@@ -200,7 +201,7 @@ static inline void parse_redirect (char const *s, size_t const *word, size_t n, 
   if (!domain)
     strerr_dief6x(1, "redirection", " without a domain directive", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   if (s[word[0]] != '/')
-    strerr_dief5x(1, "redirected resource must start with /", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    strerr_dief6x(1, "redirected resource", " must start with /", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   if (!uint320_scan(s + word[1], &code))
     strerr_dief6x(1, "invalid redirection code ", s + word[1], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   for (; i < 4 ; i++) if (code == codes[i]) break ;
@@ -237,7 +238,7 @@ static void parse_bitattr (char const *s, size_t const *word, size_t n, char con
   if (!domain)
     strerr_dief7x(1, "resource attribute ", "definition", " without a domain directive", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   if (s[*word] != '/')
-    strerr_dief5x(1, "resource must start with /", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    strerr_dief6x(1, "resource", " must start with /", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   {
     confnode const *oldnode ;
     size_t arglen = strlen(s + *word) ;
@@ -279,7 +280,7 @@ static inline void parse_filetype (char const *s, size_t const *word, size_t n, 
   if (!domain)
     strerr_dief7x(1, "file-type", " definition", " without a domain directive", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   if (s[word[0]] != '/')
-    strerr_dief5x(1, "resource must start with /", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    strerr_dief6x(1, "resource", " must start with /", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   {
     confnode const *oldnode ;
     size_t arglen = strlen(s + word[0]) ;
@@ -321,6 +322,32 @@ static inline void parse_filetype (char const *s, size_t const *word, size_t n, 
   }
 }
 
+static inline void parse_customresponse (char const *s, size_t const *word, size_t n, char const *domain, size_t domainlen, mdt const *md)
+{
+  uint32_t status ;
+  size_t word1, len ;
+  char key[7 + domainlen] ;
+
+  if (n != 2)
+    strerr_dief8x(1, "too ", n > 2 ? "many" : "few", " arguments to directive ", "custom-response", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+  if (!domain)
+    strerr_dief7x(1, "custom-response", " definition", " without a domain directive", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+  if (!uint320_scan(s + word[0], &status) || status < 100 || status > 999)
+    strerr_dief6x(1, "invalid status", " for custom-response", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+  word1 = word[1] ;
+  while (s[word1] == '/') word1++ ;
+  len = strlen(s + word1) ;
+  if (!len || !strncmp(s + word1, "../", 3) || strstr(s + word1, "/../") || (len >= 3 && !strcmp(s + word1 + len - 3, "/..")))
+    strerr_dief6x(1, "invalid file", " for custom-response", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+  key[0] = 'E' ;
+  key[1] = ':' ;
+  uint32_fmt(key + 2, status) ;
+  key[5] = ':' ;
+  memcpy(key + 6, domain, domainlen) ;
+  key[6 + domainlen] = 0 ;
+  add_unique(key, s + word1, len + 1, md) ;
+}
+
 static inline void process_line (char const *s, size_t const *word, size_t n, stralloc *domain, mdt *md)
 {
   static struct directive_s const directives[] =
@@ -329,6 +356,7 @@ static inline void process_line (char const *s, size_t const *word, size_t n, st
     { .s = "basic-auth", .token = T_BASICAUTH },
     { .s = "cgi", .token = T_CGI },
     { .s = "content-type", .token = T_CONTENTTYPE },
+    { .s = "custom-response", .token = T_CUSTOMRESPONSE },
     { .s = "domain", .token = T_DOMAIN },
     { .s = "file-type", .token = T_FILETYPE },
     { .s = "global", .token = T_GLOBAL },
@@ -419,6 +447,9 @@ static inline void process_line (char const *s, size_t const *word, size_t n, st
       break ;
     case T_FILETYPE :
       parse_filetype(s, word, n, domain->s, domain->len, md) ;
+      break ;
+    case T_CUSTOMRESPONSE :
+      parse_customresponse(s, word, n, domain->s, domain->len, md) ;
       break ;
   }
 }
