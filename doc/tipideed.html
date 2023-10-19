@@ -33,14 +33,14 @@ a web server package: it serves files over HTTP.
 
 <ul>
  <li> tipideed reads a stream of HTTP (1.0 or 1.1) requests on its stdin, and tries
-to fulfill them, sending answers to stdout, and logs to stderr. </li>
+to fulfill them, sending answers to stdout and logs to stderr. </li>
  <li> tipideed only speaks plaintext HTTP. It supports HTTPS, but the TLS layer
 must be handled upstream by a program such as
 <a href="//skarnet.org/software/s6-networking/s6-tlsd.html">s6-tlsd</a>. </li>
  <li> tipideed stays alive until the client closes the connection, or times out,
 or (in HTTP 1.1) sends a request with a <tt>Connection: close</tt> header; or an error
 occurs that makes it nonsensical to keep the connection open. </li>
- <li> By default, the documents it serves must be in subdirectories of its
+ <li> The documents it serves must be in subdirectories of its
 current working directory, one subdirectory for every domain it hosts. </li>
 </ul>
 
@@ -90,7 +90,7 @@ of the tipidee package provides service templates to help you run tipideed under
 </div>
 
 <dl>
- <dt> 0 </dt> <dd> Clean exit. There was a successful stream of HTTP exchanges,
+ <dt> 0 </dt> <dd> Clean exit. There was a successful series of HTTP exchanges,
 that either tipideed or the client decided to end in a way that is
 permitted by HTTP. </dd>
  <dt> 1 </dt> <dd> Illicit client behaviour. tipideed exited because it could
@@ -107,8 +107,10 @@ error message asking you to report the bug. Please do so, on the
 data or in the document layout that it does not like. This can happen, for
 instance, when a document is a symbolic link pointing outside of the server's
 root. </dd>
- <dt> 111 </dt> <dd> System call failed. This usually signals a problem with the
-underlying system. </dd>
+ <dt> 111 </dt> <dd> System call failed. This usually signals an issue with the
+the underlying operating system. Before exiting, if in the middle of processing
+a request, tipideed likely has sent a 500 (Internal Server Error) response to
+the client. </dd>
 </dl>
 
 <div id="environment">
@@ -272,7 +274,7 @@ more flexibility.
 document sets for different ports. You want the same document
 sets for ports 80 and 443, and that's it. And you don't want
 to have both a <tt>domain example.com:80</tt> section and a
-<tt>domain example.com: 443</tt> section in your
+<tt>domain example.com:443</tt> section in your
 <a href="tipidee.conf.html">/etc/tipidee.conf</a>, with
 duplicate information.
 </p>
@@ -342,19 +344,21 @@ with "<tt>tipideed: pid <em>pid</em>: </tt>". </li>
 that tipideed exits right after writing the message), or "<tt>warning: </tt>" for
 warnings (meaning that tipideed continues operating after writing the message).
 In normal operation, you should not see any fatal or warning line. </li>
- <li> In normal operation, tipidee can log informational lines, and the continuing
+ <li> In normal operation, tipideed can log informational lines, and the continuing
 prefix is "<tt>info: </tt>". It can potentially log:
   <ul>
    <li> One line when it starts (i.e. a client has connected) </li>
    <li> Up to three lines for every request:
     <ul>
      <li> One when the request is received </li>
-     <li> One when a suitable resource is found </li>
+     <li> One when a suitable resource is found. In rare cases
+(namely: the resource is a CGI script answering with a local redirection),
+there may be more than one resource line. </li>
      <li> One when an answer is sent </li>
     </ul> </li>
    <li> One line when it exits normally </li>
   </ul> </li>
- <li> What informational lines to log is configured via the
+ <li> What to log is configured via the
 <a href="tipidee.conf.html#log"><tt>log</tt></a> directive in the
 <a href="tipidee.conf.html">configuration file</a>. By default, only
 a minimal request line and an answer line are printed. </li>
@@ -382,7 +386,7 @@ some minimal defaults it can use. </li>
  <li> tipideed listens to a stream of HTTP requests on its standard input. For every
 HTTP request:
   <ul>
-   <li> It parses the request line and check it's HTTP/1.0 or 1.1 </li>
+   <li> It parses the request line and checks it's HTTP/1.0 or 1.1 </li>
    <li> It parses the headers into a quick access structure </li>
    <li> It checks header consistency with the request </li>
    <li> If the method is <tt>OPTIONS *</tt> or <tt>TRACE</tt>, it answers here
@@ -482,8 +486,8 @@ other Web servers, please share them on the
 (it just exits), when receiving some malformed or weirdly paced
 client requests, despite what the
 <a href="https://datatracker.ietf.org/doc/html/rfc9112">HTTP RFC</a> says.
-This is on purpose. HTTP servers are very much solicited, they can run
-very hot, the Web is a cesspool of bots and bad actors, and every
+This is on purpose. HTTP servers are very heavily solicited, they can run
+very hot, the Web is a cesspool of badly written bots and bad actors, and every
 legitimate browser knows how to speak HTTP properly and without abusing
 corner cases in the protocol.
 It makes no sense to try to follow the book to the letter, expending
