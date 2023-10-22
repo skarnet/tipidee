@@ -42,9 +42,9 @@ void response_error (tipidee_rql const *rql, char const *docroot, unsigned int s
   char const *file ;
   size_t salen = g.sa.len ;
   if (sarealpath(&g.sa, docroot) == -1 || !stralloc_0(&g.sa))
-      die500sys(rql, 111, docroot, "realpath ", docroot) ;
+    strerr_diefu2sys(111, "realpath ", docroot) ;
   if (strncmp(g.sa.s + salen, g.sa.s, g.cwdlen) || g.sa.s[salen + g.cwdlen] != '/')
-    die500x(rql, 102, docroot, "docroot ", docroot, " points outside of the server's root") ;
+    strerr_dief4x(102, "layout error: ", "docroot ", docroot, " points outside of the server's root") ;
   file = tipidee_conf_get_errorfile(&g.conf, g.sa.s + salen + g.cwdlen + 1, status) ;
   g.sa.len = salen ;
   if (!tipidee_util_defaulttext(status, &dt))
@@ -58,9 +58,9 @@ void response_error (tipidee_rql const *rql, char const *docroot, unsigned int s
   {
     int fd ;
     if (sarealpath(&g.sa, file) == -1 || !stralloc_0(&g.sa))
-      die500sys(rql, 111, docroot, "realpath ", file) ;
+      strerr_diefu2sys(111, "realpath ", file) ;
     if (strncmp(g.sa.s + salen, g.sa.s, g.cwdlen) || g.sa.s[salen + g.cwdlen] != '/')
-      die500x(rql, 102, docroot, "custom response file ", file, " points outside of the server's root") ;
+      strerr_dief4x(102, "layout error: ", "custom response file ", file, " points outside of the server's root") ;
     fd = open_read(g.sa.s + salen + g.cwdlen + 1) ;
     g.sa.len = salen ;
     if (fd == -1) strerr_warnwu3sys("open ", "custom response file ", file) ;
