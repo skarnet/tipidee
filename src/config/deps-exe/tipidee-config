@@ -1,3 +1,4 @@
+util.o
 node.o
 repo.o
 conftree.o

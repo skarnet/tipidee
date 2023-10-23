@@ -2,7 +2,6 @@
 
 #include <stdint.h>
 #include <string.h>
-#include <stdlib.h>
 #include <errno.h>
 
 #include <skalibs/uint32.h>
@@ -65,27 +64,32 @@ struct directive_s
   enum token_e token ;
 } ;
 
-static int keycmp (void const *a, void const *b)
-{
-  return strcmp((char const *)a, ((struct directive_s const *)b)->s) ;
-}
-#define BSEARCH(type, key, array) bsearch(key, (array), sizeof(array)/sizeof(type), sizeof(type), (int (*)(void const *, void const *))&keycmp)
-
-static void check_unique (char const *key, mdt const *md)
+static void conftree_checkunique (char const *key, mdt const *md)
 {
   node const *node = conftree_search(key) ;
   if (node)
   {
     char fmt[UINT32_FMT] ;
     fmt[uint32_fmt(fmt, node->line)] = 0 ;
-    strerr_diefn(1, 11, "duplicate key ", key, " in file ", g.storage.s + md->filepos, " line ", md->linefmt, ", previously defined", " in file ", g.storage.s + node->filepos, " line ", fmt) ;
+    strerr_diefn(1, 12, "duplicate ", "key ", key, " in file ", g.storage.s + md->filepos, " line ", md->linefmt, ", previously defined", " in file ", g.storage.s + node->filepos, " line ", fmt) ;
+  }
+}
+
+static void headers_checkunique (char const *key, mdt const *md)
+{
+  node const *node = headers_search(key) ;
+  if (node)
+  {
+    char fmt[UINT32_FMT] ;
+    fmt[uint32_fmt(fmt, node->line)] = 0 ;
+    strerr_diefn(1, 12, "duplicate ", "header ", key, " in file ", g.storage.s + md->filepos, " line ", md->linefmt, ", previously defined", " in file ", g.storage.s + node->filepos, " line ", fmt) ;
   }
 }
 
 static void add_unique (char const *key, char const *value, size_t valuelen, mdt const *md)
 {
   node node ;
-  check_unique(key, md) ;
+  conftree_checkunique(key, md) ;
   confnode_start(&node, key, md->filepos, md->line) ;
   confnode_add(&node, value, valuelen) ;
   conftree_add(&node) ;
@@ -124,7 +128,7 @@ static inline void parse_global (char const *s, size_t const *word, size_t n, md
     case 1 : /* argv */
     {
       node node ;
-      check_unique(gl->key, md) ;
+      conftree_checkunique(gl->key, md) ;
       confnode_start(&node, gl->key, md->filepos, md->line) ;
       for (size_t i = 1 ; i < n ; i++)
         confnode_add(&node, s + word[i], strlen(s + word[i]) + 1) ;
@@ -218,7 +222,7 @@ static inline void parse_redirect (char const *s, size_t const *word, size_t n, 
     memcpy(key + 2, domain, domainlen) ;
     memcpy(key + 2 + domainlen, s + word[0], urlen) ;
     key[2 + domainlen + urlen] = 0 ;
-    check_unique(key, md) ;
+    conftree_checkunique(key, md) ;
     confnode_start(&node, key, md->filepos, md->line) ;
     key[0] = '@' | i ;
     confnode_add(&node, &key[0], 1) ;

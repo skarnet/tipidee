@@ -26,10 +26,10 @@ node const *repo_search (repo const *r, char const *key)
   return avltree_search(&r->tree, key, &i) ? genalloc_s(node const, &r->ga) + i : 0 ;
 }
 
-void repo_add (repo *r, node const *node)
+void repo_add (repo *r, node const *nod)
 {
   uint32_t i = genalloc_len(node, &r->ga) ;
-  if (!genalloc_append(node, &r->ga, node)) dienomem() ;
+  if (!genalloc_append(node, &r->ga, nod)) dienomem() ;
   if (!avltree_insert(&r->tree, i)) dienomem() ;
 }
 

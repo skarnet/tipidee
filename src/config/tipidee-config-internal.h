@@ -5,6 +5,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
 
 #include <skalibs/buffer.h>
 #include <skalibs/strerr.h>
@@ -45,6 +46,12 @@ struct global_s
 extern struct global_s g ;
 
 
+ /* util */
+
+extern int keycmp (void const *, void const *) ;  /* for any struct starting with a string key */
+#define BSEARCH(type, key, array) bsearch(key, (array), sizeof(array)/sizeof(type), sizeof(type), &keycmp)
+
+
  /* node */
 
 extern void node_start (stralloc *, node *, char const *, size_t, uint32_t) ;
@@ -68,17 +75,18 @@ extern void confnode_add (node *, char const *, size_t) ;
 extern node const *conftree_search (char const *) ;
 extern void conftree_add (node const *) ;
 extern void conftree_update (node const *) ;
+
 extern int conftree_write (cdbmaker *) ;
 
 
  /* headers */
 
-extern void header_start (node *, char const *, size_t, uint32_t) ;
-extern void header_add (node *, char const *, size_t) ;
+extern void header_canonize (char *) ;
+extern int header_allowed (char const *) ;
 
 extern node const *headers_search (char const *) ;
-extern void headers_add (node const *) ;
-extern int headers_write (void) ;
+extern void headers_add (char const *, char const *, uint8_t, size_t, uint32_t) ;
+extern void headers_finish (void) ;
 
 
  /* lexparse */
@@ -89,12 +97,5 @@ extern void conf_lexparse (buffer *, char const *) ;
  /* defaults */
 
 extern void conf_defaults (void) ;
-
-
- /* headers */
-
-extern node const *headers_search (char const *) ;
-extern void headers_add (node const *) ;
-extern void headers_finish (void) ;
 
 #endif
