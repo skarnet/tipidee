@@ -103,7 +103,7 @@ void conf_defaults (void)
   {
     if (!conftree_search(p->key))
     {
-      confnode node ;
+      node node ;
       confnode_start(&node, p->key, 0, 0) ;
       confnode_add(&node, p->value, p->vlen) ;
       conftree_add(&node) ;

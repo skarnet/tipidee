@@ -8,10 +8,12 @@ src/include/tipidee/response.h: src/include/tipidee/rql.h
 src/include/tipidee/rql.h: src/include/tipidee/method.h src/include/tipidee/uri.h
 src/include/tipidee/tipidee.h: src/include/tipidee/conf.h src/include/tipidee/config.h src/include/tipidee/headers.h src/include/tipidee/log.h src/include/tipidee/method.h src/include/tipidee/response.h src/include/tipidee/rql.h src/include/tipidee/uri.h src/include/tipidee/util.h
 src/tipideed/tipideed-internal.h: src/include/tipidee/tipidee.h
-src/config/confnode.o src/config/confnode.lo: src/config/confnode.c src/config/tipidee-config-internal.h
 src/config/conftree.o src/config/conftree.lo: src/config/conftree.c src/config/tipidee-config-internal.h
 src/config/defaults.o src/config/defaults.lo: src/config/defaults.c src/config/tipidee-config-internal.h src/include/tipidee/log.h
+src/config/headers.o src/config/headers.lo: src/config/headers.c src/config/tipidee-config-internal.h
 src/config/lexparse.o src/config/lexparse.lo: src/config/lexparse.c src/config/tipidee-config-internal.h src/include/tipidee/config.h src/include/tipidee/log.h
+src/config/node.o src/config/node.lo: src/config/node.c src/config/tipidee-config-internal.h
+src/config/repo.o src/config/repo.lo: src/config/repo.c src/config/tipidee-config-internal.h
 src/config/tipidee-config-preprocess.o src/config/tipidee-config-preprocess.lo: src/config/tipidee-config-preprocess.c
 src/config/tipidee-config.o src/config/tipidee-config.lo: src/config/tipidee-config.c src/config/tipidee-config-internal.h src/include/tipidee/config.h
 src/libtipidee/tipidee_conf_free.o src/libtipidee/tipidee_conf_free.lo: src/libtipidee/tipidee_conf_free.c src/include/tipidee/conf.h
@@ -56,7 +58,7 @@ src/tipideed/tipideed.o src/tipideed/tipideed.lo: src/tipideed/tipideed.c src/in
 src/tipideed/trace.o src/tipideed/trace.lo: src/tipideed/trace.c src/include/tipidee/log.h src/include/tipidee/method.h src/include/tipidee/response.h src/tipideed/tipideed-internal.h
 
 tipidee-config: EXTRA_LIBS := -lskarnet ${SPAWN_LIB}
-tipidee-config: src/config/tipidee-config.o src/config/confnode.o src/config/conftree.o src/config/defaults.o src/config/lexparse.o
+tipidee-config: src/config/tipidee-config.o src/config/node.o src/config/repo.o src/config/conftree.o src/config/headers.o src/config/defaults.o src/config/lexparse.o
 tipidee-config-preprocess: EXTRA_LIBS := -lskarnet
 tipidee-config-preprocess: src/config/tipidee-config-preprocess.o
 ifeq ($(strip $(STATIC_LIBS_ARE_PIC)),)

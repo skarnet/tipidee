@@ -73,7 +73,7 @@ static int keycmp (void const *a, void const *b)
 
 static void check_unique (char const *key, mdt const *md)
 {
-  confnode const *node = conftree_search(key) ;
+  node const *node = conftree_search(key) ;
   if (node)
   {
     char fmt[UINT32_FMT] ;
@@ -84,7 +84,7 @@ static void check_unique (char const *key, mdt const *md)
 
 static void add_unique (char const *key, char const *value, size_t valuelen, mdt const *md)
 {
-  confnode node ;
+  node node ;
   check_unique(key, md) ;
   confnode_start(&node, key, md->filepos, md->line) ;
   confnode_add(&node, value, valuelen) ;
@@ -123,7 +123,7 @@ static inline void parse_global (char const *s, size_t const *word, size_t n, md
     }
     case 1 : /* argv */
     {
-      confnode node ;
+      node node ;
       check_unique(gl->key, md) ;
       confnode_start(&node, gl->key, md->filepos, md->line) ;
       for (size_t i = 1 ; i < n ; i++)
@@ -210,7 +210,7 @@ static inline void parse_redirect (char const *s, size_t const *word, size_t n, 
   if (strncmp(s + word[2], "http://", 7) && strncmp(s + word[2], "https://", 8))
     strerr_dief5x(1, "redirection target must be a full http:// or https:// target", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   {
-    confnode node ;
+    node node ;
     size_t urlen = strlen(s + word[0]) ;
     char key[3 + domainlen + urlen] ;
     if (s[word[0] + urlen - 1] == '/') { key[0] = 'r' ; urlen-- ; } else key[0] = 'R' ;
@@ -240,7 +240,7 @@ static void parse_bitattr (char const *s, size_t const *word, size_t n, char con
   if (s[*word] != '/')
     strerr_dief6x(1, "resource", " must start with /", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   {
-    confnode const *oldnode ;
+    node const *oldnode ;
     size_t arglen = strlen(s + *word) ;
     char key[3 + domainlen + arglen] ;
     if (s[*word + arglen - 1] == '/') { key[0] = 'a' ; arglen-- ; } else key[0] = 'A' ;
@@ -264,7 +264,7 @@ static void parse_bitattr (char const *s, size_t const *word, size_t n, char con
       }
     else
     {
-      confnode node ;
+      node node ;
       char val[3] = { mask, set ? mask : 0, 0 } ;
       confnode_start(&node, key, md->filepos, md->line) ;
       confnode_add(&node, val, 3) ;
@@ -282,7 +282,7 @@ static inline void parse_filetype (char const *s, size_t const *word, size_t n, 
   if (s[word[0]] != '/')
     strerr_dief6x(1, "resource", " must start with /", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   {
-    confnode const *oldnode ;
+    node const *oldnode ;
     size_t arglen = strlen(s + word[0]) ;
     char key[3 + domainlen + arglen] ;
     if (s[word[0] + arglen - 1] == '/') { key[0] = 'a' ; arglen-- ; } else key[0] = 'A' ;
@@ -302,7 +302,7 @@ static inline void parse_filetype (char const *s, size_t const *word, size_t n, 
       
       else
       {
-        confnode node ;
+        node node ;
         char val[2] = { g.storage.s[oldnode->data] | 0x80, g.storage.s[oldnode->data + 1] } ;
         confnode_start(&node, key, md->filepos, md->line) ;
         confnode_add(&node, val, 2) ;
@@ -312,7 +312,7 @@ static inline void parse_filetype (char const *s, size_t const *word, size_t n, 
     }
     else
     {
-      confnode node ;
+      node node ;
       char val[2] = { 0x80, 0x00 } ;
       confnode_start(&node, key, md->filepos, md->line) ;
       confnode_add(&node, val, 2) ;

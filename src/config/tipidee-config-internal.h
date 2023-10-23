@@ -7,13 +7,16 @@
 #include <string.h>
 
 #include <skalibs/buffer.h>
+#include <skalibs/strerr.h>
 #include <skalibs/stralloc.h>
+#include <skalibs/genalloc.h>
 #include <skalibs/cdbmake.h>
+#include <skalibs/avltree.h>
 
 #define dienomem() strerr_diefu1sys(111, "stralloc_catb")
 
-typedef struct confnode_s confnode, *confnode_ref ;
-struct confnode_s
+typedef struct node_s node, *node_ref ;
+struct node_s
 {
   uint32_t key ;
   uint32_t keylen ;
@@ -22,7 +25,16 @@ struct confnode_s
   uint32_t filepos ;
   uint32_t line ;
 } ;
-#define CONFNODE_ZERO { .key = 0, .keylen = 0, .data = 0, .datalen = 0 }
+#define NODE_ZERO { .key = 0, .keylen = 0, .data = 0, .datalen = 0 }
+
+typedef struct repo_s repo, *repo_ref ;
+struct repo_s
+{
+  genalloc ga ;
+  avltree tree ;
+  stralloc *storage ;
+} ;
+#define REPO_ZERO { .ga = GENALLOC_ZERO, .tree = AVLTREE_ZERO, .storage = 0 }
 
 struct global_s
 {
@@ -33,18 +45,40 @@ struct global_s
 extern struct global_s g ;
 
 
- /* confnode */
+ /* node */
 
-extern void confnode_start (confnode *, char const *, size_t, uint32_t) ;
-extern void confnode_add (confnode *, char const *, size_t) ;
+extern void node_start (stralloc *, node *, char const *, size_t, uint32_t) ;
+extern void node_add (stralloc *, node *, char const *, size_t) ;
+
+
+ /* repo */
+
+extern void *node_dtok (uint32_t, void *) ;
+extern int node_cmp (void const *, void const *, void *) ;
+extern node const *repo_search (repo const *, char const *) ;
+extern void repo_add (repo *, node const *) ;
+extern void repo_update (repo *, node const *) ;
 
 
  /* conftree */
 
-extern confnode const *conftree_search (char const *) ;
-extern void conftree_add (confnode const *) ;
-extern void conftree_update (confnode const *) ;
+extern void confnode_start (node *, char const *, size_t, uint32_t) ;
+extern void confnode_add (node *, char const *, size_t) ;
+
+extern node const *conftree_search (char const *) ;
+extern void conftree_add (node const *) ;
+extern void conftree_update (node const *) ;
 extern int conftree_write (cdbmaker *) ;
+
+
+ /* headers */
+
+extern void header_start (node *, char const *, size_t, uint32_t) ;
+extern void header_add (node *, char const *, size_t) ;
+
+extern node const *headers_search (char const *) ;
+extern void headers_add (node const *) ;
+extern int headers_write (void) ;
 
 
  /* lexparse */
@@ -55,5 +89,12 @@ extern void conf_lexparse (buffer *, char const *) ;
  /* defaults */
 
 extern void conf_defaults (void) ;
+
+
+ /* headers */
+
+extern node const *headers_search (char const *) ;
+extern void headers_add (node const *) ;
+extern void headers_finish (void) ;
 
 #endif

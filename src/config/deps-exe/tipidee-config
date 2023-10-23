@@ -1,5 +1,7 @@
-confnode.o
+node.o
+repo.o
 conftree.o
+headers.o
 defaults.o
 lexparse.o
 -lskarnet
