@@ -11,11 +11,11 @@
 #include <tipidee/response.h>
 #include <tipidee/util.h>
 
-size_t tipidee_response_file (buffer *b, tipidee_rql const *rql, unsigned int status, char const *reason, struct stat const *st, char const *ct, uint32_t options, tain const *stamp)
+size_t tipidee_response_file (buffer *b, tipidee_rql const *rql, unsigned int status, char const *reason, struct stat const *st, char const *ct, tipidee_response_header const *rhdr, uint32_t rhdrn, uint32_t options, tain const *stamp)
 {
   char fmt[128] ;
   size_t n = tipidee_response_status(b, rql, status, reason) ;
-  n += tipidee_response_header_common_put(b, options & 1, stamp) ;
+  n += tipidee_response_header_writeall(b, rhdr, rhdrn, options & 1, stamp) ;
   if (options & 2)
   {
     size_t l = tipidee_response_header_lastmodified(fmt, 128, st) ;

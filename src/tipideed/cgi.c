@@ -255,36 +255,6 @@ static inline int local_redirect (tipidee_rql *rql, char const *docroot, char co
   return 1 ;
 }
 
-static inline void print_cgi_headers (tipidee_headers const *hdr, size_t rbodylen)
-{
-  static char const *const nope_table[] =
-  {
-    "Connection",
-    "Content-Length",
-    "Date",
-    "Status",
-    0
-  } ;
-  char fmt[SIZE_FMT] ;
-  for (size_t i = 0 ; i < hdr->n ; i++)
-  {
-    char const *key = hdr->buf + hdr->list[i].left ;
-    char const *const *p = nope_table ;
-    if (tipidee_response_header_builtin_search(key)) continue ;
-    if (str_start(key, "X-CGI-")) continue ;
-    for (; *p ; p++) if (!strcasecmp(key, *p)) break ;
-    if (*p) continue ;
-    buffer_putsnoflush(buffer_1, key) ;
-    buffer_putnoflush(buffer_1, ": ", 2) ;
-    buffer_putsnoflush(buffer_1, hdr->buf + hdr->list[i].right) ;
-    buffer_putnoflush(buffer_1, "\r\n", 2) ;
-  }
-  fmt[size_fmt(fmt, rbodylen)] = 0 ;
-  buffer_putsnoflush(buffer_1, "Content-Length: ") ;
-  buffer_putsnoflush(buffer_1, fmt) ;
-  buffer_putnoflush(buffer_1, "\r\n", 2) ;
-}
-
 static inline int process_cgi_output (tipidee_rql *rql, char const *docroot, tipidee_headers const *hdr, char const *rbody, size_t rbodylen, char *uribuf, char const *cginame)
 {
   char const *location = tipidee_headers_search(hdr, "Location") ;
@@ -353,8 +323,14 @@ static inline int process_cgi_output (tipidee_rql *rql, char const *docroot, tip
   }
 
   tipidee_response_status(buffer_1, rql, status, reason) ;
-  tipidee_response_header_common_put_g(buffer_1, !g.cont) ;
-  print_cgi_headers(hdr, rbodylen) ;
+  tipidee_response_header_writemerge_g(buffer_1, g.rhdr, g.rhdrn, hdr, !g.cont) ;
+  {
+    char fmt[SIZE_FMT] ;
+    fmt[size_fmt(fmt, rbodylen)] = 0 ;
+    buffer_putsnoflush(buffer_1, "Content-Length: ") ;
+    buffer_putsnoflush(buffer_1, fmt) ;
+    buffer_putnoflush(buffer_1, "\r\n", 2) ;
+  }
   if (buffer_timed_put_g(buffer_1, "\r\n", 2, &deadline) < 2)
     strerr_diefu1sys(111, "write to stdout") ;
   tipidee_log_answer(g.logv, rql, status, rbodylen) ;
@@ -372,9 +348,9 @@ static inline int do_cgi (tipidee_rql *rql, char const *docroot, char const *con
 {
   static stralloc sa = STRALLOC_ZERO ;
   tipidee_headers hdr ;
-  char hdrbuf[2048] ;
+  char hdrbuf[4096] ;
   sa.len = 0 ;
-  tipidee_headers_init(&hdr, hdrbuf, 2048) ;
+  tipidee_headers_init(&hdr, hdrbuf, 4096) ;
   if (!run_cgi(rql, docroot, argv, envp, body, bodylen, &hdr, &sa)) return 0 ;
   return process_cgi_output(rql, docroot, &hdr, sa.s, sa.len, uribuf, argv[0]) ;
 }

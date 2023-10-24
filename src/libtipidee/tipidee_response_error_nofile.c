@@ -8,7 +8,7 @@
 #include <tipidee/method.h>
 #include <tipidee/response.h>
 
-size_t tipidee_response_error_nofile (buffer *b, tipidee_rql const *rql, unsigned int status, char const *reason, char const *text, uint32_t options, tain const *stamp)
+size_t tipidee_response_error_nofile (buffer *b, tipidee_rql const *rql, unsigned int status, char const *reason, char const *text, tipidee_response_header const *rhdr, uint32_t rhdrn, uint32_t options, tain const *stamp)
 {
   static char const txt1[] = "<html>\n<head><title>" ;
   static char const txt2[] = "</title></head>\n<body>\n<h1> " ;
@@ -16,7 +16,7 @@ size_t tipidee_response_error_nofile (buffer *b, tipidee_rql const *rql, unsigne
   static char const txt4[] = "\n</p>\n</body>\n</html>\n" ;
   char fmt[SIZE_FMT] ;
   size_t n = tipidee_response_status(b, rql, status, reason) ;
-  n += tipidee_response_header_common_put(b, options, stamp) ;
+  n += tipidee_response_header_writeall(b, rhdr, rhdrn, options, stamp) ;
   n += buffer_putsnoflush(b, "Content-Type: text/html; charset=UTF-8\r\n") ;
   n += buffer_putsnoflush(b, "Content-Length: ") ;
   n += buffer_putnoflush(b, fmt, size_fmt(fmt, text ? sizeof(txt1) + sizeof(txt2) + sizeof(txt3) + sizeof(txt4) - 4 + 2 * strlen(reason) + strlen(text) : 0)) ;

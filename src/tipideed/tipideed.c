@@ -352,7 +352,7 @@ int main (int argc, char const *const *argv, char const *const *envp)
   stralloc bodysa = STRALLOC_ZERO ;
   size_t remoteip, remotehost ;
   char const *x ;
-  uint32_t n, rhlen ;
+  uint32_t n ;
   char progstr[14 + PID_FMT] = "tipideed: pid " ;
   progstr[14 + pid_fmt(progstr + 14, getpid())] = 0 ;
   PROG = progstr ;
@@ -397,11 +397,11 @@ int main (int argc, char const *const *argv, char const *const *envp)
   if (!n) strerr_dief3x(102, "bad", " config value for ", "G:index_file") ;
   g.indexn = n-1 ;
 
-  x = tipidee_conf_get_responseheaders(&g.conf, "G:response_headers", &rhlen, &n) ;
+  x = tipidee_conf_get_responseheaders(&g.conf, "G:response_headers", &n, &g.rhdrn) ;
   if (!x) strerr_diefu3sys(102, "get", " config value for ", "G:response_headers") ;
 
   tipidee_response_header rhdr[n ? n : 1] ;  /* should start a block but that's a lot of editing */
-  if (!tipidee_response_header_preparebuiltin(rhdr, n, x, rhlen))
+  if (!tipidee_response_header_preparebuiltin(rhdr, g.rhdrn, x, n))
     strerr_dief3x(102, "bad", " config value for ", "G:response_headers") ;
   g.rhdr = rhdr ;
 

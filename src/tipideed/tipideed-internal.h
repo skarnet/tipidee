@@ -32,6 +32,7 @@ struct global_s
   char const *indexnames[16] ;
   tipidee_response_header const *rhdr ;
   int p[2] ;
+  uint32_t rhdrn ;
   uint32_t logv ;
   uint32_t maxrqbody ;
   uint32_t maxcgibody ;
@@ -54,6 +55,7 @@ struct global_s
   .indexnames = { 0 }, \
   .rhdr = 0, \
   .p = { -1, -1 }, \
+  .rhdrn = 0, \
   .logv = TIPIDEE_LOG_DEFAULT, \
   .maxrqbody = 0, \
   .maxcgibody = 0, \
