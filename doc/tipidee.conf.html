@@ -139,14 +139,20 @@ directive! </li>
 </ul>
 
 <div id="global">
-<h3> Global directives </h3>
+<h3> Simple global settings </h3>
 </div>
 
 <p>
  Global directives control global aspects of <a href="tipideed.html">tipideed</a>
 &mdash; values that apply to the server itself, no matter what domain it is
-serving. The directive name is <tt>global</tt>, and it takes two arguments: the
-name and the value of a setting.
+serving.
+
+<p>
+ Some global directives are introduced by their own keywords, see below.
+Others are simple configuration values that would clutter up the
+directive namespace, so we put them together under a unique umbrella,
+the <tt>global</tt> directive.
+<tt>global</tt> takes two arguments: the name of a setting and its value.
 </p>
 
 <div id="read_timeout">
@@ -270,20 +276,25 @@ output data. And this is "private dirty" memory, i.e. memory that
 that setting &mdash; and with the CGI scripts you choose to run. </li>
 </ul>
 
-<div id="index_file">
-<h4> <tt>index_file</tt> </h4>
+<div id="index-file">
+<h3> The <tt>index-file</tt> directive </h3>
 </div>
 
 <p>
- <code> global index_file <em>file1</em> <em>file2</em> ... </code>
+ <code> index-file <em>file1</em> <em>file2</em> ... </code>
+</p>
+
+<p>
+ <tt>index-file</tt> is a global directive, the first one in this
+list that is introduced by its own keyword and does not use <tt>global</tt>.
 </p>
 
 <ul>
- <li> The <tt>global index_file</tt> directive has a variable number of
+ <li> The <tt>index-file</tt> directive has a variable number of
 arguments. <em>file1</em>, <em>file2</em>, and so on are the names of the
 files that should be used to try and complete the URI when a client request
 resolves to a directory. </li>
- <li> For instance: <tt>global index_file index.cgi index.html index.htm</tt>
+ <li> For instance: <tt>index-file index.cgi index.html index.htm</tt>
 means that when <a href="tipideed.html">tipideed</a> is asked to serve
 <tt>http://example.com</tt>, it will first try to serve as if the request
 had been <tt>http://example.com/index.cgi</tt>, then
@@ -295,7 +306,7 @@ resources exist, <a href="tipideed.html">tipideed</a> responds 404 (Not Found). 
 <tt>http://example.com/foo/index.cgi</tt>, then (if not found)
 <tt>http://example.com/foo/index.html</tt>, then (if not found)
 <tt>http://example.com/foo/index.htm</tt>. </li>
- <li> The default is <tt>global index_file index.html</tt>, meaning that
+ <li> The default is <tt>index-file index.html</tt>, meaning that
 only the <tt>index.html</tt> file will be looked up when a resource resolves
 to a directory. </li>
 </ul>
@@ -305,9 +316,8 @@ to a directory. </li>
 </div>
 
 <p>
- <tt>log</tt> is also a global directive, but is introduced by the
-keyword <tt>log</tt>, without prepending <tt>global</tt>. It allows
-the user to control what will appear in
+ <tt>log</tt> is a global directive, introduced by the
+keyword <tt>log</tt>. It allows the user to control what will appear in
 <a href="tipideed.html">tipideed</a>'s log output.
 </p>
 
@@ -409,8 +419,8 @@ This keyword has no effect when given without the <tt>answer</tt> keyword. </dd>
 </div>
 
 <p>
- <tt>content-type</tt> is also a global directive, but is introduced by the
-keyword <tt>content-type</tt>, without prepending <tt>global</tt>. It allows
+ <tt>content-type</tt> is a global directive, introduced by the
+keyword <tt>content-type</tt>. It allows
 the user to define mappings from a document's extension to a standard Content-Type.
 </p>
 
@@ -435,8 +445,8 @@ serving files with uncommon extensions or have specific needs. </li>
 </div>
 
 <p>
- <tt>custom-header</tt> is also a global directive, but is introduced by the
-keyword <tt>custom-header</tt>, without prepending <tt>global</tt>. It allows
+ <tt>custom-header</tt> is global directive, introduced by the
+keyword <tt>custom-header</tt>. It allows
 the user to define custom headers that are to be added to every response.
 </p>
 

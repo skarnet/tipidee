@@ -2,6 +2,7 @@
 
 #include <stdint.h>
 #include <string.h>
+#include <stdlib.h>
 #include <errno.h>
 
 #include <skalibs/uint32.h>
@@ -26,13 +27,6 @@ struct mdt_s
 } ;
 #define MDT_ZERO { .filepos = 0, .line = 0, .linefmt = "0" }
 
-struct globalkey_s
-{
-  char const *name ;
-  char const *key ;
-  uint32_t type ;
-} ;
-
 struct logkey_s
 {
   char const *name ;
@@ -43,6 +37,7 @@ enum token_e
 {
   T_BANG,
   T_GLOBAL,
+  T_INDEXFILE,
   T_LOG,
   T_CONTENTTYPE,
   T_CUSTOMHEADER,
@@ -98,45 +93,43 @@ static void add_unique (char const *key, char const *value, size_t valuelen, mdt
 
 static inline void parse_global (char const *s, size_t const *word, size_t n, mdt const *md)
 {
-  static struct globalkey_s const globalkeys[] =
+  static char const *const globalkeys[] =
   {
-    { .name = "cgi_timeout", .key = "G:cgi_timeout", .type = 0 },
-    { .name = "index_file", .key = "G:index_file", .type = 1 },
-    { .name = "max_cgi_body_length", .key = "G:max_cgi_body_length", .type = 0 },
-    { .name = "max_request_body_length", .key = "G:max_request_body_length", .type = 0 },
-    { .name = "read_timeout", .key = "G:read_timeout", .type = 0 },
-    { .name = "write_timeout", .key = "G:write_timeout", .type = 0 }
+    "cgi_timeout",
+    "max_cgi_body_length",
+    "max_request_body_length",
+    "read_timeout",
+    "write_timeout"
   } ;
-  struct globalkey_s const *gl ;
-  if (n < 2)
-    strerr_dief8x(1, "too ", "few", " arguments to directive ", "global", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
-  gl = BSEARCH(struct globalkey_s, s + word[0], globalkeys) ;
-  if (!gl) strerr_dief6x(1, "unrecognized global setting ", s + word[0], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
-  switch (gl->type)
+  char const *const *x ;
+  uint32_t u ;
+  char pack[4] ;
+  if (n != 2)
+    strerr_dief8x(1, "too ", n < 2 ? "few" : "many", " arguments to directive ", "global", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+  x = BSEARCH(char const *, s + word[0], globalkeys) ;
+  if (!x) strerr_dief6x(1, "unrecognized global setting ", s + word[0], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+  if (!uint320_scan(s + word[1], &u))
+    strerr_dief6x(1, "invalid (non-numeric) value for global setting ", s + word[0], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+  uint32_pack_big(pack, u) ;
   {
-    case 0 : /* 4 bytes */
-    {
-      char pack[4] ;
-      uint32_t u ;
-      if (n > 2)
-        strerr_dief8x(1, "too ", "many", " arguments to global setting ", s + word[0], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
-      if (!uint320_scan(s + word[1], &u))
-        strerr_dief6x(1, "invalid (non-numeric) value for global setting ", s + word[0], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
-      uint32_pack_big(pack, u) ;
-      add_unique(gl->key, pack, 4, md) ;
-      break ;
-    }
-    case 1 : /* argv */
-    {
-      node node ;
-      conftree_checkunique(gl->key, md) ;
-      confnode_start(&node, gl->key, md->filepos, md->line) ;
-      for (size_t i = 1 ; i < n ; i++)
-        confnode_add(&node, s + word[i], strlen(s + word[i]) + 1) ;
-      conftree_add(&node) ;
-      break ;
-    }
+    size_t len = strlen(*x) ;
+    char key[len + 3] ;
+    memcpy(key, "G:", 2) ;
+    memcpy(key + 2, *x, len + 1) ;
+    add_unique(key, pack, 4, md) ;
   }
+}
+
+static inline void parse_indexfile (char const *s, size_t const *word, size_t n, mdt const *md)
+{
+  node node ;
+  if (!n)
+    strerr_dief8x(1, "too ", "few", " arguments to directive ", "index_file", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+  conftree_checkunique("G:index-file", md) ;
+  confnode_start(&node, "G:index-file", md->filepos, md->line) ;
+  for (size_t i = 0 ; i < n ; i++)
+    confnode_add(&node, s + word[i], strlen(s + word[i]) + 1) ;
+  conftree_add(&node) ;
 }
 
 static inline void parse_log (char const *s, size_t const *word, size_t n, mdt const *md)
@@ -387,6 +380,7 @@ static inline void process_line (char const *s, size_t const *word, size_t n, st
     { .s = "domain", .token = T_DOMAIN },
     { .s = "file-type", .token = T_FILETYPE },
     { .s = "global", .token = T_GLOBAL },
+    { .s = "index-file", .token = T_INDEXFILE },
     { .s = "log", .token = T_LOG },
     { .s = "no-auth", .token = T_NOAUTH },
     { .s = "noncgi", .token = T_NONCGI },
@@ -420,6 +414,9 @@ static inline void process_line (char const *s, size_t const *word, size_t n, st
     }
     case T_GLOBAL :
       parse_global(s, word, n, md) ;
+      break ;
+    case T_INDEXFILE :
+      parse_indexfile(s, word, n, md) ;
       break ;
     case T_LOG :
       parse_log(s, word, n, md) ;

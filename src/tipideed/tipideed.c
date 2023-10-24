@@ -393,7 +393,7 @@ int main (int argc, char const *const *argv, char const *const *envp)
   g.maxrqbody = get_uint32("G:max_request_body_length") ;
   g.maxcgibody = get_uint32("G:max_cgi_body_length") ;
   g.logv = get_uint32("G:logv") ;
-  n = tipidee_conf_get_argv(&g.conf, "G:index_file", g.indexnames, 16, &g.indexlen) ;
+  n = tipidee_conf_get_argv(&g.conf, "G:index-file", g.indexnames, 16, &g.indexlen) ;
   if (!n) strerr_dief3x(102, "bad", " config value for ", "G:index_file") ;
   g.indexn = n-1 ;
 

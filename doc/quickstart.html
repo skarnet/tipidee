@@ -103,6 +103,43 @@ your service manager scripts. </li>
 containing service files to run tipidee under various service managers. 
 </p>
 
+<div id="caveats">
+<h2> Caveats </h2>
+</div>
+
+<h3> <tt>Host</tt> support in HTTP/1.0 </h3>
+
+<p>
+ A strict reading of the
+<a href="https://datatracker.ietf.org/doc/html/rfc1945">HTTP/1.0 specification</a>
+says that the Request-Line is the only piece of client-provided data that can
+be used to identify a resource, and that extension headers can modify the
+interpretation and processing of that resource but not <em>change</em> what
+resource is served.
+</p>
+
+<p>
+ This goes directly against the use of the <tt>Host</tt> header to identify
+the host of a resource and that is used in HTTP/1.1.
+</p>
+
+<p>
+ A lot of HTTP servers out there don't really care about that, and have
+historically used <tt>Host</tt> to perform virtual hosting even in HTTP/1.0,
+even though it goes against the specification. Consequently, clients have
+adapted, and
+<a href="https://github.com/curl/curl/issues/5976">even the popular
+<tt>curl</tt> client</a> sends a <tt>Host</tt> header in HTTP/1.0.
+</p>
+
+<p>
+ Since the point of the Web is interoperability, tipidee aligns with
+the common practice, and will read a client-provided <tt>Host</tt> header,
+if any, to determine what domain the request is directed to, even in
+HTTP/1.0 though it is contrary to the specification. I refer to this
+practice as "HTTP/1.05".
+</p>
+
 <div id="faq">
 <h2> Frequently asked questions </h2>
 </div>
