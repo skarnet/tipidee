@@ -449,7 +449,7 @@ the user to define custom headers that are to be added to every response.
 provides a header with the same name. If <tt>weak</tt>, the CGI value has precedence; if <tt>strong</tt>,
 <em>value</em> has precedence. </li>
  <li> <em>key</em> is the name of the custom header, such as <tt>Content-Security-Policy</tt> or <tt>X-Tacky-Header</tt>.
-It is case-insensitive; its spelling be canonicalized when processed. </li>
+It is case-insensitive; its spelling will be canonicalized when processed. </li>
  <li> <em>value</em> is the content of the header. Any whitespace given in <em>value</em> will all register as a single space. </li>
  <li> Some headers cannot be customized. <a href="tipidee-config.html">tipidee-config</a>
 will reject an attempt to define a <tt>Connection</tt> or a <tt>Date</tt> header, for instance. </li>
