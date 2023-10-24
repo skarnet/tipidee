@@ -30,6 +30,7 @@ struct global_s
   tain cgitto ;
   char const *defaulthost ;
   char const *indexnames[16] ;
+  tipidee_response_header const *rhdr ;
   int p[2] ;
   uint32_t logv ;
   uint32_t maxrqbody ;
@@ -51,6 +52,7 @@ struct global_s
   .cgitto = TAIN_ZERO, \
   .defaulthost = "@", \
   .indexnames = { 0 }, \
+  .rhdr = 0, \
   .p = { -1, -1 }, \
   .logv = TIPIDEE_LOG_DEFAULT, \
   .maxrqbody = 0, \

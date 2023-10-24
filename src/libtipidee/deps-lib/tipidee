@@ -4,6 +4,7 @@ tipidee_conf_get_argv.o
 tipidee_conf_get_content_type.o
 tipidee_conf_get_errorfile.o
 tipidee_conf_get_redirection.o
+tipidee_conf_get_responseheaders.o
 tipidee_conf_get_string.o
 tipidee_conf_get_uint32.o
 tipidee_conf_init.o
@@ -24,6 +25,7 @@ tipidee_response_header_common_put.o
 tipidee_response_header_date.o
 tipidee_response_header_date_fmt.o
 tipidee_response_header_lastmodified.o
+tipidee_response_header_preparebuiltin.o
 tipidee_response_status.o
 tipidee_rql_read.o
 tipidee_uri_parse.o

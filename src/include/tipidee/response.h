@@ -16,6 +16,14 @@
 
 #include <tipidee/rql.h>
 
+typedef struct tipidee_response_header_s tipidee_response_header, *tipidee_response_header_ref ;
+struct tipidee_response_header_s
+{
+  char const *key ;
+  char const *value ;
+  uint8_t options ;
+} ;
+
 typedef struct tipidee_response_header_builtin_s tipidee_response_header_builtin, *tipidee_response_header_builtin_ref ;
 struct tipidee_response_header_builtin_s
 {
@@ -41,5 +49,7 @@ extern size_t tipidee_response_error_nofile (buffer *, tipidee_rql const *, unsi
 
 extern tipidee_response_header_builtin const *tipidee_response_header_builtin_table ;
 extern char const *tipidee_response_header_builtin_search (char const *) ;
+
+extern int tipidee_response_header_preparebuiltin (tipidee_response_header *, uint32_t, char const *, size_t) ;
 
 #endif

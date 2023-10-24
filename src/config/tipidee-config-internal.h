@@ -81,11 +81,11 @@ extern int conftree_write (cdbmaker *) ;
 
  /* headers */
 
-extern void header_canonize (char *) ;
+extern void header_canonicalize (char *) ;
 extern int header_allowed (char const *) ;
 
 extern node const *headers_search (char const *) ;
-extern void headers_add (char const *, char const *, uint8_t, size_t, uint32_t) ;
+extern void headers_addv (char const *, uint8_t, char const *, size_t const *, size_t, size_t, uint32_t) ;
 extern void headers_finish (void) ;
 
 

@@ -1,8 +1,10 @@
 /* ISC license. */
 
+#include <stdint.h>
 #include <string.h>
 #include <ctype.h>
 
+#include <skalibs/uint32.h>
 #include <skalibs/strerr.h>
 #include <skalibs/genalloc.h>
 #include <skalibs/avltree.h>
@@ -47,7 +49,7 @@ int header_allowed (char const *key)
   return !p || p->overridable ;
 }
 
-void header_canonize (char *key)
+void header_canonicalize (char *key)
 {
   int h = 1 ;
   size_t len = strlen(key) ;
@@ -63,17 +65,25 @@ node const *headers_search (char const *key)
   return repo_search(&headers, key) ;
 }
 
-void headers_add (char const *key, char const *value, uint8_t options, size_t filepos, uint32_t line)
+void headers_addv (char const *key, uint8_t options, char const *s, size_t const *word, size_t n, size_t filepos, uint32_t line)
 {
   node node ;
+  if (!n) return ;
   node_start(&headers_storage, &node, key, filepos, line) ;
   node_add(&headers_storage, &node, options & 1 ? "\1" : "", 1) ;
-  node_add(&headers_storage, &node, value, strlen(value) + 1) ;
+  node_add(&headers_storage, &node, s + word[0], strlen(s + word[0])) ;
+  for (size_t i = 1 ; i < n ; i++)
+  {
+    node_add(&headers_storage, &node, " ", 1) ;
+    node_add(&headers_storage, &node, s + word[i], strlen(s + word[i])) ;
+  }
+  node_add(&headers_storage, &node, "", 1) ;
   repo_add(&headers, &node) ;
 }
 
-static void headers_defaults (node *node)
+static uint32_t headers_defaults (node *node)
 {
+  uint32_t n = 0 ;
   for (size_t i = 0 ; i < sizeof(builtinheaders) / sizeof(struct builtinheaders_s) ; i++)
   {
     struct builtinheaders_s const *p = builtinheaders + i ;
@@ -82,7 +92,9 @@ static void headers_defaults (node *node)
     confnode_add(node, p->key, strlen(p->key) + 1) ;
     confnode_add(node, p->overridable ? "\1" : "", 1) ;
     confnode_add(node, p->value, strlen(p->value) + 1) ;
+    n++ ;
   }
+  return n ;
 }
 
 static int header_write (uint32_t d, unsigned int h, void *data)
@@ -91,16 +103,20 @@ static int header_write (uint32_t d, unsigned int h, void *data)
   node *const header = genalloc_s(node, &headers.ga) + d ;
   (void)h ;
   confnode_add(confnode, headers_storage.s + header->key, header->keylen + 1) ;
-  confnode_add(confnode, headers_storage.s + header->data, header->datalen + 1) ;
+  confnode_add(confnode, headers_storage.s + header->data, header->datalen) ;
   return 1 ;
 }
 
 void headers_finish (void)
 {
+  uint32_t n ;
+  char pack[4] ;
   node node ;
-  confnode_start(&node, "G:response-headers", 0, 0) ;
-  headers_defaults(&node) ;
+  confnode_start(&node, "G:response_headers", 0, 0) ;
+  n = avltree_len(&headers.tree) + headers_defaults(&node) ;
   (void)avltree_iter(&headers.tree, &header_write, &node) ;
+  uint32_pack_big(pack, n) ;
+  confnode_add(&node, pack, 4) ;
   conftree_add(&node) ;
   avltree_free(&headers.tree) ;
   genalloc_free(node, &headers.ga) ;

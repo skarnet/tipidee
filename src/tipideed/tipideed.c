@@ -350,6 +350,9 @@ static inline int serve (tipidee_rql *rql, char const *docroot, char *uribuf, ti
 int main (int argc, char const *const *argv, char const *const *envp)
 {
   stralloc bodysa = STRALLOC_ZERO ;
+  size_t remoteip, remotehost ;
+  char const *x ;
+  uint32_t n, rhlen ;
   char progstr[14 + PID_FMT] = "tipideed: pid " ;
   progstr[14 + pid_fmt(progstr + 14, getpid())] = 0 ;
   PROG = progstr ;
@@ -383,31 +386,37 @@ int main (int argc, char const *const *argv, char const *const *envp)
     tipideed_harden(h) ;
   }
 
-  {
-    size_t remoteip, remotehost ;
-    unsigned int n ;
-    prep_env(&remoteip, &remotehost) ;
-    inittto(&g.readtto, "G:read_timeout") ;
-    inittto(&g.writetto, "G:write_timeout") ;
-    inittto(&g.cgitto, "G:cgi_timeout") ;
-    g.maxrqbody = get_uint32("G:max_request_body_length") ;
-    g.maxcgibody = get_uint32("G:max_cgi_body_length") ;
-    g.logv = get_uint32("G:logv") ;
-    n = tipidee_conf_get_argv(&g.conf, "G:index_file", g.indexnames, 16, &g.indexlen) ;
-    if (!n) strerr_dief3x(102, "bad", " config value for ", "G:index_file") ;
-    g.indexn = n-1 ;
+  prep_env(&remoteip, &remotehost) ;
+  inittto(&g.readtto, "G:read_timeout") ;
+  inittto(&g.writetto, "G:write_timeout") ;
+  inittto(&g.cgitto, "G:cgi_timeout") ;
+  g.maxrqbody = get_uint32("G:max_request_body_length") ;
+  g.maxcgibody = get_uint32("G:max_cgi_body_length") ;
+  g.logv = get_uint32("G:logv") ;
+  n = tipidee_conf_get_argv(&g.conf, "G:index_file", g.indexnames, 16, &g.indexlen) ;
+  if (!n) strerr_dief3x(102, "bad", " config value for ", "G:index_file") ;
+  g.indexn = n-1 ;
 
-    if (ndelay_on(0) == -1 || ndelay_on(1) == -1)
-      strerr_diefu1sys(111, "set I/O nonblocking") ;
-    init_splice_pipe() ;
-    if (!sig_catch(SIGCHLD, &sigchld_handler))
-      strerr_diefu1sys(111, "set SIGCHLD handler") ;
-    if (!sig_altignore(SIGPIPE))
-      strerr_diefu1sys(111, "ignore SIGPIPE") ;
-    if (!tain_now_set_stopwatch_g())
-      strerr_diefu1sys(111, "initialize clock") ;
-    tipidee_log_start(g.logv, g.sa.s + remoteip, g.sa.s + remotehost) ;
-  }
+  x = tipidee_conf_get_responseheaders(&g.conf, "G:response_headers", &rhlen, &n) ;
+  if (!x) strerr_diefu3sys(102, "get", " config value for ", "G:response_headers") ;
+
+  tipidee_response_header rhdr[n ? n : 1] ;  /* should start a block but that's a lot of editing */
+  if (!tipidee_response_header_preparebuiltin(rhdr, n, x, rhlen))
+    strerr_dief3x(102, "bad", " config value for ", "G:response_headers") ;
+  g.rhdr = rhdr ;
+
+  if (ndelay_on(0) == -1 || ndelay_on(1) == -1)
+    strerr_diefu1sys(111, "set I/O nonblocking") ;
+  init_splice_pipe() ;
+  if (!sig_catch(SIGCHLD, &sigchld_handler))
+    strerr_diefu1sys(111, "set SIGCHLD handler") ;
+  if (!sig_altignore(SIGPIPE))
+    strerr_diefu1sys(111, "ignore SIGPIPE") ;
+  if (!tain_now_set_stopwatch_g())
+    strerr_diefu1sys(111, "initialize clock") ;
+
+
+  tipidee_log_start(g.logv, g.sa.s + remoteip, g.sa.s + remotehost) ;
 
 
  /* Main loop */
@@ -419,7 +428,6 @@ int main (int argc, char const *const *argv, char const *const *envp)
     tipidee_headers hdr ;
     int e ;
     unsigned int localredirs = 0 ;
-    char const *x ;
     size_t content_length ;
     tipidee_transfercoding tcoding = TIPIDEE_TRANSFERCODING_UNKNOWN ;
     char uribuf[URI_BUFSIZE] ;

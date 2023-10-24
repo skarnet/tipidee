@@ -430,6 +430,31 @@ list</a> of default Content-Type mappings; this directive should only be necessa
 serving files with uncommon extensions or have specific needs. </li>
 </ul>
 
+<div id="custom-header">
+<h3> The <tt>custom-header</tt> directive </h3>
+</div>
+
+<p>
+ <tt>custom-header</tt> is also a global directive, but is introduced by the
+keyword <tt>custom-header</tt>, without prepending <tt>global</tt>. It allows
+the user to define custom headers that are to be added to every response.
+</p>
+
+<p>
+ <code> custom-header <em>option</em> <em>key</em> <em>value</em> </code>
+</p>
+
+<ul>
+ <li> <em>option</em> is <tt>weak</tt> or <tt>strong</tt>, and determines what happens when a CGI script
+provides a header with the same name. If <tt>weak</tt>, the CGI value has precedence; if <tt>strong</tt>,
+<em>value</em> has precedence. </li>
+ <li> <em>key</em> is the name of the custom header, such as <tt>Content-Security-Policy</tt> or <tt>X-Tacky-Header</tt>.
+It is case-insensitive; its spelling be canonicalized when processed. </li>
+ <li> <em>value</em> is the content of the header. Any whitespace given in <em>value</em> will all register as a single space. </li>
+ <li> Some headers cannot be customized. <a href="tipidee-config.html">tipidee-config</a>
+will reject an attempt to define a <tt>Connection</tt> or a <tt>Date</tt> header, for instance. </li>
+</ul>
+
 <div id="local">
 <h3> Local directives </h3>
 </div>

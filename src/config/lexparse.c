@@ -45,6 +45,7 @@ enum token_e
   T_GLOBAL,
   T_LOG,
   T_CONTENTTYPE,
+  T_CUSTOMHEADER,
   T_DOMAIN,
   T_NPHPREFIX,
   T_REDIRECT,
@@ -192,6 +193,27 @@ static inline void parse_contenttype (char const *s, size_t const *word, size_t 
     memcpy(key + 2, s + word[i] + 1, len - 1) ;
     key[len + 1] = 0 ;
     add_unique(key, ct, strlen(ct) + 1, md) ;
+  }
+}
+
+static inline void parse_customheader (char const *s, size_t const *word, size_t n, mdt const *md)
+{
+  uint8_t options = 0 ;
+  if (n < 3)
+    strerr_dief8x(1, "too ", "few", " arguments to directive ", "custom-header", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+  if (!strcmp(s + word[0], "weak")) options |= 1 ;
+  else if (!strcmp(s + word[0], "strong")) options &= ~1 ;
+  else strerr_dief7x(1, "type should be weak or strong for", " directive ", "custom-header", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+  word++ ; n-- ;
+  {
+    size_t len = strlen(s + *word) ;
+    char key[len + 1] ;
+    memcpy(key, s + *word++, len + 1) ; n-- ;
+    header_canonicalize(key) ;
+    if (!header_allowed(key))
+      strerr_dief7x(1, "header ", key, " cannot be customized", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    headers_checkunique(key, md) ;
+    headers_addv(key, options, s, word, n, md->filepos, md->line) ;
   }
 }
 
@@ -360,6 +382,7 @@ static inline void process_line (char const *s, size_t const *word, size_t n, st
     { .s = "basic-auth", .token = T_BASICAUTH },
     { .s = "cgi", .token = T_CGI },
     { .s = "content-type", .token = T_CONTENTTYPE },
+    { .s = "custom-header", .token = T_CUSTOMHEADER },
     { .s = "custom-response", .token = T_CUSTOMRESPONSE },
     { .s = "domain", .token = T_DOMAIN },
     { .s = "file-type", .token = T_FILETYPE },
@@ -403,6 +426,9 @@ static inline void process_line (char const *s, size_t const *word, size_t n, st
       break ;
     case T_CONTENTTYPE :
       parse_contenttype(s, word, n, md) ;
+      break ;
+    case T_CUSTOMHEADER :
+      parse_customheader(s, word, n, md) ;
       break ;
     case T_DOMAIN :
       if (n != 1)
@@ -518,4 +544,5 @@ void conf_lexparse (buffer *b, char const *ifile)
   stralloc_free(&domain) ;
   genalloc_free(size_t, &words) ;
   stralloc_free(&sa) ;
+  headers_finish() ;
 }
