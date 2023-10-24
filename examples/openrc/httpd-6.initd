@@ -6,8 +6,8 @@ _ip=::
 _uid=`id -u www-data`
 _gid=`id -g www-data`
 
-command=/bin/env
-command_args="UID=${_uid} GID=${_gid} s6-tcpserver6 -U ${_ip} 80 s6-tcpserver-access tipideed"
+command=/usr/bin/env
+command_args="UID=${_uid} GID=${_gid} s6-tcpserver -U ${_ip} 80 tipideed"
 command_background=yes
 directory=/home/www-data
 pidfile=/run/httpd-6.pid
