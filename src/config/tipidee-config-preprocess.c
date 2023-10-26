@@ -21,7 +21,7 @@
 
 #define USAGE "tipidee-config-preprocess file"
 #define dieusage() strerr_dieusage(100, USAGE)
-#define dienomem() strerr_diefu1sys(111, "stralloc_catb") ;
+#define dienomem() strerr_diefu1sys(111, "build internal strings") ;
 
 static stralloc sa = STRALLOC_ZERO ;
 static genalloc ga = GENALLOC_ZERO ;  /* size_t */
@@ -63,7 +63,8 @@ static inline void includecwd (void)
   DIR *dir ;
   size_t sabase = sa.len ;
   size_t gabase = genalloc_len(size_t, &ga) ;
-  if (sagetcwd(&sa) < 0 || !stralloc_0(&sa)) dienomem() ;
+  if (sagetcwd(&sa) == -1) strerr_diefu1sys(111, "getcwd") ;
+  if (!stralloc_0(&sa)) dienomem() ;
   dir = opendir(".") ;
   if (!dir) strerr_diefu2sys(111, "opendir ", sa.s + sabase) ;
 
@@ -95,7 +96,7 @@ static void include (char const *file)
   size_t sabase = sa.len ;
   size_t filelen = strlen(file) ;
   if (!sadirname(&sa, file, filelen) || !stralloc_0(&sa)) dienomem() ;
-  if (chdir(sa.s + sabase) < 0) strerr_diefu2sys(111, "chdir to ", sa.s + sabase) ;
+  if (chdir(sa.s + sabase) == -1) strerr_diefu2sys(111, "chdir to ", sa.s + sabase) ;
   sa.len = sabase ;
   if (!sabasename(&sa, file, filelen)) dienomem() ;
   {
@@ -151,7 +152,16 @@ static void includefromhere (char const *file)
   char buf[4096] ;
   unsigned char state = 0 ;
 
-  if (!stralloc_catb(&namesa, "\004", 1) || sarealpath(&namesa, file) < 0 || !stralloc_0(&namesa)) dienomem() ;
+  if (!stralloc_catb(&namesa, "\004", 1)) dienomem() ;
+  if (sarealpath(&namesa, file) == -1)
+  {
+    cmd = errno ;
+    if (sagetcwd(&sa) == -1) strerr_diefu1sys(111, "getcwd") ;
+    if (!stralloc_0(&sa)) dienomem() ;
+    errno = cmd ;
+    strerr_dief4sys(111, "from directory ", sa.s + sabase, ": unable to realpath ", file) ;
+  }
+  if (!stralloc_0(&namesa)) dienomem() ;
   if (avltree_search(&namemap, namesa.s + namesabase + 1, &d))
   {
     if (namesa.s[d] & 0x04)
@@ -169,12 +179,12 @@ static void includefromhere (char const *file)
     if (!avltree_insert(&namemap, d)) dienomem() ;
   }
 
-  if (!string_quote(&sa, namesa.s + d + 1, strlen(namesa.s + d + 1))) dienomem() ;
+  if (!string_quote_nospace(&sa, namesa.s + d + 1, strlen(namesa.s + d + 1))) dienomem() ;
   if (!stralloc_0(&sa)) dienomem() ;
 
   sastart = sa.len ;
   fd = open_readb(file) ;
-  if (fd < 0) strerr_diefu2sys(111, "open ", namesa.s + d + 1) ;
+  if (fd == -1) strerr_diefu2sys(111, "open ", namesa.s + d + 1) ;
   buffer_init(&b, &buffer_read, fd, buf, 4096) ;
 
   if (buffer_put(buffer_1, "! 0 ", 4) < 4
