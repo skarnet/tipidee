@@ -81,20 +81,19 @@ void headers_addv (char const *key, uint8_t options, char const *s, size_t const
   repo_add(&headers, &node) ;
 }
 
-static uint32_t headers_defaults (node *node)
+static inline void headers_defaults (void)
 {
-  uint32_t n = 0 ;
   for (size_t i = 0 ; i < sizeof(builtinheaders) / sizeof(struct builtinheaders_s) ; i++)
   {
+    node node ;
     struct builtinheaders_s const *p = builtinheaders + i ;
     if (!p->value) continue ;
     if (p->overridable && headers_search(p->key)) continue ;
-    confnode_add(node, p->key, strlen(p->key) + 1) ;
-    confnode_add(node, p->overridable ? "\1" : "", 1) ;
-    confnode_add(node, p->value, strlen(p->value) + 1) ;
-    n++ ;
+    node_start(&headers_storage, &node, p->key, 0, 0) ;
+    node_add(&headers_storage, &node, p->overridable ? "\1" : "", 1) ;
+    node_add(&headers_storage, &node, p->value, strlen(p->value) + 1) ;
+    repo_add(&headers, &node) ;
   }
-  return n ;
 }
 
 static int header_write (uint32_t d, unsigned int h, void *data)
@@ -109,13 +108,12 @@ static int header_write (uint32_t d, unsigned int h, void *data)
 
 void headers_finish (void)
 {
-  uint32_t n ;
-  char pack[4] ;
   node node ;
+  char pack[4] ;
+  headers_defaults() ;
+  uint32_pack_big(pack, avltree_len(&headers.tree)) ;
   confnode_start(&node, "G:response_headers", 0, 0) ;
-  n = avltree_len(&headers.tree) + headers_defaults(&node) ;
   (void)avltree_iter(&headers.tree, &header_write, &node) ;
-  uint32_pack_big(pack, n) ;
   confnode_add(&node, pack, 4) ;
   conftree_add(&node) ;
   avltree_free(&headers.tree) ;
