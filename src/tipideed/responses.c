@@ -2,6 +2,7 @@
 
 #include <skalibs/bsdsnowflake.h>
 
+#include <errno.h>
 #include <string.h>
 #include <unistd.h>
 
@@ -103,7 +104,9 @@ void response_error_and_exit (tipidee_rql const *rql, char const *docroot, unsig
 
 void response_error_and_die (tipidee_rql const *rql, int e, char const *docroot, unsigned int status, char const *const *v, unsigned int n, uint32_t options)
 {
+  int serr = errno ;
   response_error(rql, docroot, status, options | 1) ;
+  errno = serr ;
   if (options & 1) strerr_dievsys(e, v, n) ;
   else strerr_diev(e, v, n) ;
 }

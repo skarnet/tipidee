@@ -11,19 +11,20 @@
 
 static int get_redir (tipidee_conf const *conf, size_t minl, char *key, size_t l, char const *path, tipidee_redirection *r)
 {
-  char const *v ;
+  char const *v = 0 ;
   key[0] = 'R' ;
   key[l] = '/' ;
-  for (;;)
+  errno = ENOENT ;
+  while (!v)
   {
-    while (l > minl && key[l] != '/') l-- ;
-    if (l <= minl) return 0 ;
+    if (errno != ENOENT) return -1 ;
+    while (l >= minl && key[l] != '/') l-- ;
+    if (l < minl) break ;
     key[l--] = 0 ;
     v = tipidee_conf_get_string(conf, key) ;
-    if (v) break ;
-    if (errno != ENOENT) return -1 ;
     key[0] = 'r' ;
   }
+  if (!v) return 0 ;
   if (v[0] < '@' || v[0] > 'C') return (errno = EPROTO, -1) ;
   r->type = v[0] & ~'@' ;
   r->location = v+1 ;

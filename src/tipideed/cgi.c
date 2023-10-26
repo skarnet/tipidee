@@ -124,10 +124,10 @@ static inline int do_nph (tipidee_rql const *rql, char const *docroot, char cons
         PROG = progstr ;
         tain_add_g(&deadline, &g.cgitto) ;
         close(p[0]) ;
-        if (ndelay_on(p[1]) == -1) strerr_diefu1sys(111, "set fd nonblocking") ;
+        if (ndelay_on(p[1]) == -1) die500sys(rql, 111, docroot, "set fd nonblocking") ;
         if (buffer_timed_put_g(&b, body, bodylen, &deadline) < bodylen
          || !buffer_timed_flush_g(&b, &deadline))
-          strerr_diefu2sys(111, "write request body to nph ", argv[0]) ;
+          die500sys(rql, 111, docroot, "write request body to nph ", argv[0]) ;
         _exit(0) ;
       }
       default : break ;
