@@ -386,7 +386,7 @@ http <em>version</em></tt>. The path is decoded, but if there are non-printable 
 encoded as hexadecimal values <tt>\0xab</tt>. If the request line includes a query, a <tt>query <em>query</em></tt> field
 is added before the <tt>http</tt> field. </dd>
  <dt> <tt>referrer</tt> </dt> <dd> Add a <tt>referrer "<em>referrer</em>"</tt> field to the <tt>request</tt> line, for
-requests that include a <tt>Referrer:</tt> header. <em>referrer</em> is quoted like <em>path</em>, to avoid
+requests that include a <tt>Referer:</tt> header. <em>referrer</em> is quoted like <em>path</em>, to avoid
 malicious clients messing with log lines.
 This keyword has no effect when given without the <tt>request</tt> keyword. </dd>
  <dt> <tt>user-agent</tt> </dt> <dd> Add a <tt>user-agent "<em>user-agent</em>"</tt> field to the <tt>request</tt> line, for
@@ -453,9 +453,9 @@ the header:
 </p>
 
 <p>
- <code> custom-header add <em>name</em> <em>value</em> </code>
- <code> custom-header always <em>name</em> <em>value</em> </code>
- <code> custom-header remove <em>name</em> </code>
+ <code> custom-header add <em>name</em> <em>value</em> </code> <br>
+ <code> custom-header always <em>name</em> <em>value</em> </code> <br>
+ <code> custom-header remove <em>name</em> </code> <br>
  <code> custom-header never <em>name</em> </code>
 </p>
 

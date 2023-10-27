@@ -20,7 +20,7 @@ void tipidee_log_request (uint32_t v, tipidee_rql const *rql, tipidee_headers co
   if (!string_quotes(sa, rql->uri.path) || !stralloc_0(sa)) goto eerr ;
   if (v & TIPIDEE_LOG_REFERRER)
   {
-    char const *x = tipidee_headers_search(hdr, "Referrer") ;
+    char const *x = tipidee_headers_search(hdr, "Referer") ;
     if (x)
     {
       refpos = sa->len ;
