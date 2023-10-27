@@ -68,16 +68,19 @@ node const *headers_search (char const *key)
 void headers_addv (char const *key, uint8_t options, char const *s, size_t const *word, size_t n, size_t filepos, uint32_t line)
 {
   node node ;
-  if (!n) return ;
+  char c = !s << 7 | (options & 1) ;
   node_start(&headers_storage, &node, key, filepos, line) ;
-  node_add(&headers_storage, &node, options & 1 ? "\1" : "", 1) ;
-  node_add(&headers_storage, &node, s + word[0], strlen(s + word[0])) ;
-  for (size_t i = 1 ; i < n ; i++)
+  node_add(&headers_storage, &node, &c, 1) ;
+  if (s)
   {
-    node_add(&headers_storage, &node, " ", 1) ;
-    node_add(&headers_storage, &node, s + word[i], strlen(s + word[i])) ;
+    node_add(&headers_storage, &node, s + word[0], strlen(s + word[0])) ;
+    for (size_t i = 1 ; i < n ; i++)
+    {
+      node_add(&headers_storage, &node, " ", 1) ;
+      node_add(&headers_storage, &node, s + word[i], strlen(s + word[i])) ;
+    }
+    node_add(&headers_storage, &node, "", 1) ;
   }
-  node_add(&headers_storage, &node, "", 1) ;
   repo_add(&headers, &node) ;
 }
 
@@ -87,11 +90,11 @@ static inline void headers_defaults (void)
   {
     node node ;
     struct builtinheaders_s const *p = builtinheaders + i ;
-    if (!p->value) continue ;
+    char c = (!p->value << 7) | p->overridable ;
     if (p->overridable && headers_search(p->key)) continue ;
     node_start(&headers_storage, &node, p->key, 0, 0) ;
-    node_add(&headers_storage, &node, p->overridable ? "\1" : "", 1) ;
-    node_add(&headers_storage, &node, p->value, strlen(p->value) + 1) ;
+    node_add(&headers_storage, &node, &c, 1) ;
+    if (p->value) node_add(&headers_storage, &node, p->value, strlen(p->value) + 1) ;
     repo_add(&headers, &node) ;
   }
 }

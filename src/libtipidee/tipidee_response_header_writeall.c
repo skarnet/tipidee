@@ -11,6 +11,7 @@ size_t tipidee_response_header_writeall (buffer *b, tipidee_response_header cons
   if (options & 1) m += buffer_putsnoflush(b, "Connection: close\r\n") ;
   for (uint32_t i = 0 ; i < rhdrn ; i++)
   {
+    if (!rhdr[i].value) continue ;
     m += buffer_putsnoflush(b, rhdr[i].key) ;
     m += buffer_putnoflush(b, ": ", 2) ;
     m += buffer_putsnoflush(b, rhdr[i].value) ;

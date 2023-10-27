@@ -27,13 +27,13 @@ struct mdt_s
 } ;
 #define MDT_ZERO { .filepos = 0, .line = 0, .linefmt = "0" }
 
-struct logkey_s
+struct namevalue_s
 {
   char const *name ;
   uint32_t value ;
 } ;
 
-enum token_e
+enum directivevalue_e
 {
   T_BANG,
   T_GLOBAL,
@@ -54,10 +54,12 @@ enum token_e
   T_CUSTOMRESPONSE
 } ;
 
-struct directive_s
+enum customheaderoptionvalue_e
 {
-  char const *s ;
-  enum token_e token ;
+  CHO_ADD,
+  CHO_ALWAYS,
+  CHO_REMOVE,
+  CHO_NEVER
 } ;
 
 static void conftree_checkunique (char const *key, mdt const *md)
@@ -134,7 +136,7 @@ static inline void parse_indexfile (char const *s, size_t const *word, size_t n,
 
 static inline void parse_log (char const *s, size_t const *word, size_t n, mdt const *md)
 {
-  static struct logkey_s const logkeys[] =
+  static struct namevalue_s const logkeys[] =
   {
     { .name = "answer", .value = TIPIDEE_LOG_ANSWER },
     { .name = "answer_size", .value = TIPIDEE_LOG_SIZE },
@@ -155,7 +157,7 @@ static inline void parse_log (char const *s, size_t const *word, size_t n, mdt c
     strerr_dief8x(1, "too ", "few", " arguments to directive ", "log", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   for (size_t i = 0 ; i < n ; i++)
   {
-    struct logkey_s const *l = BSEARCH(struct logkey_s, s + word[i], logkeys) ;
+    struct namevalue_s const *l = BSEARCH(struct namevalue_s, s + word[i], logkeys) ;
     if (!l) strerr_dief6x(1, "unrecognized log setting ", s + word[i], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
     if (l->value) v |= l->value ;
     else if (n == 1) v = 0 ;
@@ -191,12 +193,20 @@ static inline void parse_contenttype (char const *s, size_t const *word, size_t 
 
 static inline void parse_customheader (char const *s, size_t const *word, size_t n, mdt const *md)
 {
-  uint8_t options = 0 ;
-  if (n < 3)
+  static struct namevalue_s const choptions[] =
+  {
+    { .name = "add", .value = CHO_ADD },
+    { .name = "always", .value = CHO_ALWAYS },
+    { .name = "never", .value = CHO_NEVER },
+    { .name = "remove", .value = CHO_REMOVE },
+  } ;
+  struct namevalue_s const *p ;
+  if (n < 2)
     strerr_dief8x(1, "too ", "few", " arguments to directive ", "custom-header", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
-  if (!strcmp(s + word[0], "weak")) options |= 1 ;
-  else if (!strcmp(s + word[0], "strong")) options &= ~1 ;
-  else strerr_dief7x(1, "type should be weak or strong for", " directive ", "custom-header", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+  p = BSEARCH(struct namevalue_s, s + *word, choptions) ;
+  if (!p) strerr_dief7x(1, "type should be weak or strong for", " directive ", "custom-header", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+  if ((p->value == CHO_ADD || p->value == CHO_ALWAYS) == (n == 2))
+    strerr_dief10x(1, "too ", n == 2 ? "few" : "many", " arguments to directive ", "custom-header", " ", p->name, " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   word++ ; n-- ;
   {
     size_t len = strlen(s + *word) ;
@@ -206,7 +216,22 @@ static inline void parse_customheader (char const *s, size_t const *word, size_t
     if (!header_allowed(key))
       strerr_dief7x(1, "header ", key, " cannot be customized", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
     headers_checkunique(key, md) ;
-    headers_addv(key, options, s, word, n, md->filepos, md->line) ;
+    switch (p->value)
+    {
+      case CHO_ADD :
+        headers_addv(key, 1, s, word, n, md->filepos, md->line) ;
+        break ;
+      case CHO_ALWAYS :
+        headers_addv(key, 0, s, word, n, md->filepos, md->line) ;
+        break ;
+      case CHO_NEVER :
+        headers_addv(key, 0, 0, 0, 0, md->filepos, md->line) ;
+        break ;
+      case CHO_REMOVE :
+        headers_addv(key, 1, 0, 0, 0, md->filepos, md->line) ;
+        break ;
+      default : strerr_dief1x(101, "can't happen: unknown value in parse_customheader") ;
+    }
   }
 }
 
@@ -369,34 +394,34 @@ static inline void parse_customresponse (char const *s, size_t const *word, size
 
 static inline void process_line (char const *s, size_t const *word, size_t n, stralloc *domain, mdt *md)
 {
-  static struct directive_s const directives[] =
+  static struct namevalue_s const directives[] =
   {
-    { .s = "!", .token = T_BANG },
-    { .s = "basic-auth", .token = T_BASICAUTH },
-    { .s = "cgi", .token = T_CGI },
-    { .s = "content-type", .token = T_CONTENTTYPE },
-    { .s = "custom-header", .token = T_CUSTOMHEADER },
-    { .s = "custom-response", .token = T_CUSTOMRESPONSE },
-    { .s = "domain", .token = T_DOMAIN },
-    { .s = "file-type", .token = T_FILETYPE },
-    { .s = "global", .token = T_GLOBAL },
-    { .s = "index-file", .token = T_INDEXFILE },
-    { .s = "log", .token = T_LOG },
-    { .s = "no-auth", .token = T_NOAUTH },
-    { .s = "noncgi", .token = T_NONCGI },
-    { .s = "nonnph", .token = T_NONNPH },
-    { .s = "nph", .token = T_NPH },
-    { .s = "nph-prefix", .token = T_NPHPREFIX },
-    { .s = "redirect", .token = T_REDIRECT },
+    { .name = "!", .value = T_BANG },
+    { .name = "basic-auth", .value = T_BASICAUTH },
+    { .name = "cgi", .value = T_CGI },
+    { .name = "content-type", .value = T_CONTENTTYPE },
+    { .name = "custom-header", .value = T_CUSTOMHEADER },
+    { .name = "custom-response", .value = T_CUSTOMRESPONSE },
+    { .name = "domain", .value = T_DOMAIN },
+    { .name = "file-type", .value = T_FILETYPE },
+    { .name = "global", .value = T_GLOBAL },
+    { .name = "index-file", .value = T_INDEXFILE },
+    { .name = "log", .value = T_LOG },
+    { .name = "no-auth", .value = T_NOAUTH },
+    { .name = "noncgi", .value = T_NONCGI },
+    { .name = "nonnph", .value = T_NONNPH },
+    { .name = "nph", .value = T_NPH },
+    { .name = "nph-prefix", .value = T_NPHPREFIX },
+    { .name = "redirect", .value = T_REDIRECT },
   } ;
-  struct directive_s const *directive ;
+  struct namevalue_s const *directive ;
   char const *word0 ;
   if (!n--) return ;
   word0 = s + *word++ ;
-  directive = BSEARCH(struct directive_s, word0, directives) ;
+  directive = BSEARCH(struct namevalue_s, word0, directives) ;
   if (!directive)
     strerr_dief6x(1, "unrecognized word ", word0, " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
-  switch (directive->token)
+  switch (directive->value)
   {
     case T_BANG :
     {

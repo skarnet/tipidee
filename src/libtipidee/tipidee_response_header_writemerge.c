@@ -16,19 +16,13 @@ static int tipidee_response_header_cmp (void const *a, void const *b)
 
 size_t tipidee_response_header_writemerge (buffer *b, tipidee_response_header const *rhdr, uint32_t rhdrn, tipidee_headers const *hdr, uint32_t options, tain const *stamp)
 {
-  static char const *const nope_table[] =
-  {
-    "Connection",
-    "Content-Length",
-    "Date",
-    "Status"
-  } ;
   char fmt[128] ;
   size_t m = buffer_putnoflush(b, fmt, tipidee_response_header_date(fmt, 128, stamp)) ;
   if (options & 1) m += buffer_putsnoflush(b, "Connection: close\r\n") ;
 
   for (uint32_t i = 0 ; i < rhdrn ; i++)
   {
+    if (!rhdr[i].value) continue ;
     if (rhdr[i].options & 1 && tipidee_headers_search(hdr, rhdr[i].key)) continue ;
     m += buffer_putsnoflush(b, rhdr[i].key) ;
     m += buffer_putnoflush(b, ": ", 2) ;
@@ -41,7 +35,6 @@ size_t tipidee_response_header_writemerge (buffer *b, tipidee_response_header co
     tipidee_response_header const *p ;
     char const *key = hdr->buf + hdr->list[i].left ;
     if (!strncasecmp(key, "X-CGI-", 6)) continue ;
-    if (bsearch(key, nope_table, sizeof(nope_table) / sizeof(char const *const), sizeof(char const *const), (int (*)(void const *, void const *))&strcasecmp)) continue ;
     p = bsearch(key, rhdr, rhdrn, sizeof(tipidee_response_header), &tipidee_response_header_cmp) ;
     if (p && !(p->options & 1)) continue ;
     m += buffer_putsnoflush(b, key) ;

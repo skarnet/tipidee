@@ -448,21 +448,31 @@ serving files with uncommon extensions or have specific needs. </li>
  <tt>custom-header</tt> is global directive, introduced by the
 keyword <tt>custom-header</tt>. It allows
 the user to define custom headers that are to be added to every response.
+It takes a subcommand, that is used to define what should be done with
+the header:
 </p>
 
 <p>
- <code> custom-header <em>option</em> <em>key</em> <em>value</em> </code>
+ <code> custom-header add <em>name</em> <em>value</em> </code>
+ <code> custom-header always <em>name</em> <em>value</em> </code>
+ <code> custom-header remove <em>name</em> </code>
+ <code> custom-header never <em>name</em> </code>
 </p>
 
 <ul>
- <li> <em>option</em> is <tt>weak</tt> or <tt>strong</tt>, and determines what happens when a CGI script
-provides a header with the same name. If <tt>weak</tt>, the CGI value has precedence; if <tt>strong</tt>,
-<em>value</em> has precedence. </li>
- <li> <em>key</em> is the name of the custom header, such as <tt>Content-Security-Policy</tt> or <tt>X-Tacky-Header</tt>.
-It is case-insensitive; its spelling will be canonicalized when processed. </li>
- <li> <em>value</em> is the content of the header. Any whitespace given in <em>value</em> will all register as a single space. </li>
+ <li> <tt>custom-header add</tt> tells tipidee to add a header named <em>name</em>
+with the value <em>value</em> to all its answers. A CGI script can override <em>value</em>
+by providing its own <em>name</em> header. </li>
+ <li> <tt>custom-header always</tt> is like <tt>custom-header add</tt>, except a CGI script
+cannot override <em>value</em>, which will always be used. </li>
+ <li> <tt>custom-header remove</tt> tells tipidee to <em>not</em> provide a <em>name</em>
+header. This is only useful for a few overridable headers that tipidee provides by default,
+such as <tt>Content-Security-Policy</tt> or <tt>Referrer-Policy</tt>. If a CGI script
+provides such a header, the CGI header will be used despite the directive. </li>
+ <li> <tt>custom-header never</tt> is like <tt>custom-header remove</tt>, except even a
+CGI script cannot provide a <em>name</em> header, which will be stripped from its output. </li>
  <li> Some headers cannot be customized. <a href="tipidee-config.html">tipidee-config</a>
-will reject an attempt to define a <tt>Connection</tt> or a <tt>Date</tt> header, for instance. </li>
+will reject an attempt to add, or remove, a <tt>Connection</tt> header, for instance. </li>
 </ul>
 
 <div id="local">

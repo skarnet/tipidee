@@ -18,11 +18,15 @@ int tipidee_response_header_preparebuiltin (tipidee_response_header *tab, uint32
     if (pos++ >= len) return 0 ;
     tab[i].options = (uint8_t)s[pos] ;
     if (pos++ >= len) return 0 ;
-    tab[i].value = s + pos ;
-    next = memchr(s + pos, 0, len - pos) ;
-    if (!next) return 0 ;
-    pos = next - s ;
-    if (pos++ >= len) return 0 ;
+    if (tab[i].options & 0x80) tab[i].value = 0 ;
+    else
+    {
+      tab[i].value = s + pos ;
+      next = memchr(s + pos, 0, len - pos) ;
+      if (!next) return 0 ;
+      pos = next - s ;
+      if (pos++ >= len) return 0 ;
+    }
   }
   return pos == len ;
 }
