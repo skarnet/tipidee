@@ -22,10 +22,14 @@ struct builtinheaders_s
 static struct builtinheaders_s const builtinheaders[] =
 {
   { .key = "Accept-Ranges", .value = "none", .overridable = 0 },
+  { .key = "Allow", .value = 0, .overridable = 0 },
   { .key = "Cache-Control", .value = "private", .overridable = 1 },
   { .key = "Connection", .value = 0, .overridable = 0 },
+  { .key = "Content-Length", .value = 0, .overridable = 0 },
   { .key = "Content-Security-Policy", .value = "default-src 'self'; style-src 'self' 'unsafe-inline';", .overridable = 1 },
+  { .key = "Content-Type", .value = 0, .overridable = 0 },
   { .key = "Date", .value = 0, .overridable = 0 },
+  { .key = "Location", .value = 0, .overridable = 0 },
   { .key = "Referrer-Policy", .value = "no-referrer-when-downgrade", .overridable = 1 },
   { .key = "Server", .value = "tipidee/" TIPIDEE_VERSION, .overridable = 0 },
   { .key = "Status", .value = 0, .overridable = 0 },
