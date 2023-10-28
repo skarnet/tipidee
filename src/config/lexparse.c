@@ -204,7 +204,7 @@ static inline void parse_customheader (char const *s, size_t const *word, size_t
   if (n < 2)
     strerr_dief8x(1, "too ", "few", " arguments to directive ", "custom-header", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   p = BSEARCH(struct namevalue_s, s + *word, choptions) ;
-  if (!p) strerr_dief7x(1, "type should be weak or strong for", " directive ", "custom-header", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+  if (!p) strerr_dief9x(1, "invalid subcommand ", s + *word, " for", " directive ", "custom-header", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   if ((p->value == CHO_ADD || p->value == CHO_ALWAYS) == (n == 2))
     strerr_dief10x(1, "too ", n == 2 ? "few" : "many", " arguments to directive ", "custom-header", " ", p->name, " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   word++ ; n-- ;
