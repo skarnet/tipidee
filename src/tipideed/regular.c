@@ -52,13 +52,13 @@ int respond_304 (tipidee_rql const *rql, char const *fn, struct stat const *st)
 {
   tain deadline ;
   char fmt[128] ;
-  size_t n = tipidee_response_status(buffer_1, rql, 304, "Not Modified") ;
-  n += tipidee_response_header_writeall_g(buffer_1, g.rhdr, g.rhdrn, !g.cont) ;
+  tipidee_response_status(buffer_1, rql, 304, "Not Modified") ;
+  tipidee_response_header_writeall_g(buffer_1, g.rhdr, g.rhdrn, !g.cont) ;
   {
     size_t l = tipidee_response_header_lastmodified(fmt, 128, st) ;
-    if (l) n += buffer_putnoflush(buffer_1, fmt, l) ;
+    if (l) buffer_putnoflush(buffer_1, fmt, l) ;
   }
-  n += buffer_putnoflush(buffer_1, "\r\n", 2) ;
+  buffer_putnoflush(buffer_1, "\r\n", 2) ;
   tipidee_log_answer(g.logv, rql, 304, 0) ;
   tain_add_g(&deadline, &g.writetto) ;
   if (!buffer_timed_flush_g(buffer_1, &deadline))
