@@ -11,6 +11,7 @@
 
 #include <tipidee/rql.h>
 #include <tipidee/headers.h>
+#include <tipidee/resattr.h>
 
 #define TIPIDEE_LOG_REQUEST 0x0001
 #define TIPIDEE_LOG_REFERRER 0x0002
@@ -25,15 +26,6 @@
 #define TIPIDEE_LOG_DEBUG 0x8000
 
 #define TIPIDEE_LOG_DEFAULT (TIPIDEE_LOG_REQUEST | TIPIDEE_LOG_ANSWER | TIPIDEE_LOG_SIZE)
-
-typedef struct tipidee_resattr_s tipidee_resattr, *tipidee_resattr_ref ;
-struct tipidee_resattr_s
-{
-  char const *content_type ;
-  uint32_t iscgi : 1 ;
-  uint32_t isnph : 1 ;
-} ;
-#define TIPIDEE_RESATTR_ZERO { .content_type = 0, .iscgi = 0, .isnph = 0 }
 
 extern void tipidee_log_start (uint32_t, char const *, char const *) ;
 extern void tipidee_log_exit (uint32_t, unsigned int) ;

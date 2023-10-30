@@ -4,6 +4,8 @@ tipidee_conf_get_argv.o
 tipidee_conf_get_content_type.o
 tipidee_conf_get_errorfile.o
 tipidee_conf_get_redirection.o
+tipidee_conf_get_resattr.o
+tipidee_conf_get_resattr1.o
 tipidee_conf_get_responseheaders.o
 tipidee_conf_get_string.o
 tipidee_conf_get_uint32.o

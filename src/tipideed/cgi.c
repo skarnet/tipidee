@@ -364,6 +364,7 @@ int respond_cgi (tipidee_rql *rql, char const *docroot, char const *fn, size_t d
   modify_env(rql, docroot, hdr, bodylen, fn + docrootlen, infopath) ;
   env_merge(envp, envmax, (char const *const *)environ, g.envlen, g.sa.s + g.cwdlen + 1, g.sa.len - (g.cwdlen+1)) ;
   g.sa.len = sabase ;
-  return ra->isnph ? do_nph(rql, docroot, argv, envp, body, bodylen) :
-                     do_cgi(rql, docroot, argv, envp, body, bodylen, uribuf) ;
+  return ra->flags & TIPIDEE_RA_FLAG_NPH ?
+    do_nph(rql, docroot, argv, envp, body, bodylen) :
+    do_cgi(rql, docroot, argv, envp, body, bodylen, uribuf) ;
 }

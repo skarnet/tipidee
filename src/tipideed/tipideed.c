@@ -199,50 +199,8 @@ static inline void get_resattr (tipidee_rql const *rql, char const *docroot, cha
   if (sarealpath(&g.sa, res) == -1 || !stralloc_0(&g.sa)) die500sys(rql, 111, docroot, "realpath ", res) ;
   if (strncmp(g.sa.s + pos, g.sa.s, g.cwdlen) || g.sa.s[pos + g.cwdlen] != '/')
     die500x(rql, 102, docroot, "resource ", res, " points outside of the server's root") ;
-
-  {
-    char const *attr = 0 ;
-    size_t len = g.sa.len - pos - g.cwdlen + 1 ;
-    char key[len + 1] ;
-    key[0] = 'A' ; key[1] = ':' ;
-    memcpy(key + 2, g.sa.s + pos + 1 + g.cwdlen, len - 2) ;
-    key[len] = '/' ;
-    errno = ENOENT ;
-    while (!attr)
-    {
-      if (errno != ENOENT) die500x(rql, 102, docroot, "invalid configuration data for ", key) ;
-      while (len > 2 && key[len] != '/') len-- ;
-      if (len <= 2) break ;
-      key[len--] = 0 ;
-      attr = tipidee_conf_get_string(&g.conf, key) ;
-      key[0] = 'a' ;
-    }
-    if (attr)
-    {
-      if (*attr < '@' || *attr > 'G') die500x(rql, 102, docroot, "invalid configuration data for ", key) ;
-      ra->iscgi = *attr & ~'@' & 1 ;
-      if (attr[1]) ra->content_type = attr + 1 ;
-      if (ra->iscgi)
-      {
-        char const *nphprefix ;
-        char *p ;
-        key[0] = 'N' ;
-        p = strchr(key+2, '/') ;
-        if (p) *p = 0 ;
-        nphprefix = tipidee_conf_get_string(&g.conf, key) ;
-        if (nphprefix)
-        {
-          char const *base = strrchr(g.sa.s + pos + g.cwdlen, '/') ;
-          if (str_start(base + 1, nphprefix)) ra->isnph = 1 ;
-        }
-      }
-    }
-  }
-  if (!ra->iscgi && !ra->content_type)
-  {
-    ra->content_type = tipidee_conf_get_content_type(&g.conf, g.sa.s + pos + g.cwdlen) ;
-    if (!ra->content_type) die500sys(rql, 111, docroot, "get content type for ", g.sa.s + pos + g.cwdlen) ;
-  }
+  if (!tipidee_conf_get_resattr(&g.conf, g.sa.s + pos + g.cwdlen + 1, ra))
+    die500sys(rql, 102, docroot, "look up resource attributes for ", g.sa.s + pos + g.cwdlen + 1) ;
   g.sa.len = pos ;
 }
 
@@ -321,18 +279,18 @@ static inline int serve (tipidee_rql *rql, char const *docroot, char *uribuf, ti
 
   get_resattr(rql, docroot, fn, &ra) ;
 
-  if (!ra.iscgi)
+  if (!ra.flags & TIPIDEE_RA_FLAG_CGI)
   {
     if (infopath) { respond_404(rql, docroot) ; return 0 ; }
     if (rql->m == TIPIDEE_METHOD_POST) exit_405(rql) ;
   }
 
   if (rql->m == TIPIDEE_METHOD_OPTIONS)
-    return respond_options(rql, 2 | ra.iscgi) ;
+    return respond_options(rql, 2 | !!(ra.flags & TIPIDEE_RA_FLAG_CGI)) ;
 
   tipidee_log_resource(g.logv, rql, fn, &ra, infopath) ;
 
-  if (ra.iscgi)
+  if (ra.flags & TIPIDEE_RA_FLAG_CGI)
     return respond_cgi(rql, docroot, fn, docrootlen, infopath, uribuf, hdr, &ra, body, bodylen) ;
 
   infopath = tipidee_headers_search(hdr, "If-Modified-Since") ;

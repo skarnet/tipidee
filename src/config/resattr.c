@@ -6,10 +6,10 @@
 
 #include "tipidee-config-internal.h"
 
-static repo conftree = \
+static repo resattr = \
 { \
   .ga = GENALLOC_ZERO, \
-  .tree = AVLTREE_INIT(8, 3, 8, &node_dtok, &node_cmp, &conftree.ga), \
+  .tree = AVLTREE_INIT(8, 3, 8, &node_dtok, &node_cmp, &resattr.ga), \
   .storage = &g.storage \
 } ;
 
@@ -42,6 +42,11 @@ static int confnode_write (uint32_t d, unsigned int h, void *data)
 {
   node *nod = genalloc_s(node, &conftree.ga) + d ;
   (void)h ;
+  if ((conftree.storage->s[nod->key] & ~0x20) == 'A')
+  {
+    conftree.storage->s[++nod->data] |= '@' ;
+    nod->datalen-- ;
+  }
   return cdbmake_add((cdbmaker *)data, conftree.storage->s + nod->key, nod->keylen, conftree.storage->s + nod->data, nod->datalen) ;
 }
 

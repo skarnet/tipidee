@@ -25,11 +25,8 @@ static struct builtinheaders_s const builtinheaders[] =
   { .key = "Allow", .value = 0, .overridable = 0 },
   { .key = "Cache-Control", .value = "private", .overridable = 1 },
   { .key = "Connection", .value = 0, .overridable = 0 },
-  { .key = "Content-Length", .value = 0, .overridable = 0 },
   { .key = "Content-Security-Policy", .value = "default-src 'self'; style-src 'self' 'unsafe-inline';", .overridable = 1 },
-  { .key = "Content-Type", .value = 0, .overridable = 0 },
   { .key = "Date", .value = 0, .overridable = 0 },
-  { .key = "Location", .value = 0, .overridable = 0 },
   { .key = "Referrer-Policy", .value = "no-referrer-when-downgrade", .overridable = 1 },
   { .key = "Server", .value = "tipidee/" TIPIDEE_VERSION, .overridable = 0 },
   { .key = "Status", .value = 0, .overridable = 0 },
@@ -49,7 +46,15 @@ static repo headers = \
 
 int header_allowed (char const *key)
 {
-  struct builtinheaders_s const *p = BSEARCH(struct builtinheaders_s, key, builtinheaders) ;
+  static char const *const nope[] =
+  {
+    "Content-Length",
+    "Content-Type",
+    "Location"
+  } ;
+  struct builtinheaders_s const *p ;
+  if (BSEARCH(char const *, key, nope)) return 0 ;
+  p = BSEARCH(struct builtinheaders_s, key, builtinheaders) ;
   return !p || p->overridable ;
 }
 

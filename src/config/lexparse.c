@@ -273,12 +273,11 @@ static inline void parse_redirect (char const *s, size_t const *word, size_t n, 
   }
 }
 
-static void parse_bitattr (char const *s, size_t const *word, size_t n, char const *domain, size_t domainlen, mdt const *md, unsigned int bit, int set)
+static void parse_bitattr (char const *s, size_t const *word, size_t n, char const *domain, size_t domainlen, mdt const *md, uint8_t bit, int h)
 {
   static char const *const attr[3][2] = { { "noncgi", "cgi" }, { "nonnph", "nph", }, { "noauth", "basic-auth" } } ;
-  uint8_t mask = (uint8_t)0x01 << bit ;
   if (n != 1)
-    strerr_dief8x(1, "too ", n > 1 ? "many" : "few", " arguments to directive ", attr[bit][set], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    strerr_dief8x(1, "too ", n > 1 ? "many" : "few", " arguments to directive ", attr[bit][h], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   if (!domain)
     strerr_dief7x(1, "resource attribute ", "definition", " without a domain directive", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   if (s[*word] != '/')
@@ -294,24 +293,31 @@ static void parse_bitattr (char const *s, size_t const *word, size_t n, char con
     key[2 + domainlen + arglen] = 0 ;
     oldnode = conftree_search(key) ;
     if (oldnode)
-      if (g.storage.s[oldnode->data] & mask)
+    {
+      uint32_t flags, mask ;
+      uint32_unpack_big(g.storage.s + oldnode->data, &flags) ;
+      uint32_unpack_big(g.storage.s + oldnode->data + 4, &mask) ;
+      if (mask & 1 << bit)
       {
         char fmt[UINT32_FMT] ;
         fmt[uint32_fmt(fmt, oldnode->line)] = 0 ;
-        strerr_diefn(1, 13, "resource attribute ", attr[bit][set], " redefinition", " in file ", g.storage.s + md->filepos, " line ", md->linefmt, "; previous definition", " in file ", g.storage.s + oldnode->filepos, " line ", fmt, " or later") ;
+        strerr_diefn(1, 13, "resource attribute ", attr[bit][h], " redefinition", " in file ", g.storage.s + md->filepos, " line ", md->linefmt, "; previous definition", " in file ", g.storage.s + oldnode->filepos, " line ", fmt, " or later") ;
       }
-      else
-      {
-        g.storage.s[oldnode->data] |= mask ;
-        if (set) g.storage.s[oldnode->data + 1] |= mask ;
-        else g.storage.s[oldnode->data + 1] &= ~mask ;
-      }
+      mask |= 1 << bit ;
+      if (h) flags |= 1 << bit ; else flags &= ~(1 << bit) ;
+      uint32_pack_big(g.storage.s + oldnode->data, flags) ;
+      uint32_pack_big(g.storage.s + oldnode->data + 4, mask) ;
+    }
     else
     {
       node node ;
-      char val[3] = { mask, set ? mask : 0, 0 } ;
+      uint32_t flags = h ? 1 << bit : 0 ;
+      uint32_t mask = 1 << bit ;
+      char val[9] = "\0\0\0\0\0\0\0\0" ;
+      uint32_pack_big(val, flags) ;
+      uint32_pack_big(val + 4, mask) ;
       confnode_start(&node, key, md->filepos, md->line) ;
-      confnode_add(&node, val, 3) ;
+      confnode_add(&node, val, 9) ;
       conftree_add(&node) ;
     }
   }
@@ -337,19 +343,17 @@ static inline void parse_filetype (char const *s, size_t const *word, size_t n, 
     oldnode = conftree_search(key) ;
     if (oldnode)
     {
-      if (g.storage.s[oldnode->data] & 0x80)
+      if (g.storage.s[oldnode->data + 8])
       {
         char fmt[UINT32_FMT] ;
         fmt[uint32_fmt(fmt, oldnode->line)] = 0 ;
         strerr_diefn(1, 12, "file-type", " redefinition", " in file ", g.storage.s + md->filepos, " line ", md->linefmt, "; previous definition", " in file ", g.storage.s + oldnode->filepos, " line ", fmt, " or later") ;
       }
-      
       else
       {
         node node ;
-        char val[2] = { g.storage.s[oldnode->data] | 0x80, g.storage.s[oldnode->data + 1] } ;
         confnode_start(&node, key, md->filepos, md->line) ;
-        confnode_add(&node, val, 2) ;
+        confnode_add(&node, g.storage.s + oldnode->data, 8) ;
         confnode_add(&node, s + word[1], strlen(s + word[1]) + 1) ;
         conftree_update(&node) ;
       }
@@ -357,9 +361,8 @@ static inline void parse_filetype (char const *s, size_t const *word, size_t n, 
     else
     {
       node node ;
-      char val[2] = { 0x80, 0x00 } ;
       confnode_start(&node, key, md->filepos, md->line) ;
-      confnode_add(&node, val, 2) ;
+      confnode_add(&node, "\0\0\0\0\0\0\0", 8) ;
       confnode_add(&node, s + word[1], strlen(s + word[1]) + 1) ;
       conftree_add(&node) ;
     }

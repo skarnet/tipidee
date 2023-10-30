@@ -7,8 +7,10 @@
 #include <stdint.h>
 
 #include <skalibs/uint16.h>
+#include <skalibs/uint32.h>
 #include <skalibs/cdb.h>
 
+#include <tipidee/resattr.h>
 #include <tipidee/uri.h>
 
 #define TIPIDEE_CONF_KEY_MAXLEN 0x1000U
@@ -43,5 +45,8 @@ extern char const *tipidee_conf_get_docroot (tipidee_conf const *, tipidee_uri c
 extern int tipidee_conf_get_redirection (tipidee_conf const *, char const *, size_t, char const *, tipidee_redirection *) ;
 extern char const *tipidee_conf_get_content_type (tipidee_conf const *, char const *) ;
 extern char const *tipidee_conf_get_errorfile (tipidee_conf const *, char const *, unsigned int) ;
+
+extern int tipidee_conf_get_resattr1 (tipidee_conf const *, char const *, tipidee_resattr *) ; /* direct key lookup */
+extern int tipidee_conf_get_resattr (tipidee_conf const *, char const *, tipidee_resattr *) ; /* high-level */
 
 #endif
