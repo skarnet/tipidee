@@ -209,7 +209,7 @@ static inline int run_cgi (tipidee_rql const *rql, char const *docroot, char con
               rstate = 1 ;
               break ;
             }
-            case 400 : die502x(rql, 2, docroot, "invalid headers", " from cgi ", argv[0]) ;
+            case 400 : die502x(rql, 2, docroot, "invalid output", " from cgi ", argv[0]) ;
             case 413 : die502x(rql, 2, docroot, hdr->n >= TIPIDEE_HEADERS_MAX ? "Too many headers" : "Too much header data", " from cgi ", argv[0]) ;
             case 500 : die500x(rql, 101, docroot, "can't happen: ", "avltreen_insert failed", " in do_cgi") ;
             default : die500x(rql, 101, docroot, "can't happen: ", "unknown tipidee_headers_parse return code", " in do_cgi") ;

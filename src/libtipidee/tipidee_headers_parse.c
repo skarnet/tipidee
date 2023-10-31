@@ -1,5 +1,6 @@
 /* ISC license. */
 
+#include <sys/types.h>
 #include <stdint.h>
 #include <string.h>
 #include <strings.h>
@@ -76,18 +77,18 @@ struct tainp_s
   tain *stamp ;
 } ;
 
-typedef int get1_func (buffer *, char *, struct tainp_s *) ;
+typedef ssize_t get1_func (buffer *, char *, struct tainp_s *) ;
 typedef get1_func *get1_func_ref ;
 
-static int get1_timed (buffer *b, char *c, struct tainp_s *d)
+static ssize_t get1_timed (buffer *b, char *c, struct tainp_s *d)
 {
   return buffer_timed_get(b, c, 1, d->deadline, d->stamp) ;
 }
 
-static int get1_notimed (buffer *b, char *c, struct tainp_s *data)
+static ssize_t get1_notimed (buffer *b, char *c, struct tainp_s *data)
 {
   (void)data ;
-  return buffer_get(b, c, 1) == 1 ;
+  return buffer_get(b, c, 1) ;
 }
 
 static uint8_t cclass (char c)
@@ -121,8 +122,8 @@ static int tipidee_headers_parse_with (buffer *b, tipidee_headers *hdr, get1_fun
   while (*state < 0x0a)
   {
     uint16_t c ;
-    char cur ;
-    if (!(*next)(b, &cur, data))
+    char cur = 0 ;
+    if ((*next)(b, &cur, data) < 0)
       return errno == ETIMEDOUT ? 408 : error_isagain(errno) ? -2 : -1 ;
     c = table[*state][cclass(cur)] ;
 /*

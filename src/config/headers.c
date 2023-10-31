@@ -25,6 +25,7 @@ static struct builtinheaders_s const builtinheaders[] =
   { .key = "Allow", .value = 0, .overridable = 0 },
   { .key = "Cache-Control", .value = "private", .overridable = 1 },
   { .key = "Connection", .value = 0, .overridable = 0 },
+  { .key = "Content-Length", .value = 0, .overridable = 0 },
   { .key = "Content-Security-Policy", .value = "default-src 'self'; style-src 'self' 'unsafe-inline';", .overridable = 1 },
   { .key = "Date", .value = 0, .overridable = 0 },
   { .key = "Referrer-Policy", .value = "no-referrer-when-downgrade", .overridable = 1 },
@@ -48,7 +49,6 @@ int header_allowed (char const *key)
 {
   static char const *const nope[] =
   {
-    "Content-Length",
     "Content-Type",
     "Location"
   } ;
