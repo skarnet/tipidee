@@ -79,7 +79,7 @@ int tipidee_rql_read (buffer *b, char *buf, size_t max, size_t *w, tipidee_rql *
   {
     size_t l = tipidee_uri_parse(buf, max, buf + pos[1], &rql->uri) ;
     if (!l) return 400 ;
-    *w = l ;
+    if (w) *w = l ;
   }
   return 0 ;
 }

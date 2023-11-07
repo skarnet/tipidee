@@ -373,7 +373,6 @@ int main (int argc, char const *const *argv, char const *const *envp)
   if (!tain_now_set_stopwatch_g())
     strerr_diefu1sys(111, "initialize clock") ;
 
-
   tipidee_log_start(g.logv, g.sa.s + remoteip, g.sa.s + remotehost) ;
 
 
@@ -386,7 +385,7 @@ int main (int argc, char const *const *argv, char const *const *envp)
     tipidee_headers hdr ;
     int e ;
     unsigned int localredirs = 0 ;
-    size_t content_length ;
+    size_t content_length = 0 ;
     tipidee_transfercoding tcoding = TIPIDEE_TRANSFERCODING_UNKNOWN ;
     char uribuf[URI_BUFSIZE] ;
     char hdrbuf[HDR_BUFSIZE] ;
@@ -394,7 +393,7 @@ int main (int argc, char const *const *argv, char const *const *envp)
     tain_add_g(&deadline, &g.readtto) ;
     bodysa.len = 0 ;
 
-    e = tipidee_rql_read_g(buffer_0, uribuf, URI_BUFSIZE, &content_length, &rql, &deadline) ;
+    e = tipidee_rql_read_g(buffer_0, uribuf, URI_BUFSIZE, 0, &rql, &deadline) ;
     switch (e)
     {
       case -1 : log_and_exit(1) ;  /* bad client */
@@ -407,7 +406,6 @@ int main (int argc, char const *const *argv, char const *const *envp)
     if (rql.http_major != 1) log_and_exit(1) ;
     if (rql.http_minor > 1) eexit_400(&rql, "Bad HTTP version") ;
 
-    content_length = 0 ;
     tipidee_headers_init(&hdr, hdrbuf, HDR_BUFSIZE) ;
     e = tipidee_headers_timed_parse_g(buffer_0, &hdr, &deadline) ;
     switch (e)
@@ -491,7 +489,7 @@ int main (int argc, char const *const *argv, char const *const *envp)
 
     if (rql.m == TIPIDEE_METHOD_TRACE)
     {
-      respond_trace(hdrbuf, &rql, &hdr) ;
+      respond_trace(&rql, &hdr) ;
       continue ;
     }
 

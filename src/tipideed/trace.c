@@ -13,7 +13,7 @@
 #include <tipidee/log.h>
 #include "tipideed-internal.h"
 
-int respond_trace (char const *buf, tipidee_rql const *rql, tipidee_headers const *hdr)
+int respond_trace (tipidee_rql const *rql, tipidee_headers const *hdr)
 {
   tain deadline ;
   size_t cl = 0 ;
@@ -26,7 +26,7 @@ int respond_trace (char const *buf, tipidee_rql const *rql, tipidee_headers cons
   cl += strlen(rql->uri.path) + (rql->uri.query ? 1 + strlen(rql->uri.query) : 0) ;
   cl += 6 + uint_fmt(0, rql->http_major) + 1 + uint_fmt(0, rql->http_minor) + 2 ;
   for (size_t i = 0 ; i < hdr->n ; i++)
-    cl += strlen(buf + hdr->list[i].left) + 2 + strlen(buf + hdr->list[i].right) + 2 ;
+    cl += strlen(hdr->buf + hdr->list[i].left) + 2 + strlen(hdr->buf + hdr->list[i].right) + 2 ;
   cl += 2 ;
   buffer_putnoflush(buffer_1, fmt, size_fmt(fmt, cl)) ;
   buffer_putsnoflush(buffer_1, "\r\n\r\n") ;
@@ -52,12 +52,12 @@ int respond_trace (char const *buf, tipidee_rql const *rql, tipidee_headers cons
   tipidee_log_answer(g.logv, rql, 200, cl) ;
   for (size_t i = 0 ; i < hdr->n ; i++)
   {
-    size_t len = strlen(buf + hdr->list[i].left) ;
+    size_t len = strlen(hdr->buf + hdr->list[i].left) ;
     tain_add_g(&deadline, &g.writetto) ;
-    if (buffer_timed_put_g(buffer_1, buf + hdr->list[i].left, len, &deadline) < len) goto err ;
+    if (buffer_timed_put_g(buffer_1, hdr->buf + hdr->list[i].left, len, &deadline) < len) goto err ;
     if (buffer_timed_put_g(buffer_1, ": ", 2, &deadline) < 2) goto err ;
-    len = strlen(buf + hdr->list[i].right) ;
-    if (buffer_timed_put_g(buffer_1, buf + hdr->list[i].right, len, &deadline) < len) goto err ;
+    len = strlen(hdr->buf + hdr->list[i].right) ;
+    if (buffer_timed_put_g(buffer_1, hdr->buf + hdr->list[i].right, len, &deadline) < len) goto err ;
     if (buffer_timed_put_g(buffer_1, "\r\n", 2, &deadline) < 2) goto err ;
   }
   if (buffer_timed_put_g(buffer_1, "\r\n", 2, &deadline) < 2

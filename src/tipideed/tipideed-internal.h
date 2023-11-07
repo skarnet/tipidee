@@ -111,7 +111,7 @@ extern void respond_30x (tipidee_rql const *, tipidee_redirection const *) ;
 
  /* Trace */
 
-extern int respond_trace (char const *, tipidee_rql const *, tipidee_headers const *) ;
+extern int respond_trace (tipidee_rql const *, tipidee_headers const *) ;
 
 
  /* Options */
