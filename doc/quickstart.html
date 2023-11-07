@@ -76,7 +76,7 @@ corresponding private key is in <tt>/etc/ssl/acme/private/example.com/key.pem</t
 the basic command line for your HTTPS service could look like:
 <tt>s6-envuidgid www
 env CERTFILE=/etc/ssl/acme/example.com/cert.pem KEYFILE=/etc/ssl/acme/private/example.com/key.pem
-s6-tlsserver -U -e example.com 443 tipideed</tt>.
+s6-tlsserver -U ${ip} 443 tipideed</tt>.
   <ul>
    <li> <a href="//skarnet.org/software/s6/s6-envuidgid.html">s6-envuidgid</a>
 puts the uid and gid of user <tt>www</tt> into the environment. </li>
@@ -84,12 +84,14 @@ puts the uid and gid of user <tt>www</tt> into the environment. </li>
 environment, so TLS programs down the line can find the certificate and key.
    <li> <a href="//skarnet.org/software/s6-networking/s6-tlsserver.html">s6-tlsserver</a>
 rewrites itself into a command line that does a lot of different things; the
-long-running process is still <a href="//skarnet.org/software/s6-networking/s6-tcpserver.html">s6-tcpserver</a>
-listening. For every client connection, it spawns a process that sets up the TLS
-transport layer and eventually execs into <tt>tipideed</tt>. </li>
+long-running process is still
+<a href="//skarnet.org/software/s6-networking/s6-tcpserver.html">s6-tcpserver</a>,
+listening and accepting client connections. For every client, it spawns a process
+that sets up the TLS transport layer and eventually execs into <tt>tipideed</tt>. </li>
    <li> <a href="tipideed.html">tipideed</a> always speaks plaintext HTTP, it has
-no knowledge of cryptography itself, but it is made aware that it's running under
-TLS, and CGI scripts it runs will have the <tt>HTTPS=on</tt> marker. </li>
+no knowledge of cryptography itself, but it is aware (via an environment variable)
+that it's running under TLS, and CGI scripts it runs will have the
+<tt>HTTPS=on</tt> marker. </li>
   </ul> </li>
  <li> These command lines will block (remain in the foreground) and log everything
 to their stderr. For more server-like functionality, you should integrate them to
