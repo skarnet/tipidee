@@ -23,8 +23,9 @@ static struct defaults_s const defaults[] =
   RECU32("G:cgi_timeout", 0),
   RECU32("G:max_request_body_length", 8192),
   RECU32("G:max_cgi_body_length", 4194304),
-  RECS("G:index-file", "index.html"),
   RECU32("G:logv", TIPIDEE_LOG_DEFAULT),
+  RECU32("G:executable_means_cgi", 0),
+  RECS("G:index-file", "index.html"),
 
   RECS("T:html", "text/html"),
   RECS("T:htm", "text/html"),

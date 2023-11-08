@@ -276,6 +276,32 @@ output data. And this is "private dirty" memory, i.e. memory that
 that setting &mdash; and with the CGI scripts you choose to run. </li>
 </ul>
 
+
+<div id="executable_means_cgi">
+<h4> <tt>executable_means_cgi</tt> </h4>
+</div>
+
+<p>
+ <code> global executable_means_cgi <em>value</em> </code>
+</p>
+
+<ul>
+ <li> <em>value</em> is a non-negative integer. If it is nonzero, then
+all the documents that have an executable bit for "others" will be
+considered CGI scripts by default. </li>
+ <li> This is useful when your CGI scripts are scattered among your
+documents and you cannot gather them under a hierarchy like <tt>/cgi-bin/</tt>. </li>
+ <li> On the other hand, it should only be used by administrators who keep a
+tight control on their documents. It is dangerous to activate this option
+with dynamically managed content, because there could be files created with
+the wrong permissions and improperly identified as CGI scripts, resulting in
+failures or even security holes. </li>
+ <li> The classification of a given executable file as a CGI script
+can be overridden by a local <tt>noncgi</tt> directive, see below. Such
+a directive can protect dynamically managed content that is restricted
+to a given hierarchy. </li>
+</ul>
+
 <div id="index-file">
 <h3> The <tt>index-file</tt> directive </h3>
 </div>

@@ -40,6 +40,7 @@ struct global_s
   uint16_t indexn : 4 ;
   uint16_t cont : 2 ;
   uint16_t ssl : 1 ;
+  uint16_t xiscgi : 1 ;
 } ;
 #define GLOBAL_ZERO \
 { \
@@ -62,7 +63,8 @@ struct global_s
   .defaultport = 0, \
   .indexn = 0, \
   .cont = 1, \
-  .ssl = 0 \
+  .ssl = 0, \
+  .xiscgi = 0 \
 }
 
 extern struct global_s g ;

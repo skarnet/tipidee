@@ -277,6 +277,7 @@ static inline int serve (tipidee_rql *rql, char const *docroot, char *uribuf, ti
   }
   tipidee_log_debug(g.logv, "serve: docroot ", docroot, " file ", fn, " infopath ", infopath ? infopath : "(none)") ;
 
+  if (g.xiscgi && st.st_mode & S_IXOTH) ra.flags |= TIPIDEE_RA_FLAG_CGI ;
   get_resattr(rql, docroot, fn, &ra) ;
 
   if (!ra.flags & TIPIDEE_RA_FLAG_CGI)
@@ -351,6 +352,7 @@ int main (int argc, char const *const *argv, char const *const *envp)
   g.maxrqbody = get_uint32("G:max_request_body_length") ;
   g.maxcgibody = get_uint32("G:max_cgi_body_length") ;
   g.logv = get_uint32("G:logv") ;
+  g.xiscgi = !!get_uint32("G:executable_means_cgi") ;
   n = tipidee_conf_get_argv(&g.conf, "G:index-file", g.indexnames, 16, &g.indexlen) ;
   if (!n) strerr_dief3x(102, "bad", " config value for ", "G:index_file") ;
   g.indexn = n-1 ;

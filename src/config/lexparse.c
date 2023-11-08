@@ -98,6 +98,7 @@ static inline void parse_global (char const *s, size_t const *word, size_t n, md
   static char const *const globalkeys[] =
   {
     "cgi_timeout",
+    "executable_means_cgi",
     "max_cgi_body_length",
     "max_request_body_length",
     "read_timeout",
@@ -536,7 +537,7 @@ static inline char next (buffer *b, mdt const *md)
 
 void conf_lexparse (buffer *b, char const *ifile)
 {
-  static uint8_t const table[4][5] =  /* see PARSING.txt */
+  static uint8_t const table[4][5] =  /* see PARSING-config.txt */
   {
     { 0x04, 0x02, 0x01, 0x80, 0x33 },
     { 0x04, 0x01, 0x01, 0x80, 0x01 },
