@@ -40,18 +40,20 @@ void response_error (tipidee_rql const *rql, char const *docroot, unsigned int s
 {
   tain deadline ;
   tipidee_defaulttext dt ;
-  char const *file ;
+  char const *file = 0;
   size_t salen = g.sa.len ;
   if (sarealpath(&g.sa, docroot) == -1)
   {
     if (errno != ENOENT) strerr_diefu2sys(111, "realpath ", docroot) ;
-    else goto nofile ;
   }
-  if (!stralloc_0(&g.sa)) strerr_diefu1sys(111, "build response") ;
-  if (strncmp(g.sa.s + salen, g.sa.s, g.cwdlen) || g.sa.s[salen + g.cwdlen] != '/')
-    strerr_dief4x(102, "layout error: ", "docroot ", docroot, " points outside of the server's root") ;
-  file = tipidee_conf_get_errorfile(&g.conf, g.sa.s + salen + g.cwdlen + 1, status) ;
-  g.sa.len = salen ;
+  else
+  {
+    if (!stralloc_0(&g.sa)) strerr_diefu1sys(111, "build response") ;
+    if (strncmp(g.sa.s + salen, g.sa.s, g.cwdlen) || g.sa.s[salen + g.cwdlen] != '/')
+      strerr_dief4x(102, "layout error: ", "docroot ", docroot, " points outside of the server's root") ;
+    file = tipidee_conf_get_errorfile(&g.conf, g.sa.s + salen + g.cwdlen + 1, status) ;
+    g.sa.len = salen ;
+  }
   if (!tipidee_util_defaulttext(status, &dt))
   {
     char fmt[UINT_FMT] ;
@@ -93,7 +95,6 @@ void response_error (tipidee_rql const *rql, char const *docroot, unsigned int s
     }
   }
 
- nofile:
   tipidee_response_error_nofile_g(buffer_1, rql, status, dt.reason, dt.text, g.rhdr, g.rhdrn, options & 1 || !g.cont) ;
   tipidee_log_answer(g.logv, rql, status, 0) ;
   tain_add_g(&deadline, &g.writetto) ;
