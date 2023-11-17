@@ -12,10 +12,10 @@
 
 void tipidee_log_request (uint32_t v, tipidee_rql const *rql, tipidee_headers const *hdr, stralloc *sa)
 {
-  char const *a[16] = { PROG, ": info:" } ;
+  char const *a[18] = { PROG, ": info:" } ;
   size_t m = 2 ;
   size_t start = sa->len ;  /* assert: not zero */
-  size_t refpos = 0, uapos = 0 ;
+  size_t refpos = 0, uapos = 0, xffpos = 0 ;
   if (!(v & TIPIDEE_LOG_REQUEST)) return ;
   if (!string_quotes(sa, rql->uri.path) || !stralloc_0(sa)) goto eerr ;
   if (v & TIPIDEE_LOG_REFERRER)
@@ -33,6 +33,15 @@ void tipidee_log_request (uint32_t v, tipidee_rql const *rql, tipidee_headers co
     if (x)
     {
       uapos = sa->len ;
+      if (!string_quotes(sa, x) || !stralloc_0(sa)) goto err ;
+    }
+  }
+  if (v & TIPIDEE_LOG_XFORWARDEDFOR)
+  {
+    char const *x = tipidee_headers_search(hdr, "X-Forwarded-For") ;
+    if (x)
+    {
+      xffpos = sa->len ;
       if (!string_quotes(sa, x) || !stralloc_0(sa)) goto err ;
     }
   }
@@ -66,6 +75,11 @@ void tipidee_log_request (uint32_t v, tipidee_rql const *rql, tipidee_headers co
   {
     a[m++] = " user-agent " ;
     a[m++] = sa->s + uapos ;
+  }
+  if (xffpos)
+  {
+    a[m++] = " x-forwarded-for " ;
+    a[m++] = sa->s + xffpos ;
   }
   strerr_warnv(a, m) ;
   sa->len = start ;

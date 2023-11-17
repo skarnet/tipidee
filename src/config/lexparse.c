@@ -150,7 +150,8 @@ static inline void parse_log (char const *s, size_t const *word, size_t n, mdt c
     { .name = "request", .value = TIPIDEE_LOG_REQUEST },
     { .name = "resource", .value = TIPIDEE_LOG_RESOURCE },
     { .name = "start", .value = TIPIDEE_LOG_START },
-    { .name = "user-agent", .value = TIPIDEE_LOG_UA }
+    { .name = "user-agent", .value = TIPIDEE_LOG_UA },
+    { .name = "x-forwarded-for", .value = TIPIDEE_LOG_XFORWARDEDFOR }
   } ;
   uint32_t v = 0 ;
   char pack[4] ;
