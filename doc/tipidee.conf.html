@@ -419,8 +419,8 @@ This keyword has no effect when given without the <tt>request</tt> keyword. </dd
 requests that include a <tt>User-Agent:</tt> header. <em>user-agent</em> is quoted like <em>path</em>, to avoid
 malicious clients messing with log lines.
 This keyword has no effect when given without the <tt>request</tt> keyword. </dd>
- <dt> <tt>x-forwarded-for</tt> </dt> <dd> Add a <tt>x-forwarded-for "<em>xff</em>"</tt> field to the <tt>request</tt> line, for
-requests that include an <tt>X-Forwarded-For:</tt> header. <em>xx</em> is quoted like <em>path</em> and <em>user-agent</em>,
+ <dt> <tt>x-forwarded-for</tt> </dt> <dd> Add an <tt>x-forwarded-for "<em>xff</em>"</tt> field to the <tt>request</tt> line, for
+requests that include an <tt>X-Forwarded-For:</tt> header. <em>xff</em> is quoted like <em>path</em> and <em>user-agent</em>,
 for the same reasons.
 This keyword has no effect when given without the <tt>request</tt> keyword. <br>
 Note that if the connection is proxied, the <tt>start</tt> line, if any, will only have information about
