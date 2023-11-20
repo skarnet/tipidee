@@ -1,9 +1,12 @@
 Changelog for tipidee.
 
-In 0.0.1.1
+In 0.0.2.0
 ----------
 
  - Bugfixes.
+ - Support for treating all executables as CGI.
+ - Support for logging X-Forwarded-For.
+ - No Referrer-Policy header by default.
 
 
 In 0.0.1.0
