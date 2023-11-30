@@ -66,9 +66,9 @@ static inline void prep_env (size_t *remoteip, size_t *remotehost)
   if (x) stralloc_catb(&g.sa, sslvars, sizeof(sslvars)) ;
   g.ssl = !!x ;
   x = getenv(basevars) ;
+  if (!x) strerr_dienotset(100, "PROTO")  ;
   protolen = strlen(x) ;
   if (protolen > 1000) strerr_dieinvalid(100, "PROTO") ;
-  if (!x) strerr_dienotset(100, "PROTO")  ;
   {
     size_t m ;
     ip46 ip ;
