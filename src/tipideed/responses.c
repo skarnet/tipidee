@@ -24,7 +24,7 @@
 void response_error_early (tipidee_rql const *rql, unsigned int status, char const *reason, char const *text, uint32_t options)
 {
   tain deadline ;
-  tipidee_response_error_nofile_g(buffer_1, rql, status, reason, text, g.rhdr, g.rhdrn, options & 1 || !g.cont) ;
+  tipidee_response_error_nofile_G(buffer_1, rql, status, reason, text, g.rhdr, g.rhdrn, options & 1 || !g.cont) ;
   tain_add_g(&deadline, &g.writetto) ;
   if (!buffer_timed_flush_g(buffer_1, &deadline))
     strerr_diefu1sys(111, "write to stdout") ;
@@ -88,7 +88,7 @@ void response_error (tipidee_rql const *rql, char const *docroot, unsigned int s
         }
         else
         {
-          tipidee_response_file_g(buffer_1, rql, status, dt.reason, &st, tipidee_conf_get_content_type(&g.conf, g.sa.s + salen + g.cwdlen + 1), g.rhdr, g.rhdrn, options) ;
+          tipidee_response_file_G(buffer_1, rql, status, dt.reason, &st, tipidee_conf_get_content_type(&g.conf, g.sa.s + salen + g.cwdlen + 1), g.rhdr, g.rhdrn, options) ;
           tipidee_log_answer(g.logv, rql, status, st.st_size) ;
           send_file(fd, st.st_size, g.sa.s + salen + g.cwdlen + 1) ;
           fd_close(fd) ;
@@ -100,7 +100,7 @@ void response_error (tipidee_rql const *rql, char const *docroot, unsigned int s
     g.sa.len = salen ;
   }
 
-  tipidee_response_error_nofile_g(buffer_1, rql, status, dt.reason, dt.text, g.rhdr, g.rhdrn, options & 1 || !g.cont) ;
+  tipidee_response_error_nofile_G(buffer_1, rql, status, dt.reason, dt.text, g.rhdr, g.rhdrn, options & 1 || !g.cont) ;
   tipidee_log_answer(g.logv, rql, status, 0) ;
   tain_add_g(&deadline, &g.writetto) ;
   if (!buffer_timed_flush_g(buffer_1, &deadline))
@@ -126,7 +126,7 @@ void exit_405_ (tipidee_rql const *rql, uint32_t options)
 {
   tain deadline ;
   tipidee_response_status(buffer_1, rql, 405, "Method Not Allowed") ;
-  tipidee_response_header_writeall_g(buffer_1, g.rhdr, g.rhdrn, 1) ;
+  tipidee_response_header_writeall_G(buffer_1, g.rhdr, g.rhdrn, 1) ;
   buffer_putsnoflush(buffer_1, "Allow: GET, HEAD") ;
   if (options & 1) buffer_putsnoflush(buffer_1, ", POST") ;
   buffer_putnoflush(buffer_1, "\r\n\r\n", 4) ;
@@ -143,7 +143,7 @@ void respond_30x (tipidee_rql const *rql, tipidee_redirection const *rd)
   static char const *const reason[4] = { "Temporary Redirect", "Permanent Redirect", "Found", "Moved Permanently" } ;
   tain deadline ;
   tipidee_response_status(buffer_1, rql, status[rd->type], reason[rd->type]) ;
-  tipidee_response_header_writeall_g(buffer_1, g.rhdr, g.rhdrn, 0) ;
+  tipidee_response_header_writeall_G(buffer_1, g.rhdr, g.rhdrn, 0) ;
   buffer_putsnoflush(buffer_1, "Content-Length: 0\r\nLocation: ") ;
   buffer_putsnoflush(buffer_1, rd->location) ;
   if (rd->sub) buffer_putsnoflush(buffer_1, rd->sub) ;

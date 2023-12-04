@@ -19,7 +19,7 @@ int respond_trace (tipidee_rql const *rql, tipidee_headers const *hdr)
   size_t cl = 0 ;
   char fmt[SIZE_FMT] ;
   tipidee_response_status(buffer_1, rql, 200, "OK") ;
-  tipidee_response_header_writeall_g(buffer_1, g.rhdr, g.rhdrn, 0) ;
+  tipidee_response_header_writeall_G(buffer_1, g.rhdr, g.rhdrn, 0) ;
   buffer_putsnoflush(buffer_1, "Content-Type: message/http\r\nContent-Length: ") ;
   cl += strlen(tipidee_method_tostr(rql->m)) + 1;
   if (rql->uri.host) cl += 7 + rql->uri.https + strlen(rql->uri.host) ;

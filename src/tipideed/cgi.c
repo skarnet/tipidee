@@ -323,7 +323,7 @@ static inline int process_cgi_output (tipidee_rql *rql, char const *docroot, tip
   }
 
   tipidee_response_status(buffer_1, rql, status, reason) ;
-  tipidee_response_header_writemerge_g(buffer_1, g.rhdr, g.rhdrn, hdr, !g.cont) ;
+  tipidee_response_header_writemerge_G(buffer_1, g.rhdr, g.rhdrn, hdr, !g.cont) ;
   {
     char fmt[SIZE_FMT] ;
     fmt[size_fmt(fmt, rbodylen)] = 0 ;
