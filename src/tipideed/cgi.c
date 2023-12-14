@@ -85,7 +85,7 @@ static inline void modify_env (tipidee_rql const *rql, char const *docroot, tipi
       }
     }
     else if (!strcasecmp(key, "Content-Type")) { addenv(rql, docroot, "CONTENT_TYPE", val) ; got |= 2 ; }
-    else if (!strcasecmp(key, "Content-Length") || !strcasecmp(key, "Connection") || !strcasecmp(key, "Host")) ;
+    else if (!strcasecmp(key, "Content-Length") || !strcasecmp(key, "Connection")) ;
     else
     {
       size_t len = strlen(key), pos = g.sa.len + 5 ;

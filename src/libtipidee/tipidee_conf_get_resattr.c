@@ -11,7 +11,7 @@
 
 int tipidee_conf_get_resattr (tipidee_conf const *conf, char const *res, tipidee_resattr *ra)
 {
-  tipidee_resattr rra = TIPIDEE_RESATTR_ZERO ;
+  tipidee_resattr rra = *ra ;
   size_t len = strlen(res) + 2 ;
   char key[len + 1] ;
   key[0] = 'A' ; key[1] = ':' ;
