@@ -97,6 +97,7 @@ static inline void parse_global (char const *s, size_t const *word, size_t n, md
 {
   static char const *const globalkeys[] =
   {
+    "XXX_no_translate",
     "cgi_timeout",
     "executable_means_cgi",
     "max_cgi_body_length",

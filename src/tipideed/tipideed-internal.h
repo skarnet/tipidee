@@ -41,6 +41,7 @@ struct global_s
   uint16_t cont : 2 ;
   uint16_t ssl : 1 ;
   uint16_t xiscgi : 1 ;
+  uint8_t flagnoxlate : 1 ;
 } ;
 #define GLOBAL_ZERO \
 { \
@@ -64,7 +65,8 @@ struct global_s
   .indexn = 0, \
   .cont = 1, \
   .ssl = 0, \
-  .xiscgi = 0 \
+  .xiscgi = 0, \
+  .flagnoxlate = 0 \
 }
 
 extern struct global_s g ;
@@ -136,6 +138,11 @@ extern int respond_304 (tipidee_rql const *, char const *, struct stat const *) 
  /* cgi */
 
 extern int respond_cgi (tipidee_rql *, char const *, char const *, size_t, char const *, char *, tipidee_headers const *, tipidee_resattr const *, char const *, size_t) ;
+
+
+ /* util */
+
+extern size_t translate_path (char const *) ;
 
 
  /* main */

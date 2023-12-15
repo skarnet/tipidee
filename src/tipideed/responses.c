@@ -40,21 +40,14 @@ void response_error (tipidee_rql const *rql, char const *docroot, unsigned int s
 {
   tain deadline ;
   tipidee_defaulttext dt ;
-  char const *file = 0;
-  size_t salen = g.sa.len ;
+  char const *file = 0 ;
+  size_t pos = translate_path(docroot) ;
 
-  if (sarealpath(&g.sa, docroot) == -1)
-  {
-    if (errno != ENOENT) strerr_diefu2sys(111, "realpath ", docroot) ;
-  }
-  else
-  {
-    if (!stralloc_0(&g.sa)) strerr_diefu1sys(111, "build response") ;
-    if (strncmp(g.sa.s + salen, g.sa.s, g.cwdlen) || g.sa.s[salen + g.cwdlen] != '/')
-      strerr_dief4x(102, "layout error: ", "docroot ", docroot, " points outside of the server's root") ;
-    file = tipidee_conf_get_errorfile(&g.conf, g.sa.s + salen + g.cwdlen + 1, status) ;
-    g.sa.len = salen ;
-  }
+  if (pos) file = tipidee_conf_get_errorfile(&g.conf, g.sa.s + pos , status) ;
+  else if (errno == EPERM)
+    strerr_dief4x(102, "layout error: ", "docroot ", docroot, " points outside of the server's root") ;
+  else if (errno != ENOENT)
+    strerr_diefu2sys(111, "translate_path ", docroot) ;
 
   if (!tipidee_util_defaulttext(status, &dt))
   {
@@ -65,13 +58,17 @@ void response_error (tipidee_rql const *rql, char const *docroot, unsigned int s
 
   if (file)
   {
-    if (sarealpath(&g.sa, file) == -1 || !stralloc_0(&g.sa))
-      strerr_warnwu3sys("realpath ", "custom response file ", file) ;
-    else if (strncmp(g.sa.s + salen, g.sa.s, g.cwdlen) || g.sa.s[salen + g.cwdlen] != '/')
-      strerr_warnw4x("layout error: ", "custom response file ", file, " points outside of the server's root") ;
+    pos = translate_path(file) ;
+    if (!pos)
+    {
+      if (errno == EPERM)
+        strerr_warnw4x("layout error: ", "custom response file ", file, " points outside of the server's root") ;
+      else
+        strerr_warnwu3sys("translate_path ", "custom response file ", file) ;
+    }
     else
     {
-      int fd = open_read(g.sa.s + salen + g.cwdlen + 1) ;
+      int fd = open_read(g.sa.s + pos) ;
       if (fd == -1) strerr_warnwu3sys("open ", "custom response file ", file) ;
       else
       {
@@ -88,16 +85,14 @@ void response_error (tipidee_rql const *rql, char const *docroot, unsigned int s
         }
         else
         {
-          tipidee_response_file_G(buffer_1, rql, status, dt.reason, &st, tipidee_conf_get_content_type(&g.conf, g.sa.s + salen + g.cwdlen + 1), g.rhdr, g.rhdrn, options) ;
+          tipidee_response_file_G(buffer_1, rql, status, dt.reason, &st, tipidee_conf_get_content_type(&g.conf, g.sa.s + pos), g.rhdr, g.rhdrn, options) ;
           tipidee_log_answer(g.logv, rql, status, st.st_size) ;
-          send_file(fd, st.st_size, g.sa.s + salen + g.cwdlen + 1) ;
+          send_file(fd, st.st_size, g.sa.s + pos) ;
           fd_close(fd) ;
-          g.sa.len = salen ;
           return ;
         }
       }
     }
-    g.sa.len = salen ;
   }
 
   tipidee_response_error_nofile_G(buffer_1, rql, status, dt.reason, dt.text, g.rhdr, g.rhdrn, options & 1 || !g.cont) ;

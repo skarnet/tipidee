@@ -5,5 +5,6 @@ regular.o
 responses.o
 send_file.o
 trace.o
+util.o
 libtipidee.a.xyzzy
 -lskarnet

@@ -195,13 +195,16 @@ static inline unsigned int indexify (tipidee_rql const *rql, char const *docroot
 
 static inline void get_resattr (tipidee_rql const *rql, char const *docroot, char const *res, tipidee_resattr *ra)
 {
-  size_t pos = g.sa.len ;
-  if (sarealpath(&g.sa, res) == -1 || !stralloc_0(&g.sa)) die500sys(rql, 111, docroot, "realpath ", res) ;
-  if (strncmp(g.sa.s + pos, g.sa.s, g.cwdlen) || g.sa.s[pos + g.cwdlen] != '/')
-    die500x(rql, 102, docroot, "resource ", res, " points outside of the server's root") ;
-  if (!tipidee_conf_get_resattr(&g.conf, g.sa.s + pos + g.cwdlen + 1, ra))
-    die500sys(rql, 102, docroot, "look up resource attributes for ", g.sa.s + pos + g.cwdlen + 1) ;
-  g.sa.len = pos ;
+  size_t pos = translate_path(res) ;
+  if (!pos)
+  {
+    if (errno == EPERM)
+      die500x(rql, 102, docroot, "resource ", res, " points outside of the server's root") ;
+    else
+      die500sys(rql, 111, docroot, "path_canonicalize ", res) ;
+  }
+  if (!tipidee_conf_get_resattr(&g.conf, g.sa.s + pos, ra))
+    die500sys(rql, 102, docroot, "look up resource attributes for ", g.sa.s + pos) ;
 }
 
 static inline void force_redirect (tipidee_rql const *rql, char const *fn)
@@ -353,6 +356,7 @@ int main (int argc, char const *const *argv, char const *const *envp)
   g.maxcgibody = get_uint32("G:max_cgi_body_length") ;
   g.logv = get_uint32("G:logv") ;
   g.xiscgi = !!get_uint32("G:executable_means_cgi") ;
+  g.flagnoxlate = !!get_uint32("G:XXX_no_translate") ;
   n = tipidee_conf_get_argv(&g.conf, "G:index-file", g.indexnames, 16, &g.indexlen) ;
   if (!n) strerr_dief3x(102, "bad", " config value for ", "G:index_file") ;
   g.indexn = n-1 ;

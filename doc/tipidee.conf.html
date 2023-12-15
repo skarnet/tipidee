@@ -302,6 +302,37 @@ a directive can protect dynamically managed content that is restricted
 to a given hierarchy. </li>
 </ul>
 
+<div id="XXX_no_translate">
+<h4> <tt>XXX_no_translate</tt> </h4>
+</div>
+
+<p>
+ <code> global XXX_no_translate <em>value</em> </code>
+</p>
+
+<ul>
+ <li> This directive is dangerous and significantly changes the behaviour of tipideed,
+which is why it is marked with the <tt>XXX_</tt> prefix. If you are not 100% certain
+that you need it, do not use it. </li>
+ <li> <em>value</em> is a non-negative integer. If it is nonzero, then:
+  <ul>
+   <li> Symbolic links are <em>not resolved</em> when tipidee looks for resources
+or error pages. This means that host names and resource paths will be looked up
+in the configuration database as they are given by the client, not as they appear
+in the filesystem. </li>
+    <ul>
+     <li> In particular, a same resource could have different attributes depending on how
+it is accessed: it could be seen as a CGI script from one URI and as a regular file from
+another. </li>
+     <li> This also means that if your configuration file needs local directives, you must
+specify them for every host/port combination your server is listening on. </li>
+    </ul> </li>
+   <li> If tipideed is not chrooted, symbolic links <em>may</em> point outside of the
+server root: this will not be checked. This allows you to serve data from other parts
+of the filesystem. </li>
+  </ul> </li>
+</ul>
+
 <div id="index-file">
 <h3> The <tt>index-file</tt> directive </h3>
 </div>
