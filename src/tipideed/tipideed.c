@@ -125,8 +125,8 @@ static inline void prep_env (size_t *remoteip, size_t *remotehost)
 
     memcpy(var + protolen, "REMOTEHOST", 11) ;
     x = getenv(var) ;
-    if ((x && !stralloc_catb(&g.sa, var, protolen + 11))
-     || !stralloc_catb(&g.sa, "REMOTE_HOST=", 12)) dienomem() ;
+    if (x && !stralloc_catb(&g.sa, var, protolen + 11)) dienomem() ;
+    if (!stralloc_catb(&g.sa, "REMOTE_HOST=", 12)) dienomem() ;
     *remotehost = g.sa.len ;
     if (x)
     {
@@ -136,7 +136,7 @@ static inline void prep_env (size_t *remoteip, size_t *remotehost)
     {
       if (!stralloc_readyplus(&g.sa, m + 2)) dienomem() ;
       if (ip46_is6(&ip)) stralloc_catb(&g.sa, "[", 1) ;
-      stralloc_catb(&g.sa, g.sa.s + *remoteip, m) ;
+      stralloc_catb(&g.sa, g.sa.s + *remoteip, m-1) ;
       if (ip46_is6(&ip)) stralloc_catb(&g.sa, "]", 1) ;
     }
     if (!stralloc_0(&g.sa)) dienomem() ;
