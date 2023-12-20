@@ -11,6 +11,7 @@
 #include <skalibs/posixplz.h>
 #include <skalibs/env.h>
 #include <skalibs/uint16.h>
+#include <skalibs/uint64.h>
 #include <skalibs/types.h>
 #include <skalibs/bytestr.h>
 #include <skalibs/sgetopt.h>
@@ -286,7 +287,7 @@ static inline int serve (tipidee_rql *rql, char const *docroot, char *uribuf, ti
   if (!ra.flags & TIPIDEE_RA_FLAG_CGI)
   {
     if (infopath) { respond_404(rql, docroot) ; return 0 ; }
-    if (rql->m == TIPIDEE_METHOD_POST) exit_405(rql) ;
+    if (rql->m == TIPIDEE_METHOD_POST) exit_405(rql, docroot, 0) ;
   }
 
   if (rql->m == TIPIDEE_METHOD_OPTIONS)
@@ -306,6 +307,19 @@ static inline int serve (tipidee_rql *rql, char const *docroot, char *uribuf, ti
      && tain_less(&actual, &wanted))
       return respond_304(rql, fn, &st) ;
   }
+
+  if (rql->m == TIPIDEE_METHOD_GET)
+  {
+    infopath = tipidee_headers_search(hdr, "Range") ;
+    if (infopath)
+    {
+      uint64_t start, len ;
+      int r = tipidee_util_parse_range(infopath, st.st_size, &start, &len) ;
+      if (r > 0) return respond_partial(rql, docroot, fn, &st, start, len, &ra) ;
+      if (r < 0) { respond_416(rql, docroot, st.st_size) ; return 0 ; }
+    }
+  }
+
   return respond_regular(rql, docroot, fn, &st, &ra) ;
 }
 

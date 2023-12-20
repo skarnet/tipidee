@@ -21,22 +21,28 @@
 
 #include "tipideed-internal.h"
 
-void response_error_early (tipidee_rql const *rql, unsigned int status, char const *reason, char const *text, uint32_t options)
+void response_error_early_plus (tipidee_rql const *rql, unsigned int status, char const *reason, char const *text, tipidee_response_header const *v, uint32_t n, uint32_t options)
 {
   tain deadline ;
-  tipidee_response_error_nofile_G(buffer_1, rql, status, reason, text, g.rhdr, g.rhdrn, options & 1 || !g.cont) ;
+  tipidee_response_error_nofile_G(buffer_1, rql, status, reason, text, g.rhdr, g.rhdrn, v, n, options & 1 || !g.cont) ;
   tain_add_g(&deadline, &g.writetto) ;
   if (!buffer_timed_flush_g(buffer_1, &deadline))
     strerr_diefu1sys(111, "write to stdout") ;
 }
 
-void response_error_early_and_exit (tipidee_rql const *rql, unsigned int status, char const *reason, char const *text)
+void response_error_early_plus_and_exit (tipidee_rql const *rql, unsigned int status, char const *reason, char const *text, tipidee_response_header const *v, uint32_t n)
 {
-  response_error_early(rql, status, reason, text, 1) ;
+  response_error_early_plus(rql, status, reason, text, v, n, 1) ;
   log_and_exit(1) ;
 }
 
-void response_error (tipidee_rql const *rql, char const *docroot, unsigned int status, uint32_t options)
+void eexit_405 (tipidee_rql const *rql)
+{
+  static tipidee_response_header const allowpost = { .key = "Allow", .value = "GET, HEAD, POST", .options = 0 } ;
+  response_error_early_plus_and_exit(rql, 405, "Method Not Allowed", "Invalid method for the resource.", &allowpost, 1) ;
+}
+
+void response_error_plus (tipidee_rql const *rql, char const *docroot, unsigned int status, tipidee_response_header const *plus, uint32_t plusn, uint32_t options)
 {
   tain deadline ;
   tipidee_defaulttext dt ;
@@ -85,7 +91,9 @@ void response_error (tipidee_rql const *rql, char const *docroot, unsigned int s
         }
         else
         {
-          tipidee_response_file_G(buffer_1, rql, status, dt.reason, &st, tipidee_conf_get_content_type(&g.conf, g.sa.s + pos), g.rhdr, g.rhdrn, options) ;
+          tipidee_response_file_G(buffer_1, rql, status, dt.reason, &st, st.st_size, tipidee_conf_get_content_type(&g.conf, g.sa.s + pos), g.rhdr, g.rhdrn, options) ;
+          tipidee_response_header_write(buffer_1, plus, plusn) ;
+          tipidee_response_header_end(buffer_1) ;
           tipidee_log_answer(g.logv, rql, status, st.st_size) ;
           send_file(fd, st.st_size, g.sa.s + pos) ;
           fd_close(fd) ;
@@ -95,56 +103,38 @@ void response_error (tipidee_rql const *rql, char const *docroot, unsigned int s
     }
   }
 
-  tipidee_response_error_nofile_G(buffer_1, rql, status, dt.reason, dt.text, g.rhdr, g.rhdrn, options & 1 || !g.cont) ;
+  tipidee_response_error_nofile_G(buffer_1, rql, status, dt.reason, dt.text, g.rhdr, g.rhdrn, plus, plusn, options & 1 || !g.cont) ;
   tipidee_log_answer(g.logv, rql, status, 0) ;
   tain_add_g(&deadline, &g.writetto) ;
   if (!buffer_timed_flush_g(buffer_1, &deadline))
     strerr_diefu1sys(111, "write to stdout") ;
 }
 
-void response_error_and_exit (tipidee_rql const *rql, char const *docroot, unsigned int status)
+void response_error_plus_and_exit (tipidee_rql const *rql, char const *docroot, unsigned int status, tipidee_response_header const *plus, uint32_t plusn)
 {
-  response_error(rql, docroot, status, 1) ;
+  response_error_plus(rql, docroot, status, plus, plusn, 1) ;
   log_and_exit(0) ;
 }
 
-void response_error_and_die (tipidee_rql const *rql, int e, char const *docroot, unsigned int status, char const *const *v, unsigned int n, uint32_t options)
+void response_error_plus_and_die (tipidee_rql const *rql, int e, char const *docroot, unsigned int status, tipidee_response_header const *plus, uint32_t plusn, char const *const *v, unsigned int n, uint32_t options)
 {
   int serr = errno ;
-  response_error(rql, docroot, status, options | 1) ;
+  response_error_plus(rql, docroot, status, plus, plusn, options | 1) ;
   errno = serr ;
   if (options & 1) strerr_dievsys(e, v, n) ;
   else strerr_diev(e, v, n) ;
 }
 
-void exit_405_ (tipidee_rql const *rql, uint32_t options)
+void exit_405 (tipidee_rql const *rql, char const *docroot, uint32_t options)
 {
-  tain deadline ;
-  tipidee_response_status(buffer_1, rql, 405, "Method Not Allowed") ;
-  tipidee_response_header_writeall_G(buffer_1, g.rhdr, g.rhdrn, 1) ;
-  buffer_putsnoflush(buffer_1, "Allow: GET, HEAD") ;
-  if (options & 1) buffer_putsnoflush(buffer_1, ", POST") ;
-  buffer_putnoflush(buffer_1, "\r\n\r\n", 4) ;
-  if (!(options & 2)) tipidee_log_answer(g.logv, rql, 405, 0) ;
-  tain_add_g(&deadline, &g.writetto) ;
-  if (!buffer_timed_flush_g(buffer_1, &deadline))
-    strerr_diefu1sys(111, "write to stdout") ;
-  log_and_exit(0) ;
+  tipidee_response_header hd = { .key = "Allow", .value = options & 1 ? "GET, HEAD, POST" : "GET, HEAD", .options = 0 } ;
+  response_error_plus_and_exit(rql, docroot, 405, &hd, 1) ;
 }
 
-void respond_30x (tipidee_rql const *rql, tipidee_redirection const *rd)
+void respond_416 (tipidee_rql const *rql, char const *docroot, uint64_t size)
 {
-  static unsigned int const status[4] = { 307, 308, 302, 301 } ;
-  static char const *const reason[4] = { "Temporary Redirect", "Permanent Redirect", "Found", "Moved Permanently" } ;
-  tain deadline ;
-  tipidee_response_status(buffer_1, rql, status[rd->type], reason[rd->type]) ;
-  tipidee_response_header_writeall_G(buffer_1, g.rhdr, g.rhdrn, 0) ;
-  buffer_putsnoflush(buffer_1, "Content-Length: 0\r\nLocation: ") ;
-  buffer_putsnoflush(buffer_1, rd->location) ;
-  if (rd->sub) buffer_putsnoflush(buffer_1, rd->sub) ;
-  buffer_putnoflush(buffer_1, "\r\n\r\n", 4) ;
-  tipidee_log_answer(g.logv, rql, status[rd->type], 0) ;
-  tain_add_g(&deadline, &g.writetto) ;
-  if (!buffer_timed_flush_g(buffer_1, &deadline))
-    strerr_diefu1sys(111, "write to stdout") ;
+  char buf[8 + UINT64_FMT] = "bytes */" ;
+  tipidee_response_header cr = { .key = "Content-Range", .value = buf, .options = 0 } ;
+  buf[8 + uint64_fmt(buf + 8, size)] = 0 ;
+  response_error_plus(rql, docroot, 416, &cr, 1, 0) ;
 }

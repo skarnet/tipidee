@@ -21,7 +21,7 @@ struct builtinheaders_s
 
 static struct builtinheaders_s const builtinheaders[] =
 {
-  { .key = "Accept-Ranges", .value = "none", .overridable = 0 },
+  { .key = "Accept-Ranges", .value = "bytes", .overridable = 0 },
   { .key = "Allow", .value = 0, .overridable = 0 },
   { .key = "Cache-Control", .value = "private", .overridable = 1 },
   { .key = "Connection", .value = 0, .overridable = 0 },

@@ -25,13 +25,14 @@
 #include <tipidee/tipidee.h>
 #include "tipideed-internal.h"
 
+#define dienomem(rql, docroot) die500sys(rql, 111, (docroot), "stralloc_catb")
+
 static void addenv_ (tipidee_rql const *rql, char const *docroot, char const *k, char const *v, int slash)
 {
   if (!stralloc_cats(&g.sa, k)
    || !stralloc_catb(&g.sa, "=/", 1 + !!slash)
    || !stralloc_cats(&g.sa, v)
-   || !stralloc_0(&g.sa))
-    die500sys(rql, 111, docroot, "stralloc_catb") ;
+   || !stralloc_0(&g.sa)) dienomem(rql, docroot) ;
 }
 
 #define addenv(rql, d, k, v) addenv_(rql, d, k, (v), 0)
@@ -40,8 +41,24 @@ static void addenv_ (tipidee_rql const *rql, char const *docroot, char const *k,
 static void delenv (tipidee_rql const *rql, char const *docroot, char const *k)
 {
   if (!stralloc_cats(&g.sa, k)
-   || !stralloc_0(&g.sa))
-    die500sys(rql, 111, docroot, "stralloc_catb") ;
+   || !stralloc_0(&g.sa)) dienomem(rql, docroot) ;
+}
+
+static void addrequesturi (tipidee_rql const *rql, char const *docroot, char const *script, char const *infopath)
+{
+  if (!stralloc_cats(&g.sa, "REQUEST_URI=")
+   || !stralloc_cats(&g.sa, script)) dienomem(rql, docroot) ;
+  if (infopath)
+  {
+    if (!stralloc_catb(&g.sa, "/", 1)
+     || !stralloc_cats(&g.sa, infopath)) dienomem(rql, docroot) ;
+  }
+  if (rql->uri.query)
+  {
+    if (!stralloc_catb(&g.sa, "?", 1)
+     || !stralloc_cats(&g.sa, rql->uri.query)) dienomem(rql, docroot) ;
+  }
+  if (!stralloc_0(&g.sa)) dienomem(rql, docroot) ;
 }
 
 static inline void modify_env (tipidee_rql const *rql, char const *docroot, tipidee_headers const *hdr, size_t cl, char const *script, char const *infopath)
@@ -61,13 +78,14 @@ static inline void modify_env (tipidee_rql const *rql, char const *docroot, tipi
   if (rql->uri.query) addenv(rql, docroot, "QUERY_STRING", rql->uri.query) ;
   else delenv(rql, docroot, "QUERY_STRING") ;
   addenv(rql, docroot, "SCRIPT_NAME", script) ;
+  addrequesturi(rql, docroot, script, infopath) ;
   addenv(rql, docroot, "SERVER_NAME", rql->uri.host) ;
   {
     char proto[9] = "HTTP/1.1" ;
     if (!rql->http_minor) proto[7] = '0' ;
     addenv(rql, docroot, "SERVER_PROTOCOL", proto) ;
   }
-  
+
   for (size_t i = 0 ; i < hdr->n ; i++)
   {
     char const *key = hdr->buf + hdr->list[i].left ;

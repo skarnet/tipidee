@@ -1,8 +1,9 @@
 cgi.o
+errors.o
 harden.o
 options.o
 regular.o
-responses.o
+redirection.o
 send_file.o
 trace.o
 util.o

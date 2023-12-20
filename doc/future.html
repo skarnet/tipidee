@@ -25,23 +25,6 @@ of HTTP that would be nice to have, and that may be implemented at some point
 down the line.
 </p>
 
-<h2> Ranges </h2>
-
-<p>
- <a href="https://datatracker.ietf.org/doc/html/rfc9110#section-14">Ranges</a>
-are a useful part of HTTP when you are serving big files and connections may
-be interrupted and restarted: supporting the <tt>Range:</tt> header can save
-bandwidth, if the client only asks for the parts of the files that it's still
-missing.
-</p>
-
-<p>
- It hasn't been implemented in tipidee yet because parsing the <tt>Range:</tt>
-header is rather complex, and serving parts of files (as opposed to full files
-sequentially) also requires some extra coding that wasn't deemed worth it for
-an initial release.
-</p>
-
 <h2> HTTP Basic Authentication </h2>
 
 <p>

@@ -2,6 +2,66 @@
 
 #include <skalibs/sysdeps.h>
 
+#ifdef SKALIBS_HASSENDFILE
+
+#include <sys/types.h>
+#include <sys/sendfile.h>
+#include <limits.h>
+
+#include <skalibs/uint64.h>
+#include <skalibs/strerr.h>
+#include <skalibs/tai.h>
+#include <skalibs/unix-timed.h>
+
+#include "tipideed-internal.h"
+
+void init_splice_pipe (void)
+{
+}
+
+struct sendfile_s
+{
+  int fd ;
+  off_t pos ;  
+  uint64_t n ;
+} ;
+
+static int s_getfd (void *p)
+{
+  (void)p ;
+  return 1 ;
+}
+
+static int s_isnonempty (void *p)
+{
+  struct sendfile_s *sf = p ;
+  return !!sf->n ;
+}
+
+static int s_flush (void *p)
+{
+  struct sendfile_s *sf = p ;
+  while (sf->n)
+  {
+    ssize_t r = sendfile(1, sf->fd, &sf->pos, sf->n > SSIZE_MAX ? SSIZE_MAX : sf->n) ;
+    if (r == -1) return 0 ;
+    sf->n -= r ;
+  }
+  return 1 ;
+}
+
+void send_file_range (int fd, uint64_t offset, uint64_t n, char const *fn)
+{
+  struct sendfile_s sf = { .pos = offset, .n = n, .fd = fd } ;
+  tain deadline ;
+  tain_add_g(&deadline, &g.writetto) ;
+  if (!buffer_timed_flush_g(buffer_1, &deadline))
+    strerr_diefu2sys(111, "write", " to stdout") ;
+  if (!timed_flush_g(&sf, &s_getfd, &s_isnonempty, &s_flush, &deadline))
+    strerr_diefu3sys(111, "sendfile ", fn, " to stdout") ;
+}
+
+#else
 #ifdef SKALIBS_HASSPLICE
 
 #include <skalibs/nonposix.h>
@@ -10,7 +70,9 @@
 #include <stdint.h>
 #include <unistd.h>
 
+#include <skalibs/uint64.h>
 #include <skalibs/strerr.h>
+#include <skalibs/tai.h>
 #include <skalibs/djbunix.h>
 #include <skalibs/unix-timed.h>
 
@@ -53,7 +115,7 @@ static int flush (void *b)
   return 1 ;
 }
 
-void send_file (int fd, uint64_t n, char const *fn)
+void send_file_range (int fd, uint64_t offset, uint64_t n, char const *fn)
 {
   tain deadline ;
   struct spliceinfo_s si = { .last = 0 } ;
@@ -62,7 +124,7 @@ void send_file (int fd, uint64_t n, char const *fn)
     strerr_diefu2sys(111, "write", " to stdout") ;
   while (n)
   {
-    si.n = splice(fd, 0, g.p[1], 0, n, 0) ;
+    si.n = splice(fd, &offset, g.p[1], 0, n, 0) ;
     if (si.n == -1) strerr_diefu2sys(111, "read from ", fn) ;
     else if (!si.n) strerr_diefu3x(111, "serve ", fn, ": file was truncated") ;
     else if (si.n > n)
@@ -81,7 +143,10 @@ void send_file (int fd, uint64_t n, char const *fn)
 #else
 
 #include <sys/uio.h>
+#include <unistd.h>
+#include <stdint.h>
 
+#include <skalibs/uint64.h>
 #include <skalibs/allreadwrite.h>
 #include <skalibs/buffer.h>
 #include <skalibs/strerr.h>
@@ -94,12 +159,14 @@ void init_splice_pipe (void)
 {
 }
 
-void send_file (int fd, uint64_t n, char const *fn)
+void send_file_range (int fd, uint64_t offset, uint64_t n, char const *fn)
 {
   tain deadline ;
   struct iovec v[2] ;
   ssize_t r ;
   if (!n) goto flushit ;  /* I know, I know, but do-while SUCKS */
+  if (offset && lseek(fd, offset, SEEK_SET) == -1)
+    strerr_diefu2sys(111, "lseek on ", fn) ;
  fillit:
   buffer_wpeek(buffer_1, v) ;
   r = allreadv(fd, v, 2) ;
@@ -119,4 +186,5 @@ void send_file (int fd, uint64_t n, char const *fn)
   if (n) goto fillit ;
 }
 
+#endif
 #endif

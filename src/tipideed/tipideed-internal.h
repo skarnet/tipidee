@@ -79,28 +79,33 @@ extern void tipideed_harden (unsigned int) ;
 
  /* Responses */
 
-extern void response_error_early (tipidee_rql const *, unsigned int, char const *, char const *, uint32_t) ;  /* set bit 0 for Connection: close */
-extern void response_error_early_and_exit (tipidee_rql const *, unsigned int, char const *, char const *) gccattr_noreturn ;
-extern void exit_405_ (tipidee_rql const *, uint32_t) gccattr_noreturn ;  /* set bit 0 for Allow: POST, bit 1 for preexit */
+#define response_error_early(rql, status, reason, text, options) response_error_early_plus(rql, status, reason, text, 0, 0, options)
+extern void response_error_early_plus (tipidee_rql const *, unsigned int, char const *, char const *, tipidee_response_header const *, uint32_t, uint32_t) ;
+#define response_error_early_and_exit(rql, status, reason, text) response_error_early_plus_and_exit(rql, status, reason, (text), 0, 0)
+extern void response_error_early_plus_and_exit (tipidee_rql const *, unsigned int, char const *, char const *, tipidee_response_header const *, uint32_t) gccattr_noreturn ;
+extern void eexit_405 (tipidee_rql const *) gccattr_noreturn ;
 
 #define eexit_400(r, s) response_error_early_and_exit(r, 400, "Bad Request", s)
-#define eexit_405(r) exit_405_((r), 3)
 #define eexit_408(r) response_error_early_and_exit((r), 408, "Request Timeout", 0)
 #define eexit_413(r, s) response_error_early_and_exit(r, 413, "Request Entity Too Large", s)
 #define eexit_501(r, s) response_error_early_and_exit(r, 501, "Not Implemented", s)
 
+#define response_error(rql, docroot, status, options) response_error_plus(rql, docroot, status, 0, 0, options)
+extern void response_error_plus (tipidee_rql const *, char const *, unsigned int, tipidee_response_header const *, uint32_t, uint32_t) ;  /* set bit 0 for Connection: close */
+#define response_error_and_exit(rql, docroot, status) response_error_plus_and_exit(rql, docroot, (status), 0, 0)
+extern void response_error_plus_and_exit (tipidee_rql const *, char const *, unsigned int, tipidee_response_header const *, uint32_t) gccattr_noreturn ;
+#define response_error_and_die(rql, e, docroot, status, v, n, options) response_error_plus_and_die(rql, e, docroot, status, 0, 0, v, n, options)
+extern void response_error_plus_and_die (tipidee_rql const *, int, char const *, unsigned int, tipidee_response_header const *, uint32_t, char const *const *, unsigned int, uint32_t) gccattr_noreturn ;  /* set bit 0 for diesys */
 
-extern void response_error (tipidee_rql const *, char const *, unsigned int, uint32_t) ;  /* set bit 0 for Connection: close */
-extern void response_error_and_exit (tipidee_rql const *, char const *, unsigned int) gccattr_noreturn ;
-extern void response_error_and_die (tipidee_rql const *, int, char const *, unsigned int, char const *const *, unsigned int, uint32_t) gccattr_noreturn ;  /* set bit 0 for diesys */
-
+extern void exit_405 (tipidee_rql const *, char const *, uint32_t) gccattr_noreturn ;
 #define exit_400(r, d) response_error_and_exit(r, (d), 400)
-#define exit_405(r) exit_405_((r), 0)
 #define exit_408(r, d) response_error_and_exit(r, (d), 408)
 #define exit_413(r, d) response_error_and_exit(r, (d), 413)
 #define exit_501(r, d) response_error_and_exit(r, (d), 501)
 
 extern void respond_30x (tipidee_rql const *, tipidee_redirection const *) ;
+extern void respond_416 (tipidee_rql const *, char const *, uint64_t) ;
+
 #define respond_403(r, d) response_error(r, (d), 403, 0)
 #define respond_404(r, d) response_error(r, (d), 404, 0)
 #define respond_414(r, d) response_error(r, (d), 414, 0)
@@ -126,12 +131,14 @@ extern int respond_options (tipidee_rql const *, uint32_t) ;
  /* send_file */
 
 extern void init_splice_pipe (void) ;
-extern void send_file (int, uint64_t, char const *) ;
+extern void send_file_range (int, uint64_t, uint64_t, char const *) ;
+#define send_file(fd, n, fn) send_file_range(fd, 0, n, fn)
 
 
  /* regular */
 
 extern int respond_regular (tipidee_rql const *, char const *, char const *, struct stat const *, tipidee_resattr const *) ;
+extern int respond_partial (tipidee_rql const *, char const *, char const *, struct stat const *, uint64_t, uint64_t, tipidee_resattr const *) ;
 extern int respond_304 (tipidee_rql const *, char const *, struct stat const *) ;
 
 

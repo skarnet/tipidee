@@ -3,9 +3,10 @@
 #ifndef TIPIDEE_UTIL_H
 #define TIPIDEE_UTIL_H
 
-#include <stddef.h>
+#include <sys/types.h>
 #include <stdint.h>
 
+#include <skalibs/uint64.h>
 #include <skalibs/buffer.h>
 #include <skalibs/tai.h>
 #include <skalibs/stralloc.h>
@@ -31,4 +32,6 @@ extern int tipidee_util_chunked_read (buffer *, stralloc *, size_t, tain const *
 
 extern int tipidee_util_httpdate (char const *, tain *) ;
 extern int tipidee_util_defaulttext (unsigned int, tipidee_defaulttext *) ;
+extern int tipidee_util_parse_range (char const *, off_t, uint64_t *, uint64_t *) ;
+
 #endif
