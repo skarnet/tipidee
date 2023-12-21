@@ -77,7 +77,7 @@ extern struct global_s g ;
 extern void tipideed_harden (unsigned int) ;
 
 
- /* Responses */
+ /* errors */
 
 #define response_error_early(rql, status, reason, text, options) response_error_early_plus(rql, status, reason, text, 0, 0, options)
 extern void response_error_early_plus (tipidee_rql const *, unsigned int, char const *, char const *, tipidee_response_header const *, uint32_t, uint32_t) ;
@@ -103,7 +103,6 @@ extern void exit_405 (tipidee_rql const *, char const *, uint32_t) gccattr_noret
 #define exit_413(r, d) response_error_and_exit(r, (d), 413)
 #define exit_501(r, d) response_error_and_exit(r, (d), 501)
 
-extern void respond_30x (tipidee_rql const *, tipidee_redirection const *) ;
 extern void respond_416 (tipidee_rql const *, char const *, uint64_t) ;
 
 #define respond_403(r, d) response_error(r, (d), 403, 0)
@@ -118,12 +117,17 @@ extern void respond_416 (tipidee_rql const *, char const *, uint64_t) ;
 #define die502x(r, e, d, ...) diefx(r, e, d, 502, __VA_ARGS__)
 
 
- /* Trace */
+ /* redirection */
+
+extern void respond_30x (tipidee_rql const *, tipidee_redirection const *) ;
+
+
+ /* trace */
 
 extern int respond_trace (tipidee_rql const *, tipidee_headers const *) ;
 
 
- /* Options */
+ /* options */
 
 extern int respond_options (tipidee_rql const *, uint32_t) ;
 

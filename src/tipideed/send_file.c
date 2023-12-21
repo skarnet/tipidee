@@ -164,7 +164,7 @@ void send_file_range (int fd, uint64_t offset, uint64_t n, char const *fn)
   tain deadline ;
   struct iovec v[2] ;
   ssize_t r ;
-  if (!n) goto flushit ;  /* I know, I know, but do-while SUCKS */
+  if (!n) goto flushit ;
   if (offset && lseek(fd, offset, SEEK_SET) == -1)
     strerr_diefu2sys(111, "lseek on ", fn) ;
  fillit:

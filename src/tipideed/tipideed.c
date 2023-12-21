@@ -202,7 +202,7 @@ static inline void get_resattr (tipidee_rql const *rql, char const *docroot, cha
     if (errno == EPERM)
       die500x(rql, 102, docroot, "resource ", res, " points outside of the server's root") ;
     else
-      die500sys(rql, 111, docroot, "path_canonicalize ", res) ;
+      die500sys(rql, 111, docroot, "translate_path ", res) ;
   }
   if (!tipidee_conf_get_resattr(&g.conf, g.sa.s + pos, ra))
     die500sys(rql, 102, docroot, "look up resource attributes for ", g.sa.s + pos) ;
