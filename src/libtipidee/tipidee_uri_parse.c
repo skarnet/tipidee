@@ -97,7 +97,7 @@ END = 13, X = 14
 static inline uint8_t uridecode_cclass (char c)
 {
   static uint8_t const table[128] = "01111111111111111111111111111111161162>>>>>=>==4;;;;;;;;;;5>>=>36<<<<<<====================>1>==1<<<<<<=7=======9==:8======111=1" ;
-  return c < 0 ? 1 : table[(uint8_t)c] - '0' ;
+  return c & 0x80 ? 1 : table[(uint8_t)c] - '0' ;
 }
 
 size_t tipidee_uri_parse (char *out, size_t max, char const *in, tipidee_uri *uri)
