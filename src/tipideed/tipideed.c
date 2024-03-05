@@ -252,8 +252,8 @@ static inline int serve (tipidee_rql *rql, char const *docroot, char *uribuf, ti
     size_t pos = docrootlen + pathlen - 1 ;
     for (;;)
     {
-      while (fn[pos] != '/') pos-- ;
-      if (pos <= docrootlen) { respond_404(rql, docroot) ; return 0 ; }
+      while (pos && fn[pos] != '/') pos-- ;
+      if (!pos) { respond_404(rql, docroot) ; return 0 ; }
       fn[pos] = 0 ;
       if (stat(fn, &st) == 0) break ;
       switch (errno)
