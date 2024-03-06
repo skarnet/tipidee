@@ -274,7 +274,6 @@ static inline int serve (tipidee_rql *rql, char const *docroot, char *uribuf, ti
       fn[pos] = 0 ;
     }
   }
-  tipidee_log_debug(g.logv, "found ", fn) ;
   if (S_ISDIR(st.st_mode))
   {
     switch (indexify(rql, docroot, fn, &st))
@@ -286,7 +285,6 @@ static inline int serve (tipidee_rql *rql, char const *docroot, char *uribuf, ti
       case 0 : break ;
     }
   }
-  tipidee_log_debug(g.logv, "serve: docroot ", docroot, " file ", fn, infopath[0] ? " infopath /" : "", infopath[0] ? infopath : "") ;
 
   if (g.xiscgi && st.st_mode & S_IXOTH) ra.flags |= TIPIDEE_RA_FLAG_CGI ;
   get_resattr(rql, docroot, fn, &ra) ;
