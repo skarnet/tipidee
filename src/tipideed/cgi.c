@@ -48,7 +48,7 @@ static void addrequesturi (tipidee_rql const *rql, char const *docroot, char con
 {
   if (!stralloc_cats(&g.sa, "REQUEST_URI=")
    || !stralloc_cats(&g.sa, script)) dienomem(rql, docroot) ;
-  if (infopath)
+  if (infopath[0])
   {
     if (!stralloc_catb(&g.sa, "/", 1)
      || !stralloc_cats(&g.sa, infopath)) dienomem(rql, docroot) ;
@@ -73,7 +73,7 @@ static inline void modify_env (tipidee_rql const *rql, char const *docroot, tipi
   }
   else delenv(rql, docroot, "CONTENT_LENGTH") ;
 
-  if (infopath) addenvslash(rql, docroot, "PATH_INFO", infopath) ;
+  if (infopath[0]) addenvslash(rql, docroot, "PATH_INFO", infopath) ;
   else delenv(rql, docroot, "PATH_INFO") ;
   if (rql->uri.query) addenv(rql, docroot, "QUERY_STRING", rql->uri.query) ;
   else delenv(rql, docroot, "QUERY_STRING") ;

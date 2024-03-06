@@ -21,7 +21,7 @@ void tipidee_log_resource (uint32_t v, tipidee_rql const *rql, char const *file,
   a[m++] = file ;
   a[m++] = " type " ;
   a[m++] = ra->flags & TIPIDEE_RA_FLAG_CGI ? ra->flags & TIPIDEE_RA_FLAG_NPH ? "nph" : "cgi" : ra->content_type ;
-  if (ra->flags & TIPIDEE_RA_FLAG_CGI && infopath)
+  if (ra->flags & TIPIDEE_RA_FLAG_CGI && infopath[0])
   {
     a[m++] = " path_info /" ;
     a[m++] = infopath ;

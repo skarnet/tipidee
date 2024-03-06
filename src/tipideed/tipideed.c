@@ -224,9 +224,11 @@ static inline int serve (tipidee_rql *rql, char const *docroot, char *uribuf, ti
   tipidee_resattr ra = TIPIDEE_RESATTR_ZERO ;
   size_t docrootlen = strlen(docroot) ;
   size_t pathlen = strlen(rql->uri.path) ;
-  char const *infopath = 0 ;
+  char const *x = 0 ;
   struct stat st ;
-  char fn[docrootlen + pathlen + 2 + g.indexlen] ;
+  char fn[docrootlen + pathlen + 3 + g.indexlen] ;
+  char infopath[pathlen + 1] ;
+  infopath[0] = 0 ;
   memcpy(fn, docroot, docrootlen) ;
   memcpy(fn + docrootlen, rql->uri.path, pathlen) ;
   fn[docrootlen + pathlen] = 0 ;
@@ -265,11 +267,16 @@ static inline int serve (tipidee_rql *rql, char const *docroot, char *uribuf, ti
         default : die500sys(rql, 111, docroot, "stat ", fn) ;
       }
     }
-    infopath = fn + pos + 1 ;
+    strcpy(infopath, fn + pos + 1) ;
+    if (infopath[0] && S_ISDIR(st.st_mode))
+    {
+      fn[pos++] = '/' ;
+      fn[pos] = 0 ;
+    }
   }
+  tipidee_log_debug(g.logv, "found ", fn) ;
   if (S_ISDIR(st.st_mode))
   {
-    if (infopath) { respond_404(rql, docroot) ; return 0 ; }
     switch (indexify(rql, docroot, fn, &st))
     {
       case 403 : respond_403(rql, docroot) ; return 0 ;
@@ -279,14 +286,14 @@ static inline int serve (tipidee_rql *rql, char const *docroot, char *uribuf, ti
       case 0 : break ;
     }
   }
-  tipidee_log_debug(g.logv, "serve: docroot ", docroot, " file ", fn, " infopath ", infopath ? infopath : "(none)") ;
+  tipidee_log_debug(g.logv, "serve: docroot ", docroot, " file ", fn, infopath[0] ? " infopath /" : "", infopath[0] ? infopath : "") ;
 
   if (g.xiscgi && st.st_mode & S_IXOTH) ra.flags |= TIPIDEE_RA_FLAG_CGI ;
   get_resattr(rql, docroot, fn, &ra) ;
 
-  if (!ra.flags & TIPIDEE_RA_FLAG_CGI)
+  if (!(ra.flags & TIPIDEE_RA_FLAG_CGI))
   {
-    if (infopath) { respond_404(rql, docroot) ; return 0 ; }
+    if (infopath[0]) { respond_404(rql, docroot) ; return 0 ; }
     if (rql->m == TIPIDEE_METHOD_POST) exit_405(rql, docroot, 0) ;
   }
 
@@ -298,11 +305,11 @@ static inline int serve (tipidee_rql *rql, char const *docroot, char *uribuf, ti
   if (ra.flags & TIPIDEE_RA_FLAG_CGI)
     return respond_cgi(rql, docroot, fn, docrootlen, infopath, uribuf, hdr, &ra, body, bodylen) ;
 
-  infopath = tipidee_headers_search(hdr, "If-Modified-Since") ;
-  if (infopath)
+  x = tipidee_headers_search(hdr, "If-Modified-Since") ;
+  if (x)
   {
     tain wanted, actual ;
-    if (tipidee_util_httpdate(infopath, &wanted)
+    if (tipidee_util_httpdate(x, &wanted)
      && tain_from_timespec(&actual, &st.st_mtim)
      && tain_less(&actual, &wanted))
       return respond_304(rql, fn, &st) ;
@@ -310,11 +317,11 @@ static inline int serve (tipidee_rql *rql, char const *docroot, char *uribuf, ti
 
   if (rql->m == TIPIDEE_METHOD_GET)
   {
-    infopath = tipidee_headers_search(hdr, "Range") ;
-    if (infopath)
+    x = tipidee_headers_search(hdr, "Range") ;
+    if (x)
     {
       uint64_t start, len ;
-      int r = tipidee_util_parse_range(infopath, st.st_size, &start, &len) ;
+      int r = tipidee_util_parse_range(x, st.st_size, &start, &len) ;
       if (r > 0) return respond_partial(rql, docroot, fn, &st, start, len, &ra) ;
       if (r < 0) { respond_416(rql, docroot, st.st_size) ; return 0 ; }
     }
