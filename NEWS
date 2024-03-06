@@ -1,5 +1,19 @@
 Changelog for tipidee.
 
+In 0.0.4.0
+----------
+
+ - Bugfixes.
+ - New ls.cgi binary for use in document hierarchies.
+
+
+In 0.0.3.0
+----------
+
+ - Bugfixes.
+ - New XXX_no_translate configuration option.
+
+
 In 0.0.2.0
 ----------
 

@@ -3,6 +3,7 @@ tipideed \
 tipidee-config
 
 LIBEXEC_TARGETS := \
-tipidee-config-preprocess
+tipidee-config-preprocess \
+ls.cgi
 
 LIB_DEFS := TIPIDEE=tipidee

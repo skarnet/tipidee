@@ -42,6 +42,7 @@ tipidee_rql_read.o
 tipidee_uri_parse.o
 tipidee_util_chunked_read.o
 tipidee_util_defaulttext.o
+tipidee_util_htmlescape.o
 tipidee_util_httpdate.o
 tipidee_util_parse_range.o
 -lskarnet

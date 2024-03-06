@@ -34,4 +34,6 @@ extern int tipidee_util_httpdate (char const *, tain *) ;
 extern int tipidee_util_defaulttext (unsigned int, tipidee_defaulttext *) ;
 extern int tipidee_util_parse_range (char const *, off_t, uint64_t *, uint64_t *) ;
 
+extern char const *tipidee_util_htmlescape (char const *) ;
+
 #endif

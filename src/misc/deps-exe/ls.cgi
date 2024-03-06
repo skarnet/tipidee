@@ -1,0 +1,2 @@
+libtipidee.a.xyzzy
+-lskarnet

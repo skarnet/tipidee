@@ -1,0 +1,64 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="Content-Language" content="en" />
+    <title>tipidee: the ls.cgi program</title>
+    <meta name="Description" content="tipidee: the ls.cgi internal program" />
+    <meta name="Keywords" content="tipidee ls.cgi index index.cgi listing directory cgi http" />
+    <!-- <link rel="stylesheet" type="text/css" href="//skarnet.org/default.css" /> -->
+  </head>
+<body>
+
+<p>
+<a href="index.html">tipidee</a><br />
+<a href="//skarnet.org/software/">Software</a><br />
+<a href="//skarnet.org/">skarnet.org</a>
+</p>
+
+<h1> The <tt>ls.cgi</tt> internal program </h1>
+
+<p>
+ <tt>ls.cgi</tt> is a binary that is suitable for using as a CGI script,
+e.g. called <tt>index.cgi</tt>,
+in a Web document hierarchy served by tipidee, when the goal of the index
+file is only to list the contents of the directory it resides in.
+</p>
+
+<h2> Interface </h2>
+
+<pre>
+     ls.cgi
+</pre>
+
+<ul>
+ <li> It is not meant to be invoked by users. It will fail if invoked outside of a
+CGI script context. As such, it is unexported (it will appear in <tt>libexecdir</tt>,
+not in <tt>bindir</tt>). </li>
+ <li> It is meant to be placed in the repository of CGI scripts and symlinked as
+<tt>index.cgi</tt> in the places where the URL of a directory should list the
+contents of said directory. </li>
+ <li> For instance, if <tt>example.com:443/index.cgi</tt> is a copy of, or a
+symlink to, ls.cgi, and the tipidee configuration says that this binary is meant
+to be a CGI script, then access to <tt>https://example.com</tt> will list the files
+available in the <tt>example.com:443/</tt> directory. </li>
+</ul>
+
+<h2> Exit codes </h2>
+
+<dl>
+ <dt> 0 </dt> <dd> success </dd>
+ <dt> 100 </dt> <dd> wrong usage </dd>
+ <dt> 111 </dt> <dd> system call failed </dd>
+</dl>
+
+<h2> Notes </h2>
+
+<ul>
+ <li> ls.cgi is very minimalistic. It provides no CSS or anything else than
+the bare list of files. It is provided as an example of how CGI scripts can
+work with tipidee. </li>
+</ul>
+
+</body>
+</html>
