@@ -5,5 +5,5 @@ backtick -E ip { pipeline { s6-dnsip6 example.com } head -n 1 }
 s6-envuidgid www
 cd /home/www
 fdmove 1 3
-s6-tcpserver -v2 -1 -U -c 512 -- $ip 80
+s6-tcpserver -1 -U -c 512 -- $ip 80
 tipideed
