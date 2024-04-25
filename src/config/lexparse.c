@@ -182,15 +182,20 @@ static inline void parse_contenttype (char const *s, size_t const *word, size_t 
   n-- ;
   for (size_t i = 0 ; i < n ; i++)
   {
-    size_t len = strlen(s + word[i]) ;
-    char key[len + 2] ;
-    if (s[word[i]] != '.')
-      strerr_dief6x(1, "file extensions must start with a dot", " - check directive content-type", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
-    key[0] = 'T' ;
-    key[1] = ':' ;
-    memcpy(key + 2, s + word[i] + 1, len - 1) ;
-    key[len + 1] = 0 ;
-    add_unique(key, ct, strlen(ct) + 1, md) ;
+    if (s[word[i]] == '\"' && s[word[i]+1] == '\"' && !s[word[i]+2])
+      add_unique("T:", ct, strlen(ct) + 1, md) ;
+    else if (s[word[i]] != '.')
+      strerr_dief6x(1, "file extensions must be \"\" or start with a dot", " - check directive content-type", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    else
+    {
+      size_t len = strlen(s + word[i]) ;
+      char key[len + 2] ;
+      key[0] = 'T' ;
+      key[1] = ':' ;
+      memcpy(key + 2, s + word[i] + 1, len - 1) ;
+      key[len + 1] = 0 ;
+      add_unique(key, ct, strlen(ct) + 1, md) ;
+    }
   }
 }
 

@@ -499,6 +499,8 @@ to clients with the <tt>Content-Type: <em>type</em></tt> header.
  <li> Extensions must be listed <em>with</em> their initial dot. </li>
  <li> Example: <tt>content-type text/html .html .htm</tt> means that files
 ending in <tt>.html</tt> or <tt>.htm</tt> should be served as <tt>text/html</tt>.
+ <li> As a special case, <tt>content-type some/thing ""</tt> means that files without an
+extension should be served as <tt>some/thing</tt>. </li>
  <li> tipidee already comes with a
 <a href="https://git.skarnet.org/cgi-bin/cgit.cgi/tipidee/tree/src/config/defaults.c#n19">large
 list</a> of default Content-Type mappings; this directive should only be necessary if you're
