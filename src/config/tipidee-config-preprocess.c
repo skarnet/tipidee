@@ -237,7 +237,7 @@ static void includefromhere (char const *file)
         case 1 :
         case 0 :
         {
-          int fdhere = open2(".", O_RDONLY | O_DIRECTORY) ;
+          int fdhere = open2(".", O_RDONLY) ;
           char linefmt[UINT32_FMT] ;
           if (fdhere == -1)
             strerr_dief3sys(111, "in ", namesa.s + d + 1, ": unable to open base directory: ") ;
