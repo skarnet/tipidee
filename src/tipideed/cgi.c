@@ -27,16 +27,17 @@
 
 #define dienomem(rql, docroot) die500sys(rql, 111, (docroot), "stralloc_catb")
 
-static void addenv_ (tipidee_rql const *rql, char const *docroot, char const *k, char const *v, int slash)
+static void addenv_ (tipidee_rql const *rql, char const *docroot, char const *k, char const *v, size_t vlen, int slash)
 {
   if (!stralloc_cats(&g.sa, k)
    || !stralloc_catb(&g.sa, "=/", 1 + !!slash)
-   || !stralloc_cats(&g.sa, v)
+   || !stralloc_catb(&g.sa, v, vlen)
    || !stralloc_0(&g.sa)) dienomem(rql, docroot) ;
 }
 
-#define addenv(rql, d, k, v) addenv_(rql, d, k, (v), 0)
-#define addenvslash(rql, d, k, v) addenv_(rql, d, k, (v), 1)
+#define addenv(rql, d, k, v) addenv_(rql, d, k, (v), strlen(v), 0)
+#define addenvb(rql, d, k, v, vlen) addenv_(rql, d, k, v, (vlen), 0)
+#define addenvslash(rql, d, k, v) addenv_(rql, d, k, (v), strlen(v), 1)
 
 static void delenv (tipidee_rql const *rql, char const *docroot, char const *k)
 {
@@ -92,13 +93,11 @@ static inline void modify_env (tipidee_rql const *rql, char const *docroot, tipi
     char const *val = hdr->buf + hdr->list[i].right ;
     if (!strcasecmp(key, "Authorization"))
     {
-      size_t n = str_chr(val, ' ') ;
-      if (n)
+      size_t len = strlen(val) ;
+      size_t n = byte_chr(val, len, ' ') ;
+      if (n < len)
       {
-        char scheme[n] ;
-        memcpy(scheme, val, n-1) ;
-        scheme[n-1] = 0 ;
-        addenv(rql, docroot, "AUTH_TYPE", scheme) ;
+        addenvb(rql, docroot, "AUTH_TYPE", val, n) ;
         got |= 1 ;
       }
     }
