@@ -524,7 +524,7 @@ int main (int argc, char const *const *argv, char const *const *envp)
       if (rql.uri.host[hostlen - 1] == '.') hostlen-- ;
       memcpy(docroot, rql.uri.host, hostlen) ;
       docroot[hostlen] = ':' ;
-      docroot[hostlen + 1 + uint16_fmt(docroot + hostlen + 1, rql.uri.port)] = 0 ;
+      docroot[hostlen + 1 + uint16_fmt(docroot + hostlen + 1, g.defaultport)] = 0 ;  /* don't allow clients to spoof the port */
 
      /* All good. Read the body if any */
 
