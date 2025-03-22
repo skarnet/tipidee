@@ -184,7 +184,7 @@ static inline int do_cgi (tipidee_rql *rql, char const *docroot, char const *con
   int r ;
   tipidee_headers hdr ;
   char hdrbuf[4096] ;
-  char buf[4096] ;
+  char buf[BUFFER_OUTSIZE - 16] ;  /* leave room for chunk encoding */
   iopause_fd x[2] = { { .events = IOPAUSE_READ }, { .events = IOPAUSE_WRITE } } ;
   size_t bodyw = 0 ;
   tain deadline ;
@@ -205,7 +205,7 @@ static inline int do_cgi (tipidee_rql *rql, char const *docroot, char const *con
     close(x[1].fd) ;
     x[1].fd = -1 ;
   }
-  buffer_init(&b, &buffer_read, x[0].fd, buf, 4096) ;
+  buffer_init(&b, &buffer_read, x[0].fd, buf, BUFFER_OUTSIZE - 16) ;
   tain_add_g(&deadline, &g.cgitto) ;
 
   for (;;)

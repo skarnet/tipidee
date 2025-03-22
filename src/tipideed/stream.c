@@ -117,6 +117,7 @@ void stream_infinite (int fd, char const *fn)
     r = timed_readv_g(fd, v, 2, &deadline) ;
     if (r == -1) strerr_diefu2sys(111, "read from resource ", fn) ;
     if (!r) break ;
+    buffer_wseek(buffer_1, r) ;
     tain_add_g(&deadline, &g.writetto) ;
     if (!buffer_timed_flush_g(buffer_1, &deadline))
       strerr_diefu1sys(111, "write to stdout") ;
@@ -125,9 +126,40 @@ void stream_infinite (int fd, char const *fn)
 
 #endif
 
-
+#include <skalibs/types.h>
 #include <skalibs/buffer.h>
 
 void stream_autochunk (buffer *b, char const *fn)
 {
+  tain deadline ;
+  struct iovec v[2] ;
+  size_t len, w ;
+  char fmt[SIZE_XFMT] ;
+
+  for (;;)
+  {
+    ssize_t r = buffer_len(b) ;
+    if (!r)
+    {
+      tain_add_g(&deadline, &g.cgitto) ;
+      r = buffer_timed_fill_g(b, &deadline) ;
+      if (r == -1) strerr_diefu2sys(111, "read from resource ", fn) ;
+      if (!r) break ;
+    }
+
+    tain_add_g(&deadline, &g.writetto) ;
+    len = size_xfmt(fmt, r) ;
+    if (buffer_timed_put_g(buffer_1, fmt, len, &deadline) < r
+     || buffer_timed_put_g(buffer_1, "\r\n", 2, &deadline) < 2) strerr_diefu1sys(111, "write to stdout") ;
+    buffer_wpeek(b, v) ;
+    w = buffer_timed_putv_g(buffer_1, v, 2, &deadline) ;
+    buffer_wseek(b, w) ;
+    if (w < r
+     || buffer_timed_put_g(buffer_1, "\r\n", 2, &deadline) < 2
+     || !buffer_timed_flush_g(buffer_1, &deadline)) strerr_diefu1sys(111, "write to stdout") ;
+  }
+
+  tain_add_g(&deadline, &g.writetto) ;
+  if (buffer_timed_put_g(buffer_1, "0\r\n\r\n", 5, &deadline) < 5
+   || !buffer_timed_flush_g(buffer_1, &deadline)) strerr_diefu1sys(111, "write to stdout") ;
 }
