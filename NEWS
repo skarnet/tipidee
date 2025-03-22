@@ -1,9 +1,10 @@
 Changelog for tipidee.
 
-In 0.0.5.2
+In 0.0.6.0
 ----------
 
  - Bugfixes.
+ - CGI output is now streamed.
 
 
 In 0.0.5.1

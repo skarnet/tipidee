@@ -28,7 +28,7 @@ int tipidee_conf_get_resattr (tipidee_conf const *conf, char const *res, tipidee
     if (r == -1) return 0 ;
     if (r)
     {
-      rra.flags = (~rra.mask & atom.mask & atom.flags) | ((rra.mask | ~atom.mask) & rra.flags) ;  /* yup */
+      rra.flags = (~rra.mask & atom.mask & atom.flags) | ((rra.mask | ~atom.mask) & rra.flags) ;  /* it's obvious, right */
       rra.mask |= atom.mask ;
       if (!rra.content_type) rra.content_type = atom.content_type ;
     }

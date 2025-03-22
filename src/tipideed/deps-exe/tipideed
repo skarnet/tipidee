@@ -5,6 +5,7 @@ options.o
 regular.o
 redirection.o
 send_file.o
+stream.o
 trace.o
 util.o
 libtipidee.a.xyzzy

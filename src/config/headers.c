@@ -30,6 +30,7 @@ static struct builtinheaders_s const builtinheaders[] =
   { .key = "Date", .value = 0, .overridable = 0 },
   { .key = "Server", .value = "tipidee/" TIPIDEE_VERSION, .overridable = 1 },
   { .key = "Status", .value = 0, .overridable = 0 },
+  { .key = "Transfer-Encoding", .value = 0, .overridable = 0 },
   { .key = "Vary", .value = "Accept-Encoding", .overridable = 0 },
   { .key = "X-Content-Type-Options", .value = "nosniff", .overridable = 1 },
   { .key = "X-Frame-Options", .value = "DENY", .overridable = 1 }

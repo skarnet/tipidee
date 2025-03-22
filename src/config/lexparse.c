@@ -50,6 +50,8 @@ enum directivevalue_e
   T_NONNPH,
   T_BASICAUTH,
   T_NOAUTH,
+  T_AUTOCHUNK,
+  T_NOAUTOCHUNK,
   T_FILETYPE,
   T_CUSTOMRESPONSE
 } ;
@@ -408,6 +410,7 @@ static inline void process_line (char const *s, size_t const *word, size_t n, st
   static struct namevalue_s const directives[] =
   {
     { .name = "!", .value = T_BANG },
+    { .name = "autochunk", .value = T_AUTOCHUNK },
     { .name = "basic-auth", .value = T_BASICAUTH },
     { .name = "cgi", .value = T_CGI },
     { .name = "content-type", .value = T_CONTENTTYPE },
@@ -419,6 +422,7 @@ static inline void process_line (char const *s, size_t const *word, size_t n, st
     { .name = "index-file", .value = T_INDEXFILE },
     { .name = "log", .value = T_LOG },
     { .name = "no-auth", .value = T_NOAUTH },
+    { .name = "noautochunk", .value = T_NOAUTOCHUNK },
     { .name = "noncgi", .value = T_NONCGI },
     { .name = "nonnph", .value = T_NONNPH },
     { .name = "nph", .value = T_NPH },
@@ -507,6 +511,12 @@ static inline void process_line (char const *s, size_t const *word, size_t n, st
     case T_NOAUTH :
       strerr_warnw5x("file ", g.storage.s + md->filepos, " line ", md->linefmt, ": directive basic-auth not implemented in tipidee-" TIPIDEE_VERSION) ;
       parse_bitattr(s, word, n, domain->s, domain->len, md, 2, 0) ;
+      break ;
+    case T_AUTOCHUNK :
+      parse_bitattr(s, word, n, domain->s, domain->len, md, 3, 1) ;
+      break ;
+    case T_NOAUTOCHUNK :
+      parse_bitattr(s, word, n, domain->s, domain->len, md, 3, 0) ;
       break ;
     case T_FILETYPE :
       parse_filetype(s, word, n, domain->s, domain->len, md) ;

@@ -139,6 +139,13 @@ extern void send_file_range (int, uint64_t, uint64_t, char const *) ;
 #define send_file(fd, n, fn) send_file_range(fd, 0, n, fn)
 
 
+ /* stream */
+
+extern void stream_fixed (int, uint64_t, char const *) ;
+extern void stream_autochunk (buffer *, char const *) ;
+extern void stream_infinite (int, char const *) ;
+
+
  /* regular */
 
 extern int respond_regular (tipidee_rql const *, char const *, char const *, struct stat const *, tipidee_resattr const *) ;

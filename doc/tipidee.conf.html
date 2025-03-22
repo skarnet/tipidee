@@ -734,6 +734,45 @@ or specific file <em>file</em>, do <em>not</em> require authentication. </li>
 under <tt>basic-auth</tt> but want to carve exceptions. </li>
 </ul>
 
+<div id="autochunk">
+<h4> <tt>autochunk</tt> </h4>
+</div>
+
+<p>
+ <code> autochunk <em>directory</em> </code> <br>
+ <code> autochunk <em>file</em> </code>
+</p>
+
+<ul>
+ <li> This directive is useful if <em>file</em> is actually a resource providing
+a large amount of content without providing a <tt>Content-Length</tt>, i.e. a CGI
+script (or, in the future, some other resource) writing a stream of data to the
+client. Saying that <em>file</em>, or all resources under <em>directory</em>, is
+<tt>autochunk</tt> means that tipideed will split the streamed content into
+chunks. This is friendlier to browsers, and to the transport security layer. </li>
+ <li> The <tt>autochunk</tt> directive does nothing for regular files or other
+resources providing a <tt>Content-Length</tt>. It also does nothing when the
+client request uses HTTP/1.0, which does not support the use of
+<tt>Transfer-Encoding</tt>. </li>
+ <li> The default is <em>not</em> to autochunk content. </li>
+</ul>
+
+<div id="noautochunk">
+<h4> <tt>noautochunk</tt> </h4>
+</div>
+
+<p>
+ <code> noautochunk <em>directory</em> </code> <br>
+ <code> noautochunk <em>file</em> </code>
+</p>
+
+<ul>
+ <li> This is the opposite, saying that content streamed from resources under
+<em>directory</em>, or specific script <em>file</em>, will <em>not</em>
+be autochunked. </li>
+</ul>
+
+
 <div id="file-type">
 <h4> <tt>file-type</tt> </h4>
 </div>

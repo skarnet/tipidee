@@ -20,6 +20,7 @@
 #include <skalibs/iopause.h>
 #include <skalibs/env.h>
 #include <skalibs/exec.h>
+#include <skalibs/siovec.h>
 #include <skalibs/unix-timed.h>
 
 #include <tipidee/tipidee.h>
@@ -131,8 +132,6 @@ static inline int do_nph (tipidee_rql const *rql, char const *docroot, char cons
       {
 #define NAME "tipideed (nph helper for pid "
         tain deadline ;
-        char buf[4096] ;
-        buffer b = BUFFER_INIT(&buffer_write, p[1], buf, 4096) ;
         size_t m = sizeof(NAME) - 1 ;
         char progstr[sizeof(NAME) + PID_FMT] ;
         memcpy(progstr, NAME, m) ;
@@ -142,8 +141,7 @@ static inline int do_nph (tipidee_rql const *rql, char const *docroot, char cons
         tain_add_g(&deadline, &g.cgitto) ;
         close(p[0]) ;
         if (ndelay_on(p[1]) == -1) die500sys(rql, 111, docroot, "set fd nonblocking") ;
-        if (buffer_timed_put_g(&b, body, bodylen, &deadline) < bodylen
-         || !buffer_timed_flush_g(&b, &deadline))
+        if (timed_write_g(p[1], body, bodylen, &deadline) < bodylen)
           die500sys(rql, 111, docroot, "write request body to nph ", argv[0]) ;
         _exit(0) ;
       }
@@ -154,103 +152,6 @@ static inline int do_nph (tipidee_rql const *rql, char const *docroot, char cons
   if (fd_move(0, p[0]) == -1) die500sys(rql, 111, docroot, "fd_move") ;
   exec_e(argv, envp) ;
   die500sys(rql, errno == ENOENT ? 127 : 126, docroot, "exec nph ", argv[0]) ;
-}
-
-static inline int run_cgi (tipidee_rql const *rql, char const *docroot, char const *const *argv, char const *const *envp, char const *body, size_t bodylen, tipidee_headers *hdr, stralloc *sa)
-{
-  iopause_fd x[2] = { { .events = IOPAUSE_READ }, { .events = IOPAUSE_WRITE } } ;
-  size_t bodyw = 0 ;
-  unsigned int rstate = 0 ;
-  tain deadline ;
-  pid_t pid ;
-  disize curheader = DISIZE_ZERO ;
-  uint32_t parserstate = 0 ;
-  buffer b ;
-  char buf[4096] ;
-  {
-    int fd[2] = { 0, 1 } ;
-    pid = child_spawn2(argv[0], argv, envp, fd) ;
-    if (!pid) die500sys(rql, 111, docroot, "spawn ", argv[0]) ;
-    x[0].fd = fd[0] ; x[1].fd = fd[1] ;
-  }
-  if (!bodylen)
-  {
-    close(x[1].fd) ;
-    x[1].fd = -1 ;
-  }
-  buffer_init(&b, &buffer_read, x[0].fd, buf, 4096) ;
-  tain_add_g(&deadline, &g.cgitto) ;
-  while (x[0].fd >= 0)
-  {
-    int r = iopause_g(x, 1 + (x[1].fd >= 0), &deadline) ;
-    if (r == -1) die500sys(rql, 111, docroot, "iopause") ;
-    if (!r)
-    {
-      kill(pid, SIGTERM) ;
-      strerr_warnw3x("cgi ", argv[0], " timed out") ;
-      respond_504(rql, docroot) ;
-      break ;
-    }
-    if (x[1].fd >= 0 && x[1].revents & (IOPAUSE_WRITE | IOPAUSE_EXCEPT))
-    {
-      size_t len = allwrite(x[1].fd, body + bodyw, bodylen - bodyw) ;
-      if (!len)
-      {
-        strerr_warnwu2sys("write request body to cgi ", argv[0]) ;
-        bodyw = bodylen ;
-      }
-      else bodyw += len ;
-      if (bodyw >= bodylen)
-      {
-        close(x[1].fd) ;
-        x[1].fd = -1 ;
-      }
-    }
-    if (x[0].fd >= 0 && x[0].revents & (IOPAUSE_READ | IOPAUSE_EXCEPT))
-    {
-      switch (rstate)
-      {
-        case 0 :
-        {
-          r = tipidee_headers_parse_nb(&b, hdr, &curheader, &parserstate) ;
-          switch (r)
-          {
-            case -2 : break ;
-            case -1 : die500sys(rql, 111, docroot, "read from cgi ", argv[0]) ;
-            case 0 :
-            {
-              size_t n = buffer_len(&b) ;
-              if (!stralloc_readyplus(sa, n)) die500sys(rql, 111, docroot, "stralloc_readyplus") ;
-              buffer_getnofill(&b, sa->s + sa->len, n) ;
-              sa->len += n ;
-              rstate = 1 ;
-              break ;
-            }
-            case 400 : die502x(rql, 2, docroot, "invalid output", " from cgi ", argv[0]) ;
-            case 413 : die502x(rql, 2, docroot, hdr->n >= TIPIDEE_HEADERS_MAX ? "Too many headers" : "Too much header data", " from cgi ", argv[0]) ;
-            case 500 : die500x(rql, 101, docroot, "can't happen: ", "avltreen_insert failed", " in do_cgi") ;
-            default : die500x(rql, 101, docroot, "can't happen: ", "unknown tipidee_headers_parse return code", " in do_cgi") ;
-          }
-          if (!rstate) break ;
-        }
-        case 1 :
-        {
-          if (!slurpn(x[0].fd, sa, g.maxcgibody))
-          {
-            if (error_isagain(errno)) break ;
-            else if (errno == ENOBUFS) die502x(rql, 2, docroot, "Too fat body", " from cgi ", argv[0]) ;
-            else die500sys(rql, 111, docroot, "read body", " from cgi ", argv[0]) ;
-          }
-          close(x[0].fd) ;
-          x[0].fd = -1 ;
-          rstate = 2 ;
-        }
-      }
-    }
-  }
-  if (x[1].fd >= 0) close(x[1].fd) ;
-  if (x[0].fd >= 0) close(x[0].fd) ;
-  return rstate == 2 ;
 }
 
 static inline int local_redirect (tipidee_rql *rql, char const *docroot, char const *loc, char *uribuf, char const *cginame)
@@ -272,49 +173,145 @@ static inline int local_redirect (tipidee_rql *rql, char const *docroot, char co
   return 1 ;
 }
 
-static inline int process_cgi_output (tipidee_rql *rql, char const *docroot, tipidee_headers const *hdr, char const *rbody, size_t rbodylen, char *uribuf, char const *cginame)
+static inline int do_cgi (tipidee_rql *rql, char const *docroot, char const *const *argv, char const *const *envp, char const *body, size_t bodylen, char *uribuf, int autochunk)
 {
-  char const *location = tipidee_headers_search(hdr, "Location") ;
-  char const *x = tipidee_headers_search(hdr, "Status") ;
   char const *reason = "OK" ;
+  char const *location ;
+  char const *contentlength ;
+  char const *statusfield ;
   unsigned int status = 0 ;
+  size_t rbodylen = 0 ;
+  int r ;
+  tipidee_headers hdr ;
+  char hdrbuf[4096] ;
+  char buf[4096] ;
+  iopause_fd x[2] = { { .events = IOPAUSE_READ }, { .events = IOPAUSE_WRITE } } ;
+  size_t bodyw = 0 ;
   tain deadline ;
-  tain_add_g(&deadline, &g.writetto) ;
-  if (x)
+  pid_t pid ;
+  disize curheader = DISIZE_ZERO ;
+  uint32_t parserstate = 0 ;
+  buffer b ;
+
+  tipidee_headers_init(&hdr, hdrbuf, 4096) ;
   {
-    size_t m = uint_scan(x, &status) ;
-    if (!m || (x[m] && x[m] != ' '))
-      die502x(rql, 2, docroot, "cgi ", cginame, " returned an invalid ", "Status", " header") ;
-    if (x[m]) reason = x + m + 1 ;
+    int fd[2] = { 0, 1 } ;
+    pid = child_spawn2(argv[0], argv, envp, fd) ;
+    if (!pid) die500sys(rql, 111, docroot, "spawn ", argv[0]) ;
+    x[0].fd = fd[0] ; x[1].fd = fd[1] ;
+  }
+  if (!bodylen)
+  {
+    close(x[1].fd) ;
+    x[1].fd = -1 ;
+  }
+  buffer_init(&b, &buffer_read, x[0].fd, buf, 4096) ;
+  tain_add_g(&deadline, &g.cgitto) ;
+
+  for (;;)
+  {
+    r = iopause_g(x, 1 + (x[1].fd >= 0), &deadline) ;
+    if (r == -1) die500sys(rql, 111, docroot, "iopause") ;
+    if (!r) goto cgitimeout ;
+    if (x[1].fd >= 0 && x[1].revents & IOPAUSE_WRITE)
+    {
+      size_t len = allwrite(x[1].fd, body + bodyw, bodylen - bodyw) ;
+      if (!len)
+      {
+        strerr_warnwu2sys("write request body to cgi ", argv[0]) ;
+        bodyw = bodylen ;
+      }
+      else bodyw += len ;
+      if (bodyw >= bodylen)
+      {
+        close(x[1].fd) ;
+        x[1].fd = -1 ;
+      }
+    }
+    if (x[0].revents & IOPAUSE_READ)
+    {
+      switch (tipidee_headers_parse_nb(&b, &hdr, &curheader, &parserstate))
+      {
+        case -2 : break ;
+        case -1 : die500sys(rql, 111, docroot, "read from cgi ", argv[0]) ;
+        case 0 : goto normalcase ;
+        case 400 : die502x(rql, 2, docroot, "invalid output", " from cgi ", argv[0]) ;
+        case 413 : die502x(rql, 2, docroot, hdr.n >= TIPIDEE_HEADERS_MAX ? "Too many headers" : "Too much header data", " from cgi ", argv[0]) ;
+        case 500 : die500x(rql, 101, docroot, "can't happen: ", "avltreen_insert failed", " in do_cgi") ;
+        default : die500x(rql, 101, docroot, "can't happen: ", "unknown tipidee_headers_parse return code", " in do_cgi") ;
+      }
+    }
+  }
+
+ cgitimeout:
+  kill(pid, SIGTERM) ;
+  strerr_warnw3x("cgi ", argv[0], " timed out") ;
+  respond_504(rql, docroot) ;
+  if (x[1].fd >= 0) close(x[1].fd) ;
+  close(x[0].fd) ;
+  return 0 ;
+
+ normalcase:
+
+  if (x[1].fd >= 0)
+  {
+    if (timed_write_g(x[1].fd, body + bodyw, bodylen - bodyw, &deadline) < bodylen - bodyw)
+    {
+      if (errno == ETIMEDOUT) goto cgitimeout ;
+      else strerr_warnwu2sys("write request body to cgi ", argv[0]) ;
+    }
+    close(x[1].fd) ;
+    x[1].fd = -1 ;
+  }
+  tain_add_g(&deadline, &g.writetto) ;
+
+  statusfield = tipidee_headers_search(&hdr, "Status") ;
+  location = tipidee_headers_search(&hdr, "Location") ;
+  contentlength = tipidee_headers_search(&hdr, "Content-Length") ;
+  if (contentlength)
+  {
+    if (!size0_scan(contentlength, &rbodylen))
+      die502x(rql, 2, docroot, "cgi ", argv[0], " returned an invalid ", "Content-Length", " header") ;
+  }
+  if (statusfield)
+  {
+    size_t m = uint_scan(statusfield, &status) ;
+    if (!m || (statusfield[m] && statusfield[m] != ' '))
+      die502x(rql, 2, docroot, "cgi ", argv[0], " returned an invalid ", "Status", " header") ;
+    if (statusfield[m]) reason = statusfield + m + 1 ;
     else
     {
       tipidee_defaulttext dt ;
       reason = tipidee_util_defaulttext(status, &dt) ? dt.reason : "" ;
     }
     if (!location && (status == 301 || status == 302 || status == 307 || status == 308))
-      die502x(rql, 2, docroot, "cgi ", cginame, " returned a redirection status code without a ", "Location", " header") ;
+      die502x(rql, 2, docroot, "cgi ", argv[0], " returned a redirection status code without a ", "Location", " header") ;
     if (status < 100 || status > 999)
-      die502x(rql, 2, docroot, "cgi ", cginame, " returned an invalid ", "Status", " value") ;
+      die502x(rql, 2, docroot, "cgi ", argv[0], " returned an invalid ", "Status", " value") ;
   }
   if (location)
   {
-    if (!location[0]) die502x(rql, 2, docroot, "cgi ", cginame, " returned an invalid ", "Location", " header") ;
-    if (location[0] == '/' && location[1] != '/') return local_redirect(rql, docroot, location, uribuf, cginame) ;
+    if (!location[0]) die502x(rql, 2, docroot, "cgi ", argv[0], " returned an invalid ", "Location", " header") ;
+    if (location[0] == '/' && location[1] != '/')
+    {
+      close(x[0].fd) ;
+      return local_redirect(rql, docroot, location, uribuf, argv[0]) ;
+    }
     if (rbodylen)
     {
       if (!status)
-        die502x(rql, 2, docroot, "cgi ", cginame, " didn't output a ", "Status", " header", " for a client redirect response with document") ;
+        die502x(rql, 2, docroot, "cgi ", argv[0], " didn't output a ", "Status", " header", " for a client redirect response with document") ;
       if (status < 300 || status > 399)
-        die502x(rql, 2, docroot, "cgi ", cginame, " returned an invalid ", "Status", " value", " for a client redirect response with document") ;
+        die502x(rql, 2, docroot, "cgi ", argv[0], " returned an invalid ", "Status", " value", " for a client redirect response with document") ;
     }
     else
     {
-      for (size_t i = 0 ; i < hdr->n ; i++)
+      for (size_t i = 0 ; i < hdr.n ; i++)
       {
-        char const *key = hdr->buf + hdr->list[i].left ;
+        char const *key = hdr.buf + hdr.list[i].left ;
         if (!strcasecmp(key, "Location") || !strcasecmp(key, "Status")) continue ;
         if (str_start(key, "X-CGI-")) continue ;
-        die502x(rql, 2, docroot, "cgi ", cginame, " returned extra headers", " for a client redirect response without document") ;
+        die502x(rql, 2, docroot, "cgi ", argv[0], " returned extra headers", " for a client redirect response without document") ;
       }
       if (!status)
       {
@@ -326,21 +323,14 @@ static inline int process_cgi_output (tipidee_rql *rql, char const *docroot, tip
   else
   {
     if (!status) status = 200 ;
-    if (status != 304 && !tipidee_headers_search(hdr, "Content-Type"))
-      die502x(rql, 2, docroot, "cgi ", cginame, " didn't output a ", "Content-Type", " header") ;
-  }
-  x = tipidee_headers_search(hdr, "Content-Length") ;
-  if (x)
-  {
-    size_t cln ;
-    if (!size0_scan(x, &cln))
-      die502x(rql, 2, docroot, "cgi ", cginame, " returned an invalid ", "Content-Length", " header") ;
-    if (cln != rbodylen)
-      die502x(rql, 2, docroot, "cgi ", cginame, " returned a mismatching ", "Content-Length", " header") ;
+    if (status != 304 && !tipidee_headers_search(&hdr, "Content-Type"))
+      die502x(rql, 2, docroot, "cgi ", argv[0], " didn't output a ", "Content-Type", " header") ;
   }
 
   tipidee_response_status(buffer_1, rql, status, reason) ;
-  tipidee_response_header_writemerge_G(buffer_1, g.rhdr, g.rhdrn, hdr, !g.cont) ;
+  tipidee_response_header_writemerge_G(buffer_1, g.rhdr, g.rhdrn, &hdr, !g.cont) ;
+
+  if (contentlength)
   {
     char fmt[SIZE_FMT] ;
     fmt[size_fmt(fmt, rbodylen)] = 0 ;
@@ -348,28 +338,52 @@ static inline int process_cgi_output (tipidee_rql *rql, char const *docroot, tip
     buffer_putsnoflush(buffer_1, fmt) ;
     buffer_putnoflush(buffer_1, "\r\n", 2) ;
   }
-  if (buffer_timed_put_g(buffer_1, "\r\n", 2, &deadline) < 2)
-    strerr_diefu1sys(111, "write to stdout") ;
-  tipidee_log_answer(g.logv, rql, status, rbodylen) ;
-  if (rbodylen)
-  {
-    if (buffer_timed_put_g(buffer_1, rbody, rbodylen, &deadline) < rbodylen)
-      strerr_diefu1sys(111, "write to stdout") ;
-  }
-  if (!buffer_timed_flush_g(buffer_1, &deadline))
-    strerr_diefu1sys(111, "write to stdout") ;
-  return 0 ;
-}
+  else if (autochunk)
+    buffer_putsnoflush(buffer_1, "Transfer-Encoding: chunked\r\n") ;
 
-static inline int do_cgi (tipidee_rql *rql, char const *docroot, char const *const *argv, char const *const *envp, char const *body, size_t bodylen, char *uribuf)
-{
-  static stralloc sa = STRALLOC_ZERO ;
-  tipidee_headers hdr ;
-  char hdrbuf[4096] ;
-  sa.len = 0 ;
-  tipidee_headers_init(&hdr, hdrbuf, 4096) ;
-  if (!run_cgi(rql, docroot, argv, envp, body, bodylen, &hdr, &sa)) return 0 ;
-  return process_cgi_output(rql, docroot, &hdr, sa.s, sa.len, uribuf, argv[0]) ;
+  buffer_putnoflush(buffer_1, "\r\n", 2) ;
+  tipidee_log_answer(g.logv, rql, status, rbodylen) ;
+
+  if (contentlength)
+  {
+    size_t len ;
+    struct iovec v[2] ;
+    if (rbodylen)
+    {
+      buffer_wpeek(&b, v) ;
+      len = siovec_len(v, 2) ;
+      if (len > rbodylen)
+      {
+        siovec_trunc(v, 2, rbodylen) ;
+        len = rbodylen ;
+        strerr_warnw3x("cgi ", argv[0], " returned more data than advertised in its Content-Length") ;
+      }
+      if (buffer_timed_putv_g(buffer_1, v, 2, &deadline) < len)
+        strerr_diefu1sys(111, "write to stdout") ;
+      rbodylen -= len ;
+    }
+    if (!rbodylen)
+    {
+      close(x[0].fd) ;
+      return 0 ;
+    }
+    stream_fixed(x[0].fd, rbodylen, argv[0]) ;
+  }
+  else if (autochunk)
+    stream_autochunk(&b, argv[0]) ;
+  else
+  {
+    size_t len ;
+    struct iovec v[2] ;
+    buffer_wpeek(&b, v) ;
+    len = siovec_len(v, 2) ;
+    if (buffer_timed_putv_g(buffer_1, v, 2, &deadline) < len)
+      strerr_diefu1sys(111, "write to stdout") ;
+    stream_infinite(x[0].fd, argv[0]) ;
+  }
+
+  close(x[0].fd) ;
+  return 0 ;
 }
 
 int respond_cgi (tipidee_rql *rql, char const *docroot, char const *fn, size_t docrootlen, char const *infopath, char *uribuf, tipidee_headers const *hdr, tipidee_resattr const *ra, char const *body, size_t bodylen)
@@ -384,5 +398,5 @@ int respond_cgi (tipidee_rql *rql, char const *docroot, char const *fn, size_t d
   g.sa.len = sabase ;
   return ra->flags & TIPIDEE_RA_FLAG_NPH ?
     do_nph(rql, docroot, argv, envp, body, bodylen) :
-    do_cgi(rql, docroot, argv, envp, body, bodylen, uribuf) ;
+    do_cgi(rql, docroot, argv, envp, body, bodylen, uribuf, rql->http_minor && ra->flags & TIPIDEE_RA_FLAG_AUTOCHUNK) ;
 }
