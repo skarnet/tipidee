@@ -88,21 +88,20 @@ void stream_fixed (int fd, size_t n, char const *fn)
   tain deadline ;
   struct iovec v[2] ;
   size_t r ;
-  if (!n) goto flushit ;
- fillit:
-  buffer_wpeek(buffer_1, v) ;
-  siovec_trunc(v, 2, n) ;
-  tain_add_g(&deadline, &g.cgitto) ;
-  r = timed_readv_g(fd, v, 2, &deadline) ;
-  if (r == -1) strerr_diefu2sys(111, "read from resource ", fn) ;
-  if (!r) strerr_dief3x(111, "resource ", fn, " provided less content than advertised in Content-Length") ;
-  buffer_wseek(buffer_1, r) ;
-  n -= r ;
- flushit:
-  tain_add_g(&deadline, &g.writetto) ;
-  if (!buffer_timed_flush_g(buffer_1, &deadline))
-    strerr_diefu1sys(111, "write to stdout") ;
-  if (n) goto fillit ;
+  while (n)
+  {
+    buffer_wpeek(buffer_1, v) ;
+    siovec_trunc(v, 2, n) ;
+    tain_add_g(&deadline, &g.cgitto) ;
+    r = timed_readv_g(fd, v, 2, &deadline) ;
+    if (r == -1) strerr_diefu2sys(111, "read from resource ", fn) ;
+    if (!r) strerr_dief3x(111, "resource ", fn, " provided less content than advertised in Content-Length") ;
+    buffer_wseek(buffer_1, r) ;
+    n -= r ;
+    tain_add_g(&deadline, &g.writetto) ;
+    if (!buffer_timed_flush_g(buffer_1, &deadline))
+      strerr_diefu1sys(111, "write to stdout") ;
+  }
 }
 
 void stream_infinite (int fd, char const *fn)

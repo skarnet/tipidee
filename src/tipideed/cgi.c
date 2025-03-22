@@ -362,12 +362,9 @@ static inline int do_cgi (tipidee_rql *rql, char const *docroot, char const *con
         strerr_diefu1sys(111, "write to stdout") ;
       rbodylen -= len ;
     }
-    if (!rbodylen)
-    {
-      close(x[0].fd) ;
-      return 0 ;
-    }
-    stream_fixed(x[0].fd, rbodylen, argv[0]) ;
+    if (!buffer_timed_flush_g(buffer_1, &deadline))
+      strerr_diefu1sys(111, "write to stdout") ;
+    if (rbodylen) stream_fixed(x[0].fd, rbodylen, argv[0]) ;
   }
   else if (autochunk)
     stream_autochunk(&b, argv[0]) ;
