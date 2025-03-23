@@ -377,6 +377,8 @@ static inline int do_cgi (tipidee_rql *rql, char const *docroot, char const *con
     if (buffer_timed_putv_g(buffer_1, v, 2, &deadline) < len)
       strerr_diefu1sys(111, "write to stdout") ;
     buffer_rseek(&b, len) ;
+    if (!buffer_timed_flush_g(buffer_1, &deadline))
+      strerr_diefu1sys(111, "write to stdout") ;
     stream_infinite(x[0].fd, argv[0]) ;
   }
 

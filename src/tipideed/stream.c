@@ -57,6 +57,8 @@ void stream_infinite (int fd, char const *fn)
 {
   ssize_t r ;
 
+  if (ndelay_off(fd) == -1 || ndelay_off(1) == -1) strerr_diefu1sys(111, "set fds blocking") ;
+
    /* only works when fd is a pipe, which is the case for cgi; fcgi/scgi will need refactoring */
    /* XXX: ignores timeouts, but this is just TOO GOOD to pass up */
    /* no really, it is just optimal in 99.9% of cases, it is WORTH IT */
@@ -66,6 +68,7 @@ void stream_infinite (int fd, char const *fn)
    /* You WISH you had written that line of code */
 
   if (r == -1) strerr_diefu3sys(111, "splice from ", fn, " to stdout") ;
+  if (ndelay_on(1) == -1) strerr_diefu1sys(111, "set stdout nonblocking again") ;
 }
 
 #else
@@ -148,11 +151,11 @@ void stream_autochunk (buffer *b, char const *fn)
 
     tain_add_g(&deadline, &g.writetto) ;
     len = size_xfmt(fmt, r) ;
-    if (buffer_timed_put_g(buffer_1, fmt, len, &deadline) < r
+    if (buffer_timed_put_g(buffer_1, fmt, len, &deadline) < len
      || buffer_timed_put_g(buffer_1, "\r\n", 2, &deadline) < 2) strerr_diefu1sys(111, "write to stdout") ;
-    buffer_wpeek(b, v) ;
+    buffer_rpeek(b, v) ;
     w = buffer_timed_putv_g(buffer_1, v, 2, &deadline) ;
-    buffer_wseek(b, w) ;
+    buffer_rseek(b, w) ;
     if (w < r
      || buffer_timed_put_g(buffer_1, "\r\n", 2, &deadline) < 2
      || !buffer_timed_flush_g(buffer_1, &deadline)) strerr_diefu1sys(111, "write to stdout") ;
