@@ -81,6 +81,7 @@ void stream_infinite (int fd, char const *fn)
 #include <skalibs/allreadwrite.h>
 #include <skalibs/buffer.h>
 #include <skalibs/strerr.h>
+#include <skalibs/siovec.h>
 #include <skalibs/tai.h>
 #include <skalibs/unix-timed.h>
 
@@ -93,13 +94,13 @@ void stream_fixed (int fd, size_t n, char const *fn)
   size_t r ;
   while (n)
   {
-    buffer_rpeek(buffer_1, v) ;
+    buffer_wpeek(buffer_1, v) ;
     siovec_trunc(v, 2, n) ;
     tain_add_g(&deadline, &g.cgitto) ;
     r = timed_readv_g(fd, v, 2, &deadline) ;
     if (r == -1) strerr_diefu2sys(111, "read from resource ", fn) ;
     if (!r) strerr_dief3x(111, "resource ", fn, " provided less content than advertised in Content-Length") ;
-    buffer_rseek(buffer_1, r) ;
+    buffer_wseek(buffer_1, r) ;
     n -= r ;
     tain_add_g(&deadline, &g.writetto) ;
     if (!buffer_timed_flush_g(buffer_1, &deadline))
@@ -114,12 +115,12 @@ void stream_infinite (int fd, char const *fn)
   size_t r ;
   for (;;)
   {
-    buffer_rpeek(buffer_1, v) ;
+    buffer_wpeek(buffer_1, v) ;
     tain_add_g(&deadline, &g.cgitto) ;
     r = timed_readv_g(fd, v, 2, &deadline) ;
     if (r == -1) strerr_diefu2sys(111, "read from resource ", fn) ;
     if (!r) break ;
-    buffer_rseek(buffer_1, r) ;
+    buffer_wseek(buffer_1, r) ;
     tain_add_g(&deadline, &g.writetto) ;
     if (!buffer_timed_flush_g(buffer_1, &deadline))
       strerr_diefu1sys(111, "write to stdout") ;
