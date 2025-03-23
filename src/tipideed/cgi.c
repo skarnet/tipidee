@@ -350,7 +350,7 @@ static inline int do_cgi (tipidee_rql *rql, char const *docroot, char const *con
     struct iovec v[2] ;
     if (rbodylen)
     {
-      buffer_wpeek(&b, v) ;
+      buffer_rpeek(&b, v) ;
       len = siovec_len(v, 2) ;
       if (len > rbodylen)
       {
@@ -360,22 +360,23 @@ static inline int do_cgi (tipidee_rql *rql, char const *docroot, char const *con
       }
       if (buffer_timed_putv_g(buffer_1, v, 2, &deadline) < len)
         strerr_diefu1sys(111, "write to stdout") ;
+      buffer_rseek(&b, len) ;
       rbodylen -= len ;
     }
     if (!buffer_timed_flush_g(buffer_1, &deadline))
       strerr_diefu1sys(111, "write to stdout") ;
     if (rbodylen) stream_fixed(x[0].fd, rbodylen, argv[0]) ;
   }
-  else if (autochunk)
-    stream_autochunk(&b, argv[0]) ;
+  else if (autochunk) stream_autochunk(&b, argv[0]) ;
   else
   {
     size_t len ;
     struct iovec v[2] ;
-    buffer_wpeek(&b, v) ;
+    buffer_rpeek(&b, v) ;
     len = siovec_len(v, 2) ;
     if (buffer_timed_putv_g(buffer_1, v, 2, &deadline) < len)
       strerr_diefu1sys(111, "write to stdout") ;
+    buffer_rseek(&b, len) ;
     stream_infinite(x[0].fd, argv[0]) ;
   }
 
