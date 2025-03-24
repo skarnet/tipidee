@@ -292,7 +292,9 @@ static inline int serve (tipidee_rql *rql, char const *docroot, char *uribuf, ti
   if (!(ra.flags & TIPIDEE_RA_FLAG_CGI))
   {
     if (infopath[0]) { respond_404(rql, docroot) ; return 0 ; }
-    if (rql->m == TIPIDEE_METHOD_POST) exit_405(rql, docroot, 0) ;
+    if (rql->m != TIPIDEE_METHOD_GET
+     && rql->m != TIPIDEE_METHOD_HEAD
+     && rql->m != TIPIDEE_METHOD_OPTIONS) exit_405(rql, docroot, 0) ;
   }
 
   if (rql->m == TIPIDEE_METHOD_OPTIONS)

@@ -338,13 +338,18 @@ static inline int do_cgi (tipidee_rql *rql, char const *docroot, char const *con
     buffer_putsnoflush(buffer_1, fmt) ;
     buffer_putnoflush(buffer_1, "\r\n", 2) ;
   }
-  else if (autochunk)
+  else if (autochunk && rql->m != TIPIDEE_METHOD_HEAD)
     buffer_putsnoflush(buffer_1, "Transfer-Encoding: chunked\r\n") ;
 
   buffer_putnoflush(buffer_1, "\r\n", 2) ;
   tipidee_log_answer(g.logv, rql, status, rbodylen) ;
 
-  if (contentlength)
+  if (rql->m == TIPIDEE_METHOD_HEAD)
+  {
+    if (!buffer_timed_flush_g(buffer_1, &deadline))
+      strerr_diefu1sys(111, "write to stdout") ;
+  }
+  else if (contentlength)
   {
     size_t len ;
     struct iovec v[2] ;
