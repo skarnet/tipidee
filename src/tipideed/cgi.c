@@ -338,7 +338,7 @@ static inline int do_cgi (tipidee_rql *rql, char const *docroot, char const *con
     buffer_putsnoflush(buffer_1, fmt) ;
     buffer_putnoflush(buffer_1, "\r\n", 2) ;
   }
-  else if (autochunk && rql->m != TIPIDEE_METHOD_HEAD)
+  else if (autochunk)
     buffer_putsnoflush(buffer_1, "Transfer-Encoding: chunked\r\n") ;
 
   buffer_putnoflush(buffer_1, "\r\n", 2) ;

@@ -17,7 +17,7 @@ int respond_options (tipidee_rql const *rql, uint32_t flags)
   tipidee_response_status(buffer_1, rql, 200, "OK") ;
   tipidee_response_header_writeall_G(buffer_1, g.rhdr, g.rhdrn, 0) ;
   buffer_putsnoflush(buffer_1, "Content-Length: 0\r\nAllow: GET, HEAD") ;
-  if (flags & 1) buffer_putsnoflush(buffer_1, ", POST") ;
+  if (flags & 1) buffer_putsnoflush(buffer_1, ", POST, PUT, DELETE, PATCH") ;
   buffer_putnoflush(buffer_1, "\r\n\r\n", 4) ;
   if (flags & 2) tipidee_log_answer(g.logv, rql, 200, 0) ;
   tain_add_g(&deadline, &g.writetto) ;

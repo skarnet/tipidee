@@ -18,6 +18,7 @@ static struct blah_s const table[] =
   { .num = TIPIDEE_METHOD_GET, .str = "GET" },
   { .num = TIPIDEE_METHOD_HEAD, .str = "HEAD" },
   { .num = TIPIDEE_METHOD_OPTIONS, .str = "OPTIONS" },
+  { .num = TIPIDEE_METHOD_PATCH, .str = "PATCH" },
   { .num = TIPIDEE_METHOD_POST, .str = "POST" },
   { .num = TIPIDEE_METHOD_PRI, .str = "PRI" },
   { .num = TIPIDEE_METHOD_PUT, .str = "PUT" },

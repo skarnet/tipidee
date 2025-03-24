@@ -458,7 +458,7 @@ int main (int argc, char const *const *argv, char const *const *envp)
     }
 
     x = tipidee_headers_search(&hdr, "Transfer-Encoding") ;
-    if (x)
+    if (rql.http_minor && x)
     {
       if (strcasecmp(x, "chunked")) eexit_400(&rql, "unsupported Transfer-Encoding") ;
       else tcoding = TIPIDEE_TRANSFERCODING_CHUNKED ;
@@ -483,12 +483,13 @@ int main (int argc, char const *const *argv, char const *const *envp)
       case TIPIDEE_METHOD_GET :
       case TIPIDEE_METHOD_HEAD :
       case TIPIDEE_METHOD_POST :
-      case TIPIDEE_METHOD_TRACE : break ;
+      case TIPIDEE_METHOD_TRACE :
+      case TIPIDEE_METHOD_PUT :
+      case TIPIDEE_METHOD_DELETE :
+      case TIPIDEE_METHOD_PATCH : break ;
       case TIPIDEE_METHOD_OPTIONS :
         if (!rql.uri.path) { respond_options(&rql, 1) ; continue ; }
         break ;
-      case TIPIDEE_METHOD_PUT :
-      case TIPIDEE_METHOD_DELETE : eexit_405(&rql) ;
       case TIPIDEE_METHOD_CONNECT : eexit_501(&rql, "CONNECT method unsupported") ;
       case TIPIDEE_METHOD_PRI : eexit_501(&rql, "PRI method attempted with HTTP version 1") ;
       default : strerr_dief2x(101, "can't happen: ", "unknown HTTP method") ;

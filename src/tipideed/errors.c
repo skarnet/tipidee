@@ -38,7 +38,7 @@ void response_error_early_plus_and_exit (tipidee_rql const *rql, unsigned int st
 
 void eexit_405 (tipidee_rql const *rql)
 {
-  static tipidee_response_header const allowpost = { .key = "Allow", .value = "GET, HEAD, POST", .options = 0 } ;
+  static tipidee_response_header const allowpost = { .key = "Allow", .value = "GET, HEAD, POST, PUT, DELETE, PATCH", .options = 0 } ;
   response_error_early_plus_and_exit(rql, 405, "Method Not Allowed", "Invalid method for the resource.", &allowpost, 1) ;
 }
 
@@ -127,7 +127,7 @@ void response_error_plus_and_die (tipidee_rql const *rql, int e, char const *doc
 
 void exit_405 (tipidee_rql const *rql, char const *docroot, uint32_t options)
 {
-  tipidee_response_header hd = { .key = "Allow", .value = options & 1 ? "GET, HEAD, POST" : "GET, HEAD", .options = 0 } ;
+  tipidee_response_header hd = { .key = "Allow", .value = options & 1 ? "GET, HEAD, POST, PUT, DELETE, PATCH" : "GET, HEAD", .options = 0 } ;
   response_error_plus_and_exit(rql, docroot, 405, &hd, 1) ;
 }
 
