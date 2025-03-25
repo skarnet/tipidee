@@ -475,8 +475,11 @@ int main (int argc, char const *const *argv, char const *const *envp)
       else tcoding = TIPIDEE_TRANSFERCODING_NONE ;
     }
 
-    if (tcoding != TIPIDEE_TRANSFERCODING_NONE && rql.m != TIPIDEE_METHOD_POST)
-      eexit_400(&rql, "only POST requests can have an entity body") ;
+    if (tcoding != TIPIDEE_TRANSFERCODING_NONE
+     && rql.m != TIPIDEE_METHOD_POST
+     && rql.m != TIPIDEE_METHOD_PUT
+     && rql.m != TIPIDEE_METHOD_PATCH)
+      eexit_400(&rql, "Only POST, PUT and PATCH requests can have an entity body.") ;
 
     switch (rql.m)
     {

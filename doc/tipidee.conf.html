@@ -754,6 +754,16 @@ chunks. This is friendlier to browsers, and to the transport security layer. </l
 resources providing a <tt>Content-Length</tt>. It also does nothing when the
 client request uses HTTP/1.0, which does not support the use of
 <tt>Transfer-Encoding</tt>. </li>
+ <li> It is recommended to set <tt>autochunk</tt> for CGI scripts that serve
+content that needs to be resistant to truncation attacks. For instance, if you
+are serving git repositories via cgit, it is recommended to
+<code>autochunk /cgi-bin/cgit.cgi</code>. This will ensure your data can be
+served under HTTPS with the full TLS guarantees without sacrificing full duplex
+functionality. (If you don't have autochunk, the only way to ensure resistance to
+truncation attacks is to use TLS <tt>close_notify</tt>, e.g. via the <tt>-S</tt>
+option to
+<a href="//skarnet.org/software/s6-networking/s6-tlsserver.html">s6-tlsserver</a>,
+which breaks full duplex, and you don't want that.) </li>
  <li> The default is <em>not</em> to autochunk content. </li>
 </ul>
 
@@ -769,9 +779,12 @@ client request uses HTTP/1.0, which does not support the use of
 <ul>
  <li> This is the opposite, saying that content streamed from resources under
 <em>directory</em>, or specific script <em>file</em>, will <em>not</em>
-be autochunked. </li>
+be autochunked. This can be useful e.g. if you have a resource that streams
+infinite content, such as a webradio, which does not care about truncation
+attacks and uses an underlying application protocol that already splits the
+data into records; in that case, autochunk is not needed and only brings
+a small performance penalty. </li>
 </ul>
-
 
 <div id="file-type">
 <h4> <tt>file-type</tt> </h4>
