@@ -6,6 +6,7 @@
 #include <errno.h>
 #include <signal.h>
 
+#include <skalibs/uint64.h>
 #include <skalibs/gccattributes.h>
 #include <skalibs/posixplz.h>
 #include <skalibs/types.h>
@@ -179,8 +180,8 @@ static inline int do_cgi (tipidee_rql *rql, char const *docroot, char const *con
   char const *location ;
   char const *contentlength ;
   char const *statusfield ;
+  uint64_t rbodylen = 0 ;
   unsigned int status = 0 ;
-  size_t rbodylen = 0 ;
   int r ;
   tipidee_headers hdr ;
   char hdrbuf[4096] ;
@@ -270,7 +271,7 @@ static inline int do_cgi (tipidee_rql *rql, char const *docroot, char const *con
   contentlength = tipidee_headers_search(&hdr, "Content-Length") ;
   if (contentlength)
   {
-    if (!size0_scan(contentlength, &rbodylen))
+    if (!uint640_scan(contentlength, &rbodylen))
       die502x(rql, 2, docroot, "cgi ", argv[0], " returned an invalid ", "Content-Length", " header") ;
   }
   if (statusfield)
@@ -332,8 +333,8 @@ static inline int do_cgi (tipidee_rql *rql, char const *docroot, char const *con
 
   if (contentlength)
   {
-    char fmt[SIZE_FMT] ;
-    fmt[size_fmt(fmt, rbodylen)] = 0 ;
+    char fmt[UINT64_FMT] ;
+    fmt[uint64_fmt(fmt, rbodylen)] = 0 ;
     buffer_putsnoflush(buffer_1, "Content-Length: ") ;
     buffer_putsnoflush(buffer_1, fmt) ;
     buffer_putnoflush(buffer_1, "\r\n", 2) ;

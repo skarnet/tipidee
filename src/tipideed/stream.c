@@ -10,7 +10,9 @@
 #include <fcntl.h>
 #include <stdint.h>
 #include <unistd.h>
+#include <limits.h>
 
+#include <skalibs/uint64.h>
 #include <skalibs/allreadwrite.h>
 #include <skalibs/strerr.h>
 #include <skalibs/tai.h>
@@ -22,7 +24,7 @@
 struct fixed_info_s
 {
   int fd ;
-  size_t n ;
+  uint64_t n ;
 } ;
 
 static int fixed_getfd (void *b)
@@ -36,7 +38,7 @@ static ssize_t fixed_get (void *b)
   struct fixed_info_s *si = b ;
   while (si->n)
   {
-    ssize_t r = sanitize_read(splice(si->fd, 0, 1, 0, si->n, SPLICE_F_NONBLOCK)) ;
+    ssize_t r = sanitize_read(splice(si->fd, 0, 1, 0, si->n > SSIZE_MAX ? SSIZE_MAX : si->n, SPLICE_F_NONBLOCK)) ;
     if (r == -1) break ;
     if (!r) return 0 ;
     si->n -= r ;
@@ -44,7 +46,7 @@ static ssize_t fixed_get (void *b)
   return si->n ? -1 : 1 ;
 }
 
-void stream_fixed (int fd, size_t n, char const *fn)
+void stream_fixed (int fd, uint64_t n, char const *fn)
 {
   tain deadline ;
   struct fixed_info_s si = { .fd = fd, .n = n } ;
@@ -87,7 +89,7 @@ void stream_infinite (int fd, char const *fn)
 
 #include "tipideed-internal.h"
 
-void stream_fixed (int fd, size_t n, char const *fn)
+void stream_fixed (int fd, uint64_t n, char const *fn)
 {
   tain deadline ;
   struct iovec v[2] ;
