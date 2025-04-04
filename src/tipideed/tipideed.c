@@ -302,6 +302,8 @@ static inline int serve (tipidee_rql *rql, char const *docroot, char *uribuf, ti
 
   tipidee_log_resource(g.logv, rql, fn, &ra, infopath) ;
 
+  if (g.tarpit) sleep(g.tarpit / 1000) ;
+
   if (ra.flags & TIPIDEE_RA_FLAG_CGI)
     return respond_cgi(rql, docroot, fn, docrootlen, infopath, uribuf, hdr, &ra, body, bodylen) ;
 
@@ -382,6 +384,8 @@ int main (int argc, char const *const *argv, char const *const *envp)
   if (!n) strerr_dief3x(102, "bad", " config value for ", "G:index_file") ;
   g.indexn = n-1 ;
 
+  x = getenv("TARPIT") ;
+  if (x) uint320_scan(x, &g.tarpit) ;
   x = tipidee_conf_get_responseheaders(&g.conf, "G:response_headers", &n, &g.rhdrn) ;
   if (!x) strerr_diefu3sys(102, "get", " config value for ", "G:response_headers") ;
 
@@ -420,6 +424,7 @@ int main (int argc, char const *const *argv, char const *const *envp)
     tain_add_g(&deadline, &g.readtto) ;
     bodysa.len = 0 ;
 
+    if (g.tarpit) sleep(g.tarpit / 1000) ;
     e = tipidee_rql_read_g(buffer_0, uribuf, URI_BUFSIZE, 0, &rql, &deadline) ;
     switch (e)
     {
