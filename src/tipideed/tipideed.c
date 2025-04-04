@@ -301,8 +301,7 @@ static inline int serve (tipidee_rql *rql, char const *docroot, char *uribuf, ti
     return respond_options(rql, 2 | !!(ra.flags & TIPIDEE_RA_FLAG_CGI)) ;
 
   tipidee_log_resource(g.logv, rql, fn, &ra, infopath) ;
-
-  if (g.tarpit) sleep(g.tarpit / 1000) ;
+  if (g.tarpit) millisleep(g.tarpit) ;
 
   if (ra.flags & TIPIDEE_RA_FLAG_CGI)
     return respond_cgi(rql, docroot, fn, docrootlen, infopath, uribuf, hdr, &ra, body, bodylen) ;
@@ -424,7 +423,7 @@ int main (int argc, char const *const *argv, char const *const *envp)
     tain_add_g(&deadline, &g.readtto) ;
     bodysa.len = 0 ;
 
-    if (g.tarpit) sleep(g.tarpit / 1000) ;
+    if (g.tarpit) millisleep(g.tarpit) ;
     e = tipidee_rql_read_g(buffer_0, uribuf, URI_BUFSIZE, 0, &rql, &deadline) ;
     switch (e)
     {
