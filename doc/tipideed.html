@@ -186,6 +186,20 @@ be passed as <tt>REMOTE_IDENT</tt> to CGI scripts. </dd>
 the client and the server. If present, tipideed will assume that the client
 connection is secure, and will pass <tt>HTTPS=on</tt> to CGI scripts;
 otherwise, it will assume it is running plaintext HTTP. </dd>
+
+ <dt> TARPIT </dt>
+ <dd> If this variable is set and contains a positive integer, it is
+interpreted as a number of milliseconds, and tipideed will sleep for
+that amount before reading each request from that client <em>and</em> before
+serving each resource. This can protect your server against abusive bot
+crawling. You can set this variable conditionally depending on the client's
+IP or resolved host name (or subdomain), for instance by using the <tt>env</tt>
+feature of the
+<a href="//skarnet.org/software/s6/s6-accessrules-cdb-from-fs.html">TCP
+access rules format</a> used by
+<a href="//skarnet.org/software/s6-networking/s6-tcpserver-access.html">s6-tcpserver-access</a>.
+Of course, you can also use the same access rules database to outright ban
+IP ranges or domains. </dd>
 </dl>
 
 <h3> Writing </h3>
