@@ -83,11 +83,7 @@ static inline void modify_env (tipidee_rql const *rql, char const *docroot, tipi
   addenv(rql, docroot, "SCRIPT_NAME", script) ;
   addrequesturi(rql, docroot, script, infopath) ;
   addenv(rql, docroot, "SERVER_NAME", rql->uri.host) ;
-  {
-    char proto[9] = "HTTP/1.1" ;
-    if (!rql->http_minor) proto[7] = '0' ;
-    addenv(rql, docroot, "SERVER_PROTOCOL", proto) ;
-  }
+  addenv(rql, docroot, "SERVER_PROTOCOL", rql->http_minor ? "HTTP/1.1" : "HTTP/1.0") ;
 
   for (size_t i = 0 ; i < hdr->n ; i++)
   {
