@@ -451,12 +451,12 @@ in which case tipideed adds <tt>Connection: close</tt> to its last answer. </li>
 
 <p>
  On systems that implement
-<a href="https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_spawn.html">posix_spawn()</a>,
+<a href="https://pubs.opengroup.org/onlinepubs/9799919799/functions/posix_spawn.html">posix_spawn()</a>,
 the <a href="//skarnet.org/software/s6-networking/s6-tcpserver.html">s6-tcpserver</a>
 super-server (and the
 <a href="//skarnet.org/software/s6-networking/s6-tlsserver.html">s6-tlsserver</a> one
 as well, since both use the same underlying program) uses it instead of
-<a href="https://pubs.opengroup.org/onlinepubs/9699919799/functions/fork.html">fork()</a>,
+<a href="https://pubs.opengroup.org/onlinepubs/9799919799/functions/fork.html">fork()</a>,
 and that partly alleviates the performance penalty usually associated with servers
 that spawn one process per connection.
 </p>
@@ -474,9 +474,9 @@ CGI script itself, never by tipideed.
 
 <p>
  tipideed itself does not use
-<a href="https://pubs.opengroup.org/onlinepubs/9699919799/functions/fork.html">fork()</a>
+<a href="https://pubs.opengroup.org/onlinepubs/9799919799/functions/fork.html">fork()</a>
 if the system supports
-<a href="https://pubs.opengroup.org/onlinepubs/9699919799/functions/posix_spawn.html">posix_spawn()</a>
+<a href="https://pubs.opengroup.org/onlinepubs/9799919799/functions/posix_spawn.html">posix_spawn()</a>
 &mdash; with one exception, that you will not hit, and if you do, fork() will not
 be the bottleneck. (Can you guess which case it is, without looking at the code?)
 tipideed does not parse its configuration file itself, delegating the task to the

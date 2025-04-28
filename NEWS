@@ -4,7 +4,9 @@ In 0.0.6.0
 ----------
 
  - Bugfixes.
- - CGI output is now streamed.
+ - pkg-config support.
+ - CGI output is now streamed and can be autochunked.
+ - Support for ip-based tarpitting.
 
 
 In 0.0.5.1
