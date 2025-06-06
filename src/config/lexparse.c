@@ -44,6 +44,7 @@ enum directivevalue_e
   T_DOMAIN,
   T_NPHPREFIX,
   T_REDIRECT,
+  T_NOREDIRECT,
   T_CGI,
   T_NONCGI,
   T_NPH,
@@ -245,6 +246,26 @@ static inline void parse_customheader (char const *s, size_t const *word, size_t
   }
 }
 
+static inline void parse_noredirect (char const *s, size_t const *word, size_t n, char const *domain, size_t domainlen, mdt const *md)
+{
+  if (n != 1)
+    strerr_dief8x(1, "too ", n > 1 ? "many" : "few", " arguments to directive ", "noredirect", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+  if (!domain)
+    strerr_dief6x(1, "noredirection", " without a domain directive", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+  if (s[*word] != '/')
+    strerr_dief6x(1, "noredirected resource", " must start with /", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+  {
+    size_t urlen = strlen(s + *word) ;
+    char key[3 + domainlen + urlen] ;
+    if (s[*word + urlen - 1] == '/') { key[0] = 'r' ; urlen-- ; } else key[0] = 'R' ;
+    key[1] = ':' ;
+    memcpy(key + 2, domain, domainlen) ;
+    memcpy(key + 2 + domainlen, s + *word, urlen) ;
+    key[2 + domainlen + urlen] = 0 ;
+    add_unique(key, " ", 2, md) ;
+  }
+}
+
 static inline void parse_redirect (char const *s, size_t const *word, size_t n, char const *domain, size_t domainlen, mdt const *md)
 {
   static uint32_t const codes[4] = { 307, 308, 302, 301 } ;
@@ -425,6 +446,7 @@ static inline void process_line (char const *s, size_t const *word, size_t n, st
     { .name = "noautochunk", .value = T_NOAUTOCHUNK },
     { .name = "noncgi", .value = T_NONCGI },
     { .name = "nonnph", .value = T_NONNPH },
+    { .name = "noredirect", .value = T_NOREDIRECT },
     { .name = "nph", .value = T_NPH },
     { .name = "nph-prefix", .value = T_NPHPREFIX },
     { .name = "redirect", .value = T_REDIRECT },
@@ -491,6 +513,9 @@ static inline void process_line (char const *s, size_t const *word, size_t n, st
       break ;
     case T_REDIRECT :
       parse_redirect(s, word, n, domain->s, domain->len, md) ;
+      break ;
+    case T_NOREDIRECT :
+      parse_noredirect(s, word, n, domain->s, domain->len, md) ;
       break ;
     case T_CGI :
       parse_bitattr(s, word, n, domain->s, domain->len, md, 0, 1) ;

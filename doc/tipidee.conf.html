@@ -847,6 +847,21 @@ requests received on port 443). But if you declare a redirection under the
 <tt>example.com</tt> domain, it will apply to requests received on <em>any</em> port. </li>
 </ul>
 
+<div id="noredirect">
+<h4> <tt>noredirect</tt> </h4>
+</div>
+
+<p>
+ <code> noredirect <em>resource</em> </code>
+</p>
+
+<ul>
+ <li> This directive prevents <em>resource</em> from being redirected. It is typically
+useful to carve exceptions to a generic redirection policy: if you have a <code>redirect</code>
+directive for directory A and a <code>noredirect</code> directive for resource B, and A is
+a prefix of B, then B will not be redirected, but everything else under A will. </li>
+</ul>
+
 <div id="custom-response">
 <h4> <tt>custom-response</tt> </h4>
 </div>

@@ -3,8 +3,6 @@
 #include <errno.h>
 #include <string.h>
 
-#include <skalibs/lolstdio.h>
-
 #include <tipidee/conf.h>
 
 #include <skalibs/posixishard.h>
@@ -24,12 +22,11 @@ static int get_redir (tipidee_conf const *conf, size_t minl, char *key, size_t l
     v = tipidee_conf_get_string(conf, key) ;
     key[0] = 'r' ;
   }
-  if (!v) return 0 ;
+  if (!v || v[0] == ' ') return 0 ;
   if (v[0] < '@' || v[0] > 'C') return (errno = EPROTO, -1) ;
   r->type = v[0] & ~'@' ;
   r->location = v+1 ;
   r->sub = path + (l - minl + 1) ;
-  LOLDEBUG("get_redir: found redirection of type %c to %s with sub %s", v[0], r->location, r->sub) ;
   return 1 ;
 }
 
