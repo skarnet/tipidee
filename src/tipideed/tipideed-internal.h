@@ -124,6 +124,11 @@ extern void respond_416 (tipidee_rql const *, char const *, uint64_t) ;
 extern void respond_30x (tipidee_rql const *, tipidee_redirection const *) ;
 
 
+ /* rproxy */
+
+extern void rproxy (tipidee_rql const *, tipidee_redirection const *, char const *, tipidee_headers const *, char const *, size_t) ;
+
+
  /* trace */
 
 extern int respond_trace (tipidee_rql const *, tipidee_headers const *) ;

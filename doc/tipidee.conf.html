@@ -847,6 +847,41 @@ requests received on port 443). But if you declare a redirection under the
 <tt>example.com</tt> domain, it will apply to requests received on <em>any</em> port. </li>
 </ul>
 
+<div id="rproxy">
+<h4> <tt>rproxy</tt> </h4>
+</div>
+
+<p>
+ <code> rproxy <em>resource</em> unix <em>socketpath</em> </code> <br>
+ <code> rproxy <em>resource</em> tcp <em>ip</em> <em>port</em> </code>
+</p>
+
+<ul>
+ <li> The <em>rproxy</em> directive tells tipidee that when a client hits a
+given URL, the HTTP exchange should be passed as is to another server. For this
+exchange, tipideed will act as a proxy, transmitting client data to the real
+server and vice-versa. It is handled by the same mechanism as redirection, but
+unlike a redirection, it will be transparent to the client. </li>
+ <li> <em>resource</em> is the URI to redirect, relative to the current domain.
+For instance, if the current domain is <tt>example.com</tt> and <em>resource</em>
+is <tt>foobar.html</tt>, then a request for <tt>http://example.com/foobar.html</tt>
+will be reverse-proxied to <em>socketpath</em> or <em>ip</em>:<em>port</em>. </li>
+ <li> The second argument must be <code>unix</code> or <code>tcp</code>.
+  <ul>
+   <li> <code>unix</code> means that the real server is listening on a Unix domain
+socket reachable in the filesystem at <em>socketpath</em>. Note that
+<em>socketpath</em> will be understood relative to tipideed's current filesystem
+root, if it runs chrooted; this is generally not what you want, and <code>unix</code>
+should generally only be used when tipideed is <em>not</em> chrooted. </li>
+   <li> <code>tcp</code> means that the real server is listening on an Internet
+domain socket at address <em>ip</em>, port <em>port</em>. <em>ip</em> can be IPv4
+or IPv6. </li>
+  </ul> </li>
+ <li> Just like with the <code>redirection</code> directive,
+<em>resource</em> does not need to exist in the filesystem. The same caveats apply. </li>
+</ul>
+
+
 <div id="noredirect">
 <h4> <tt>noredirect</tt> </h4>
 </div>
@@ -860,6 +895,8 @@ requests received on port 443). But if you declare a redirection under the
 useful to carve exceptions to a generic redirection policy: if you have a <code>redirect</code>
 directive for directory A and a <code>noredirect</code> directive for resource B, and A is
 a prefix of B, then B will not be redirected, but everything else under A will. </li>
+ <li> You can also use <code>noredirect</code> to prevent <em>resource</em> from being
+proxied by a more generic <code>rproxy</code> directive.
 </ul>
 
 <div id="custom-response">

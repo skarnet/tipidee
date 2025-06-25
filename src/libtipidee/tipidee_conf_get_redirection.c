@@ -22,9 +22,8 @@ static int get_redir (tipidee_conf const *conf, size_t minl, char *key, size_t l
     v = tipidee_conf_get_string(conf, key) ;
     key[0] = 'r' ;
   }
-  if (!v || v[0] == ' ') return 0 ;
-  if (v[0] < '@' || v[0] > 'C') return (errno = EPROTO, -1) ;
-  r->type = v[0] & ~'@' ;
+  if (!v || ((unsigned char)v[0] & 128)) return 0 ;
+  r->type = v[0] ;
   r->location = v+1 ;
   r->sub = path + (l - minl + 1) ;
   return 1 ;

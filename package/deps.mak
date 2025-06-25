@@ -71,6 +71,7 @@ src/tipideed/harden.o src/tipideed/harden.lo: src/tipideed/harden.c src/tipideed
 src/tipideed/options.o src/tipideed/options.lo: src/tipideed/options.c src/include/tipidee/log.h src/include/tipidee/response.h src/tipideed/tipideed-internal.h
 src/tipideed/redirection.o src/tipideed/redirection.lo: src/tipideed/redirection.c src/include/tipidee/log.h src/include/tipidee/response.h src/include/tipidee/util.h src/tipideed/tipideed-internal.h
 src/tipideed/regular.o src/tipideed/regular.lo: src/tipideed/regular.c src/include/tipidee/log.h src/include/tipidee/method.h src/include/tipidee/response.h src/tipideed/tipideed-internal.h
+src/tipideed/rproxy.o src/tipideed/rproxy.lo: src/tipideed/rproxy.c src/include/tipidee/tipidee.h src/tipideed/tipideed-internal.h
 src/tipideed/send_file.o src/tipideed/send_file.lo: src/tipideed/send_file.c src/tipideed/tipideed-internal.h
 src/tipideed/stream.o src/tipideed/stream.lo: src/tipideed/stream.c src/tipideed/tipideed-internal.h
 src/tipideed/tipideed.o src/tipideed/tipideed.lo: src/tipideed/tipideed.c src/include/tipidee/tipidee.h src/tipideed/tipideed-internal.h
@@ -94,5 +95,5 @@ libtipidee.dylib.xyzzy:src/libtipidee/tipidee_conf_free.lo src/libtipidee/tipide
 ls.cgi: EXTRA_LIBS :=
 ls.cgi: src/misc/ls.cgi.o libtipidee.a.xyzzy -lskarnet
 tipideed: EXTRA_LIBS :=
-tipideed: src/tipideed/tipideed.o src/tipideed/cgi.o src/tipideed/errors.o src/tipideed/harden.o src/tipideed/options.o src/tipideed/regular.o src/tipideed/redirection.o src/tipideed/send_file.o src/tipideed/stream.o src/tipideed/trace.o src/tipideed/util.o libtipidee.a.xyzzy -lskarnet
+tipideed: src/tipideed/tipideed.o src/tipideed/cgi.o src/tipideed/errors.o src/tipideed/harden.o src/tipideed/options.o src/tipideed/regular.o src/tipideed/redirection.o src/tipideed/rproxy.o src/tipideed/send_file.o src/tipideed/stream.o src/tipideed/trace.o src/tipideed/util.o libtipidee.a.xyzzy -lskarnet
 INTERNAL_LIBS :=

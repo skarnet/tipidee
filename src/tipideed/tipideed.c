@@ -233,7 +233,7 @@ static inline int serve (tipidee_rql *rql, char const *docroot, char *uribuf, ti
   memcpy(fn + docrootlen, rql->uri.path, pathlen) ;
   fn[docrootlen + pathlen] = 0 ;
 
- /* Redirection */
+ /* Redirection or reverse proxy */
 
   if (rql->m != TIPIDEE_METHOD_OPTIONS)
   {
@@ -242,7 +242,8 @@ static inline int serve (tipidee_rql *rql, char const *docroot, char *uribuf, ti
     if (e == -1) die500sys(rql, 111, docroot, "get redirection data for ", fn) ;
     if (e)
     {
-      respond_30x(rql, &rd) ;
+      if (rd.type & 32) rproxy(rql, &rd, docroot, hdr, body, bodylen) ;
+      else respond_30x(rql, &rd) ;
       return 0 ;
     }
   }

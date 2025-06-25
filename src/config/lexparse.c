@@ -6,6 +6,7 @@
 #include <errno.h>
 
 #include <skalibs/uint32.h>
+#include <skalibs/fmtscan.h>
 #include <skalibs/buffer.h>
 #include <skalibs/strerr.h>
 #include <skalibs/stralloc.h>
@@ -45,6 +46,7 @@ enum directivevalue_e
   T_NPHPREFIX,
   T_REDIRECT,
   T_NOREDIRECT,
+  T_RPROXY,
   T_CGI,
   T_NONCGI,
   T_NPH,
@@ -262,7 +264,7 @@ static inline void parse_noredirect (char const *s, size_t const *word, size_t n
     memcpy(key + 2, domain, domainlen) ;
     memcpy(key + 2 + domainlen, s + *word, urlen) ;
     key[2 + domainlen + urlen] = 0 ;
-    add_unique(key, " ", 2, md) ;
+    add_unique(key, "\200", 2, md) ;
   }
 }
 
@@ -299,6 +301,63 @@ static inline void parse_redirect (char const *s, size_t const *word, size_t n, 
     confnode_add(&node, &key[0], 1) ;
     urlen = strlen(s + word[2]) ;
     confnode_add(&node, s + word[2], urlen - (s[word[2] + urlen - 1] == '/')) ;
+    confnode_add(&node, "", 1) ;
+    conftree_add(&node) ;
+  }
+}
+
+static inline void parse_rproxy (char const *s, size_t const *word, size_t n, char const *domain, size_t domainlen, mdt const *md)
+{
+  uint8_t type ;
+  if (n < 3 || n > 4)
+    strerr_dief8x(1, "too ", n > 4 ? "many" : "few", " arguments to directive ", "rproxy", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+  if (!domain)
+    strerr_dief6x(1, "rproxy redirection", " without a domain directive", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+  if (s[word[0]] != '/')
+    strerr_dief6x(1, "redirected resource", " must start with /", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+  if (!strcmp(s + word[1], "unix"))
+    type = 48 ;
+  else if (!strcmp(s + word[1], "tcp"))
+    type = 32 ;
+  else
+    strerr_dief7x(1, "rproxy", " directive", " needs to specify unix or tcp", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+
+  {
+    node node ;
+    size_t urlen = strlen(s + word[0]) ;
+    char key[3 + domainlen + urlen] ;
+    if (s[word[0] + urlen - 1] == '/') { key[0] = 'r' ; urlen-- ; } else key[0] = 'R' ;
+    key[1] = ':' ;
+    memcpy(key + 2, domain, domainlen) ;
+    memcpy(key + 2 + domainlen, s + word[0], urlen) ;
+    key[2 + domainlen + urlen] = 0 ;
+    conftree_checkunique(key, md) ;
+    confnode_start(&node, key, md->filepos, md->line) ;
+
+    if (type == 48)
+    {
+      if (n != 3)
+        strerr_dief8x(1, "too ", "many" , " arguments to directive ", "rproxy", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+      key[0] = '@' | type ;
+      confnode_add(&node, &key[0], 1) ;
+      confnode_add(&node, s + word[2], strlen(s + word[2]) + 1) ;
+    }
+    else
+    {
+      char ip[16] ;
+      uint16_t port ;
+      if (n != 4)
+        strerr_dief8x(1, "too ", "few" , " arguments to directive ", "rproxy", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+      if (ip6_scan(s + word[2], ip)) type |= 8 ;
+      else if (!ip4_scan(s + word[2], ip))
+        strerr_dief8x(1, "invalid ip address ", "in directive ", "rproxy", " tcp", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+      if (!uint160_scan(s + word[3], &port))
+        strerr_dief8x(1, "invalid port ", "in directive ", "rproxy", " tcp", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+      key[0] = '@' | type ;
+      uint16_pack_big(key+1, port) ;
+      confnode_add(&node, key, 3) ;
+      confnode_add(&node, ip, type & 8 ? 16 : 4) ;
+    }
     confnode_add(&node, "", 1) ;
     conftree_add(&node) ;
   }
@@ -450,6 +509,7 @@ static inline void process_line (char const *s, size_t const *word, size_t n, st
     { .name = "nph", .value = T_NPH },
     { .name = "nph-prefix", .value = T_NPHPREFIX },
     { .name = "redirect", .value = T_REDIRECT },
+    { .name = "rproxy", .value = T_RPROXY },
   } ;
   struct namevalue_s const *directive ;
   char const *word0 ;
@@ -513,6 +573,9 @@ static inline void process_line (char const *s, size_t const *word, size_t n, st
       break ;
     case T_REDIRECT :
       parse_redirect(s, word, n, domain->s, domain->len, md) ;
+      break ;
+    case T_RPROXY :
+      parse_rproxy(s, word, n, domain->s, domain->len, md) ;
       break ;
     case T_NOREDIRECT :
       parse_noredirect(s, word, n, domain->s, domain->len, md) ;

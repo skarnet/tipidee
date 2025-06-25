@@ -4,6 +4,7 @@ harden.o
 options.o
 regular.o
 redirection.o
+rproxy.o
 send_file.o
 stream.o
 trace.o

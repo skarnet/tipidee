@@ -25,11 +25,11 @@ struct tipidee_conf_s
 typedef struct tipidee_redirection_s tipidee_redirection, *tipidee_redirection_ref ;
 struct tipidee_redirection_s
 {
-  char const *location ;
   char const *sub ;
-  uint32_t type : 2 ;
+  char const *location ;
+  uint8_t type ;
 } ;
-#define TIPIDEE_REDIRECTION_ZERO { .location = 0, .sub = 0, .type = 0 }
+#define TIPIDEE_REDIRECTION_ZERO { .sub = 0, .location = 0, .type = 0 }
 
 extern void tipidee_conf_free (tipidee_conf *) ;
 extern int tipidee_conf_init (tipidee_conf *, char const *) ;
