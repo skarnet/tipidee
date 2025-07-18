@@ -28,6 +28,7 @@ static struct builtinheaders_s const builtinheaders[] =
   { .key = "Content-Length", .value = 0, .overridable = 0 },
   { .key = "Content-Security-Policy", .value = "default-src 'self'; style-src 'self' 'unsafe-inline';", .overridable = 1 },
   { .key = "Date", .value = 0, .overridable = 0 },
+  { .key = "Referrer-Policy", .value = "same-origin", .overridable = 1 },
   { .key = "Server", .value = "tipidee/" TIPIDEE_VERSION, .overridable = 1 },
   { .key = "Status", .value = 0, .overridable = 0 },
   { .key = "Transfer-Encoding", .value = 0, .overridable = 0 },
