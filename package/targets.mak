@@ -1,6 +1,7 @@
 BIN_TARGETS := \
 tipideed \
-tipidee-config
+tipidee-config \
+tipidee-logaggregate
 
 LIBEXEC_TARGETS := \
 tipidee-config-preprocess \

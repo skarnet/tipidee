@@ -5,6 +5,7 @@ In 0.0.7.0
 
  - Support for shared libraries on MacOS.
  - New directive: noredirect, to carve exceptions to generic redirections.
+ - New directives: rproxy, for basic reverse proxying
 
 
 In 0.0.6.0
