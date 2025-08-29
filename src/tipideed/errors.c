@@ -95,7 +95,7 @@ void response_error_plus (tipidee_rql const *rql, char const *docroot, unsigned 
           tipidee_response_header_write(buffer_1, plus, plusn) ;
           tipidee_response_header_end(buffer_1) ;
           tipidee_log_answer(g.logv, rql, status, st.st_size) ;
-          send_file(fd, st.st_size, g.sa.s + pos) ;
+          send_file(fd, st.st_size, g.sa.s + pos, 0) ;
           fd_close(fd) ;
           return ;
         }

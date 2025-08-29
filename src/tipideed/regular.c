@@ -44,7 +44,7 @@ int respond_regular (tipidee_rql const *rql, char const *docroot, char const *fn
     tipidee_response_file_G(buffer_1, rql, 200, "OK", st, st->st_size, ra->content_type, g.rhdr, g.rhdrn, 2 | !g.cont) ;
     tipidee_response_header_end(buffer_1) ;
     tipidee_log_answer(g.logv, rql, 200, st->st_size) ;
-    send_file(fd, st->st_size, fn) ;
+    send_file(fd, st->st_size, fn, ra->flags) ;
     fd_close(fd) ;
   }
   return 0 ;
@@ -83,7 +83,7 @@ int respond_partial (tipidee_rql const *rql, char const *docroot, char const *fn
   tipidee_response_partial_G(buffer_1, rql, st, start, len, ra->content_type, g.rhdr, g.rhdrn, 2 | !g.cont) ;
   tipidee_response_header_end(buffer_1) ;
   tipidee_log_answer(g.logv, rql, 206, len) ;
-  send_file_range(fd, start, len, fn) ;
+  send_file_range(fd, start, len, fn, ra->flags) ;
   fd_close(fd) ;
   return 0 ;
 }

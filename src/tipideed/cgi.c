@@ -170,7 +170,7 @@ static inline int local_redirect (tipidee_rql *rql, char const *docroot, char co
   return 1 ;
 }
 
-static inline int do_cgi (tipidee_rql *rql, char const *docroot, char const *const *argv, char const *const *envp, char const *body, size_t bodylen, char *uribuf, int autochunk)
+static inline int do_cgi (tipidee_rql *rql, char const *docroot, char const *const *argv, char const *const *envp, char const *body, size_t bodylen, char *uribuf, int autochunk, uint32_t raflags)
 {
   char const *reason = "OK" ;
   char const *location ;
@@ -365,11 +365,17 @@ static inline int do_cgi (tipidee_rql *rql, char const *docroot, char const *con
       buffer_rseek(&b, len) ;
       rbodylen -= len ;
     }
+    if (!(raflags & TIPIDEE_RA_FLAG_REALTIME)) cork(1) ;
     if (!buffer_timed_flush_g(buffer_1, &deadline))
       strerr_diefu1sys(111, "write to stdout") ;
-    if (rbodylen) stream_fixed(x[0].fd, rbodylen, argv[0]) ;
+    if (rbodylen) stream_fixed(x[0].fd, rbodylen, argv[0], raflags) ;
+    if (!rbodylen) uncork(1) ;  // stream_fixed() auto-uncorks
   }
-  else if (autochunk) stream_autochunk(&b, argv[0]) ;
+  else if (autochunk)
+  {
+    uncork(1) ;
+    stream_autochunk(&b, argv[0]) ;
+  }
   else
   {
     size_t len ;
@@ -379,9 +385,11 @@ static inline int do_cgi (tipidee_rql *rql, char const *docroot, char const *con
     if (buffer_timed_putv_g(buffer_1, v, 2, &deadline) < len)
       strerr_diefu1sys(111, "write to stdout") ;
     buffer_rseek(&b, len) ;
+    if (!(raflags & TIPIDEE_RA_FLAG_REALTIME)) cork(1) ;
     if (!buffer_timed_flush_g(buffer_1, &deadline))
       strerr_diefu1sys(111, "write to stdout") ;
-    stream_infinite(x[0].fd, argv[0]) ;
+    stream_infinite(x[0].fd, argv[0], raflags) ;
+    if (!(raflags & TIPIDEE_RA_FLAG_REALTIME)) uncork(1) ;
   }
 
   close(x[0].fd) ;
@@ -400,5 +408,5 @@ int respond_cgi (tipidee_rql *rql, char const *docroot, char const *fn, size_t d
   g.sa.len = sabase ;
   return ra->flags & TIPIDEE_RA_FLAG_NPH ?
     do_nph(rql, docroot, argv, envp, body, bodylen) :
-    do_cgi(rql, docroot, argv, envp, body, bodylen, uribuf, rql->http_minor && ra->flags & TIPIDEE_RA_FLAG_AUTOCHUNK) ;
+    do_cgi(rql, docroot, argv, envp, body, bodylen, uribuf, rql->http_minor && ra->flags & TIPIDEE_RA_FLAG_AUTOCHUNK, ra->flags) ;
 }

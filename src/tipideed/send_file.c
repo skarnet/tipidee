@@ -50,7 +50,7 @@ static int s_flush (void *p)
   return 1 ;
 }
 
-void send_file_range (int fd, uint64_t offset, uint64_t n, char const *fn)
+void send_file_range (int fd, uint64_t offset, uint64_t n, char const *fn, uint32_t flags)
 {
   struct sendfile_s sf = { .pos = offset, .n = n, .fd = fd } ;
   tain deadline ;
@@ -59,6 +59,7 @@ void send_file_range (int fd, uint64_t offset, uint64_t n, char const *fn)
     strerr_diefu2sys(111, "write", " to stdout") ;
   if (!timed_flush_g(&sf, &s_getfd, &s_isnonempty, &s_flush, &deadline))
     strerr_diefu3sys(111, "sendfile ", fn, " to stdout") ;
+  (void)flags ;
 }
 
 #else
@@ -88,6 +89,7 @@ struct spliceinfo_s
 {
   ssize_t n ;
   uint32_t last : 1 ;
+  uint32_t realtime : 1 ;
 } ;
 
 static int getfd (void *b)
@@ -107,7 +109,7 @@ static int flush (void *b)
   struct spliceinfo_s *si = b ;
   while (si->n)
   {
-    ssize_t r = splice(g.p[0], 0, 1, 0, si->n, SPLICE_F_NONBLOCK | (si->last ? 0 : SPLICE_F_MORE)) ;
+    ssize_t r = splice(g.p[0], 0, 1, 0, si->n, SPLICE_F_NONBLOCK | (si->last || si->realtime ? 0 : SPLICE_F_MORE)) ;
     if (r == -1) return 0 ;
     if (!r) return 1 ;
     si->n -= r ;
@@ -115,10 +117,10 @@ static int flush (void *b)
   return 1 ;
 }
 
-void send_file_range (int fd, uint64_t offset, uint64_t n, char const *fn)
+void send_file_range (int fd, uint64_t offset, uint64_t n, char const *fn, uint32_t flags)
 {
   tain deadline ;
-  struct spliceinfo_s si = { .last = 0 } ;
+  struct spliceinfo_s si = { .last = 0, .realtime = !!(flags & TIPIDEE_RA_FLAG_REALTIME) } ;
   tain_add_g(&deadline, &g.writetto) ;
   if (!buffer_timed_flush_g(buffer_1, &deadline))
     strerr_diefu2sys(111, "write", " to stdout") ;
@@ -159,7 +161,7 @@ void init_splice_pipe (void)
 {
 }
 
-void send_file_range (int fd, uint64_t offset, uint64_t n, char const *fn)
+void send_file_range (int fd, uint64_t offset, uint64_t n, char const *fn, uint32_t flags)
 {
   tain deadline ;
   struct iovec v[2] ;
@@ -184,6 +186,7 @@ void send_file_range (int fd, uint64_t offset, uint64_t n, char const *fn)
   if (!buffer_timed_flush_g(buffer_1, &deadline))
     strerr_diefu1sys(111, "write to stdout") ;
   if (n) goto fillit ;
+  (void)flags ;
 }
 
 #endif

@@ -786,6 +786,43 @@ data into records; in that case, autochunk is not needed and only brings
 a small performance penalty. </li>
 </ul>
 
+<div id="realtime">
+<h4> <tt>realtime</tt> </h4>
+</div>
+
+<p>
+ <code> realtime <em>directory</em> </code> <br>
+ <code> realtime <em>file</em> </code>
+</p>
+
+<ul>
+ <li> This directive is useful if <em>file</em> is actually a resource providing
+a large amount of content that you want to serve to the client with as little
+latency as possible, even if it means sacrificing a little throughput. If the
+system's TCP stack supports the functionality, it will minimize the delays in the
+stack so the data is sent to the client as soon as it becomes available, without
+trying to optimizing sending buffers or anything. </li>
+ <li> It is generally not recommended; you should leave that option disabled
+(which is the default). But if you have a resource that benefits from real-time
+transmission (e.g. a streaming service) then you might want to set the option for
+this resource. </li>
+</ul>
+
+<div id="norealtime">
+<h4> <tt>norealtime</tt> </h4>
+</div>
+
+<p>
+ <code> norealtime <em>directory</em> </code> <br>
+ <code> norealtime <em>file</em> </code>
+</p>
+
+<ul>
+ <li> This is the opposite, saying that content streamed from resources under
+<em>directory</em>, or specific script <em>file</em>, will <em>not</em>
+manipulate the TCP stack to send the content in real time. </li>
+</ul>
+
 <div id="file-type">
 <h4> <tt>file-type</tt> </h4>
 </div>

@@ -11,8 +11,9 @@
 #define TIPIDEE_RA_FLAG_NPH 0x0002
 #define TIPIDEE_RA_FLAG_BA 0x0004
 #define TIPIDEE_RA_FLAG_AUTOCHUNK 0x0008
+#define TIPIDEE_RA_FLAG_REALTIME 0x0010
 
-#define TIPIDEE_RA_BITS 4
+#define TIPIDEE_RA_BITS 5
 
 typedef struct tipidee_resattr_s tipidee_resattr, *tipidee_resattr_ref ;
 struct tipidee_resattr_s

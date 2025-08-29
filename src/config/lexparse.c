@@ -55,6 +55,8 @@ enum directivevalue_e
   T_NOAUTH,
   T_AUTOCHUNK,
   T_NOAUTOCHUNK,
+  T_REALTIME,
+  T_NOREALTIME,
   T_FILETYPE,
   T_CUSTOMRESPONSE
 } ;
@@ -365,7 +367,7 @@ static inline void parse_rproxy (char const *s, size_t const *word, size_t n, ch
 
 static void parse_bitattr (char const *s, size_t const *word, size_t n, char const *domain, size_t domainlen, mdt const *md, uint8_t bit, int h)
 {
-  static char const *const attr[3][2] = { { "noncgi", "cgi" }, { "nonnph", "nph", }, { "noauth", "basic-auth" } } ;
+  static char const *const attr[4][2] = { { "noncgi", "cgi" }, { "nonnph", "nph", }, { "noauth", "basic-auth" }, { "norealtime", "realtime" } } ;
   if (n != 1)
     strerr_dief8x(1, "too ", n > 1 ? "many" : "few", " arguments to directive ", attr[bit][h], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   if (!domain)
@@ -505,9 +507,11 @@ static inline void process_line (char const *s, size_t const *word, size_t n, st
     { .name = "noautochunk", .value = T_NOAUTOCHUNK },
     { .name = "noncgi", .value = T_NONCGI },
     { .name = "nonnph", .value = T_NONNPH },
+    { .name = "norealtime", .value = T_NOREALTIME },
     { .name = "noredirect", .value = T_NOREDIRECT },
     { .name = "nph", .value = T_NPH },
     { .name = "nph-prefix", .value = T_NPHPREFIX },
+    { .name = "realtime", .value = T_REALTIME },
     { .name = "redirect", .value = T_REDIRECT },
     { .name = "rproxy", .value = T_RPROXY },
   } ;
@@ -605,6 +609,12 @@ static inline void process_line (char const *s, size_t const *word, size_t n, st
       break ;
     case T_NOAUTOCHUNK :
       parse_bitattr(s, word, n, domain->s, domain->len, md, 3, 0) ;
+      break ;
+    case T_REALTIME :
+      parse_bitattr(s, word, n, domain->s, domain->len, md, 4, 1) ;
+      break ;
+    case T_NOREALTIME :
+      parse_bitattr(s, word, n, domain->s, domain->len, md, 4, 0) ;
       break ;
     case T_FILETYPE :
       parse_filetype(s, word, n, domain->s, domain->len, md) ;

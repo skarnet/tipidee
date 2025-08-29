@@ -142,15 +142,17 @@ extern int respond_options (tipidee_rql const *, uint32_t) ;
  /* send_file */
 
 extern void init_splice_pipe (void) ;
-extern void send_file_range (int, uint64_t, uint64_t, char const *) ;
-#define send_file(fd, n, fn) send_file_range(fd, 0, n, fn)
+extern void send_file_range (int, uint64_t, uint64_t, char const *, uint32_t) ;
+#define send_file(fd, n, fn, flags) send_file_range(fd, 0, n, fn, flags)
 
 
  /* stream */
 
-extern void stream_fixed (int, uint64_t, char const *) ;
+extern void cork (int) ;
+extern void uncork (int) ;
+extern void stream_fixed (int, uint64_t, char const *, uint32_t) ;
 extern void stream_autochunk (buffer *, char const *) ;
-extern void stream_infinite (int, char const *) ;
+extern void stream_infinite (int, char const *, uint32_t) ;
 
 
  /* regular */

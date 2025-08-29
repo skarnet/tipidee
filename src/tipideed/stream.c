@@ -27,14 +27,8 @@ struct fixed_info_s
 {
   int fd ;
   uint64_t n ;
+  uint32_t realtime : 1 ;
 } ;
-
-static inline void uncork (int fd)
-{
-  static int const val = 0 ;
-  if (setsockopt(fd, SOL_TCP, TCP_CORK, &val, sizeof(int)) == -1 && g.logv)
-    strerr_warnwu1sys("uncork stdout") ;
-}
 
 static int fixed_getfd (void *b)
 {
@@ -47,7 +41,7 @@ static ssize_t fixed_get (void *b)
   struct fixed_info_s *si = b ;
   while (si->n)
   {
-    ssize_t r = sanitize_read(splice(si->fd, 0, 1, 0, si->n > SSIZE_MAX ? SSIZE_MAX : si->n, SPLICE_F_NONBLOCK)) ;
+    ssize_t r = sanitize_read(splice(si->fd, 0, 1, 0, si->n > SSIZE_MAX ? SSIZE_MAX : si->n, SPLICE_F_NONBLOCK | (!si->realtime && si->n > 65536 ? SPLICE_F_MORE : 0))) ;
     if (r == -1) break ;
     if (!r) return 0 ;
     si->n -= r ;
@@ -55,16 +49,30 @@ static ssize_t fixed_get (void *b)
   return si->n ? -1 : 1 ;
 }
 
-void stream_fixed (int fd, uint64_t n, char const *fn)
+void cork (int fd)
+{
+  static int const val = 1 ;
+  if (setsockopt(fd, SOL_TCP, TCP_CORK, &val, sizeof(int)) == -1 && g.logv)
+    strerr_warnwu1sys("uncork stdout") ;
+}
+
+void uncork (int fd)
+{
+  static int const val = 0 ;
+  if (setsockopt(fd, SOL_TCP, TCP_CORK, &val, sizeof(int)) == -1 && g.logv)
+    strerr_warnwu1sys("uncork stdout") ;
+}
+
+void stream_fixed (int fd, uint64_t n, char const *fn, uint32_t flags)
 {
   tain deadline ;
-  struct fixed_info_s si = { .fd = fd, .n = n } ;
+  struct fixed_info_s si = { .fd = fd, .n = n, .realtime = !!(flags & TIPIDEE_RA_FLAG_REALTIME) } ;
   tain_add_g(&deadline, tain_less(&g.writetto, &g.cgitto) ? &g.cgitto : &g.writetto) ;
   if (timed_get_g(&si, &fixed_getfd, &fixed_get, &deadline) < 0)
     strerr_diefu3sys(111, "splice from ", fn, " to stdout") ;
 }
 
-void stream_infinite (int fd, char const *fn)
+void stream_infinite (int fd, char const *fn, uint32_t flags)
 {
   ssize_t r ;
 
@@ -74,12 +82,11 @@ void stream_infinite (int fd, char const *fn)
    /* XXX: ignores timeouts, but this is just TOO GOOD to pass up */
    /* no really, it is just optimal in 99.9% of cases, it is WORTH IT */
 
-    while ((r = splice(fd, 0, 1, 0, 65536, SPLICE_F_MORE)) > 0) ;
+    while ((r = splice(fd, 0, 1, 0, 65536, flags & TIPIDEE_RA_FLAG_REALTIME ? 0 : SPLICE_F_MORE)) > 0) ;
 
    /* You WISH you had written that line of code */
 
   if (r == -1) strerr_diefu3sys(111, "splice from ", fn, " to stdout") ;
-  uncork(1) ;
   if (ndelay_on(1) == -1) strerr_diefu1sys(111, "set stdout nonblocking again") ;
 }
 
@@ -94,12 +101,23 @@ void stream_infinite (int fd, char const *fn)
 #include <skalibs/buffer.h>
 #include <skalibs/strerr.h>
 #include <skalibs/siovec.h>
+#include <skalibs/socket.h>
 #include <skalibs/tai.h>
 #include <skalibs/unix-timed.h>
 
 #include "tipideed-internal.h"
 
-void stream_fixed (int fd, uint64_t n, char const *fn)
+void cork (int fd)
+{
+  socket_tcpdelay(fd) ;
+}
+
+void uncork (int fd)
+{
+  socket_tcpnodelay(fd) ;
+}
+
+void stream_fixed (int fd, uint64_t n, char const *fn, uint32_t flags)
 {
   tain deadline ;
   struct iovec v[2] ;
@@ -118,9 +136,10 @@ void stream_fixed (int fd, uint64_t n, char const *fn)
     if (!buffer_timed_flush_g(buffer_1, &deadline))
       strerr_diefu1sys(111, "write to stdout") ;
   }
+  (void)flags ;
 }
 
-void stream_infinite (int fd, char const *fn)
+void stream_infinite (int fd, char const *fn, uint32_t flags)
 {
   tain deadline ;
   struct iovec v[2] ;
@@ -137,6 +156,7 @@ void stream_infinite (int fd, char const *fn)
     if (!buffer_timed_flush_g(buffer_1, &deadline))
       strerr_diefu1sys(111, "write to stdout") ;
   }
+  (void)flags ;
 }
 
 #endif
