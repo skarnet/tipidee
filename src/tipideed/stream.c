@@ -6,6 +6,8 @@
 
 #include <skalibs/nonposix.h>
 
+#include <sys/socket.h>
+#include <netinet/tcp.h>
 #include <errno.h>
 #include <fcntl.h>
 #include <stdint.h>
@@ -26,6 +28,13 @@ struct fixed_info_s
   int fd ;
   uint64_t n ;
 } ;
+
+static inline void uncork (int fd)
+{
+  static int const val = 0 ;
+  if (setsockopt(fd, SOL_TCP, TCP_CORK, &val, sizeof(int)) == -1 && g.logv)
+    strerr_warnwu1sys("uncork stdout") ;
+}
 
 static int fixed_getfd (void *b)
 {
@@ -70,6 +79,7 @@ void stream_infinite (int fd, char const *fn)
    /* You WISH you had written that line of code */
 
   if (r == -1) strerr_diefu3sys(111, "splice from ", fn, " to stdout") ;
+  uncork(1) ;
   if (ndelay_on(1) == -1) strerr_diefu1sys(111, "set stdout nonblocking again") ;
 }
 
