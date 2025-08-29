@@ -55,11 +55,12 @@ void send_file_range (int fd, uint64_t offset, uint64_t n, char const *fn, uint3
   struct sendfile_s sf = { .pos = offset, .n = n, .fd = fd } ;
   tain deadline ;
   tain_add_g(&deadline, &g.writetto) ;
+  if (!(flags & TIPIDEE_RA_FLAG_REALTIME)) cork(1) ;
   if (!buffer_timed_flush_g(buffer_1, &deadline))
     strerr_diefu2sys(111, "write", " to stdout") ;
   if (!timed_flush_g(&sf, &s_getfd, &s_isnonempty, &s_flush, &deadline))
     strerr_diefu3sys(111, "sendfile ", fn, " to stdout") ;
-  (void)flags ;
+  if (!(flags & TIPIDEE_RA_FLAG_REALTIME)) uncork(1) ;
 }
 
 #else
@@ -122,6 +123,7 @@ void send_file_range (int fd, uint64_t offset, uint64_t n, char const *fn, uint3
   tain deadline ;
   struct spliceinfo_s si = { .last = 0, .realtime = !!(flags & TIPIDEE_RA_FLAG_REALTIME) } ;
   tain_add_g(&deadline, &g.writetto) ;
+  if (!si.realtime) cork(1) ;
   if (!buffer_timed_flush_g(buffer_1, &deadline))
     strerr_diefu2sys(111, "write", " to stdout") ;
   while (n)
@@ -140,6 +142,7 @@ void send_file_range (int fd, uint64_t offset, uint64_t n, char const *fn, uint3
     if (!timed_flush_g(&si, &getfd, &isnonempty, &flush, &deadline))
       strerr_diefu2sys(111, "splice", " to stdout") ;
   }
+  // if (!si.realtime) uncork(1) ;  /* auto-uncorks on si.last */
 }
 
 #else
