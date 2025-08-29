@@ -23,6 +23,7 @@
 #include <skalibs/sig.h>
 #include <skalibs/stat.h>
 #include <skalibs/stralloc.h>
+#include <skalibs/socket.h>
 #include <skalibs/djbunix.h>
 #include <skalibs/avltreen.h>
 #include <skalibs/unix-timed.h>
@@ -300,6 +301,9 @@ static inline int serve (tipidee_rql *rql, char const *docroot, char *uribuf, ti
 
   if (rql->m == TIPIDEE_METHOD_OPTIONS)
     return respond_options(rql, 2 | !!(ra.flags & TIPIDEE_RA_FLAG_CGI)) ;
+
+  if (ra.flags & TIPIDEE_RA_FLAG_REALTIME) socket_tcpnodelay(1) ;
+  else socket_tcpdelay(1) ;
 
   tipidee_log_resource(g.logv, rql, fn, &ra, infopath) ;
   if (g.tarpit) millisleep(g.tarpit) ;

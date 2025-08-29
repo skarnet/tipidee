@@ -109,12 +109,10 @@ void stream_infinite (int fd, char const *fn, uint32_t flags)
 
 void cork (int fd)
 {
-  socket_tcpdelay(fd) ;
 }
 
 void uncork (int fd)
 {
-  socket_tcpnodelay(fd) ;
 }
 
 void stream_fixed (int fd, uint64_t n, char const *fn, uint32_t flags)
