@@ -52,14 +52,14 @@ static ssize_t fixed_get (void *b)
 void cork (int fd)
 {
   static int const val = 1 ;
-  if (setsockopt(fd, SOL_TCP, TCP_CORK, &val, sizeof(int)) == -1 && g.logv)
+  if (!g.ssl && setsockopt(fd, SOL_TCP, TCP_CORK, &val, sizeof(int)) == -1 && g.logv)
     strerr_warnwu1sys("uncork stdout") ;
 }
 
 void uncork (int fd)
 {
   static int const val = 0 ;
-  if (setsockopt(fd, SOL_TCP, TCP_CORK, &val, sizeof(int)) == -1 && g.logv)
+  if (!g.ssl && setsockopt(fd, SOL_TCP, TCP_CORK, &val, sizeof(int)) == -1 && g.logv)
     strerr_warnwu1sys("uncork stdout") ;
 }
 

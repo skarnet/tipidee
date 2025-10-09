@@ -29,8 +29,7 @@
 
 enum golb_e
 {
-  GOLB_IS6,
-  GOLB_N
+  GOLB_IS6 = 0x01
 } ;
 
 static uint64_t wgolb = 0 ;
@@ -102,7 +101,7 @@ static void pidip_add (pid_t pid, char const *ip)
   if (!gensetdyn_new(&pidip_list, &d)) dienomem() ;
   pidip *p = GENSETDYN_P(pidip, &pidip_list, d) ;
   p->pid = pid ;
-  memcpy(p->ip, ip, wgolb & (1 << GOLB_IS6) ? 16 : 4) ;
+  memcpy(p->ip, ip, wgolb & GOLB_IS6 ? 16 : 4) ;
   if (!avltree_insert(&pidip_map, d)) dienomem() ;
 }
 
@@ -127,7 +126,7 @@ static void *ipinfo_dtok (uint32_t d, void *data)
 static int ip_cmp (void const *a, void const *b, void *data)
 {
   (void)data ;
-  return memcmp(a, b, wgolb & (1 << GOLB_IS6) ? 16 : 4) ;
+  return memcmp(a, b, wgolb & GOLB_IS6 ? 16 : 4) ;
 }
 
 
@@ -164,7 +163,7 @@ static void add_request (pid_t pid, char const *host, char const *path, char con
   if (!avltree_search(&ipinfo_map, p->ip, &d))
   {
     ipinfo i = IPINFO_ZERO ;
-    memcpy(i.ip, p->ip, wgolb & (1 << GOLB_IS6) ? 16 : 4) ;
+    memcpy(i.ip, p->ip, wgolb & GOLB_IS6 ? 16 : 4) ;
     d = genalloc_len(ipinfo, &ipinfo_list) ;
     if (!genalloc_append(ipinfo, &ipinfo_list, &i)) dienomem() ;
     if (!avltree_insert(&ipinfo_map, d)) dienomem() ;
@@ -298,7 +297,7 @@ static void parse_start (pid_t pid, char const *host, char *s)
     {
       char fmtline[UINT32_FMT] ;
       fmtline[uint32_fmt(fmtline, line)] = 0 ;
-      strerr_warnw("line ", fmtline, ": invalid ipv6") ;
+      strerr_warnw("line ", fmtline, ": invalid ipv6: ", s) ;
       return ;
     }
   }
@@ -308,7 +307,7 @@ static void parse_start (pid_t pid, char const *host, char *s)
     {
       char fmtline[UINT32_FMT] ;
       fmtline[uint32_fmt(fmtline, line)] = 0 ;
-      strerr_warnw("line ", fmtline, ": invalid ipv6") ;
+      strerr_warnw("line ", fmtline, ": invalid ipv4") ;
       return ;
     }
   }
@@ -376,8 +375,8 @@ static int print_iter (uint32_t d, unsigned int h, void *data)
 
 static gol_bool const rgolb[2] =
 {
-  { .so = '4', .lo = "ipv4", .clear = 1 << GOLB_IS6, .set = 0 },
-  { .so = '6', .lo = "ipv6", .clear = 0, .set = 1 << GOLB_IS6 }
+  { .so = '4', .lo = "ipv4", .clear = GOLB_IS6, .set = 0 },
+  { .so = '6', .lo = "ipv6", .clear = 0, .set = GOLB_IS6 }
 } ;
 
 int main (int argc, char const *const *argv)

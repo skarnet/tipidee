@@ -320,7 +320,7 @@ static inline int do_cgi (tipidee_rql *rql, char const *docroot, char const *con
   else
   {
     if (!status) status = 200 ;
-    if (status != 304 && !tipidee_headers_search(&hdr, "Content-Type"))
+    if (status != 304 && (status < 400 || status > 599) && !tipidee_headers_search(&hdr, "Content-Type"))
       die502x(rql, 2, docroot, "cgi ", argv[0], " didn't output a ", "Content-Type", " header") ;
   }
 

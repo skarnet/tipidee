@@ -7,6 +7,7 @@
 #include <string.h>
 #include <stdlib.h>
 
+#include <skalibs/bytestr.h>
 #include <skalibs/buffer.h>
 #include <skalibs/strerr.h>
 #include <skalibs/stralloc.h>
@@ -45,11 +46,7 @@ struct global_s
 
 extern struct global_s g ;
 
-
- /* util */
-
-extern int keycmp (void const *, void const *) ;  /* for any struct starting with a string key */
-#define BSEARCH(type, key, array) bsearch(key, (array), sizeof(array)/sizeof(type), sizeof(type), &keycmp)
+#define BSEARCH(type, key, array) bsearch(key, (array), sizeof(array)/sizeof(type), sizeof(type), &stringkey_bcmp)
 
 
  /* node */

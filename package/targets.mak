@@ -1,7 +1,8 @@
 BIN_TARGETS := \
 tipideed \
 tipidee-config \
-tipidee-logaggregate
+tipidee-logaggregate \
+cgit-nollmcrawler
 
 LIBEXEC_TARGETS := \
 tipidee-config-preprocess \
