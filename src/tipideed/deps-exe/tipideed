@@ -11,3 +11,6 @@ trace.o
 util.o
 libtipidee.a.xyzzy
 -lskarnet
+${SOCKET_LIB}
+${SYSCLOCK_LIB}
+${SPAWN_LIB}

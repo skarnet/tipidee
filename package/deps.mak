@@ -63,6 +63,7 @@ src/libtipidee/tipidee_util_defaulttext.o src/libtipidee/tipidee_util_defaulttex
 src/libtipidee/tipidee_util_htmlescape.o src/libtipidee/tipidee_util_htmlescape.lo: src/libtipidee/tipidee_util_htmlescape.c src/include/tipidee/util.h
 src/libtipidee/tipidee_util_httpdate.o src/libtipidee/tipidee_util_httpdate.lo: src/libtipidee/tipidee_util_httpdate.c src/include/tipidee/util.h
 src/libtipidee/tipidee_util_parse_range.o src/libtipidee/tipidee_util_parse_range.lo: src/libtipidee/tipidee_util_parse_range.c src/include/tipidee/util.h
+src/misc/cgiwrapper-nollmcrawler.o src/misc/cgiwrapper-nollmcrawler.lo: src/misc/cgiwrapper-nollmcrawler.c
 src/misc/ls.cgi.o src/misc/ls.cgi.lo: src/misc/ls.cgi.c src/include/tipidee/response.h src/include/tipidee/util.h
 src/misc/tipidee-logaggregate.o src/misc/tipidee-logaggregate.lo: src/misc/tipidee-logaggregate.c
 src/tipideed/cgi.o src/tipideed/cgi.lo: src/tipideed/cgi.c src/include/tipidee/tipidee.h src/tipideed/tipideed-internal.h
@@ -98,6 +99,6 @@ ls.cgi: EXTRA_LIBS :=
 ls.cgi: src/misc/ls.cgi.o libtipidee.a.xyzzy -lskarnet
 tipidee-logaggregate: EXTRA_LIBS :=
 tipidee-logaggregate: src/misc/tipidee-logaggregate.o -lskarnet
-tipideed: EXTRA_LIBS :=
+tipideed: EXTRA_LIBS := ${SOCKET_LIB} ${SYSCLOCK_LIB} ${SPAWN_LIB}
 tipideed: src/tipideed/tipideed.o src/tipideed/cgi.o src/tipideed/errors.o src/tipideed/harden.o src/tipideed/options.o src/tipideed/regular.o src/tipideed/redirection.o src/tipideed/rproxy.o src/tipideed/send_file.o src/tipideed/stream.o src/tipideed/trace.o src/tipideed/util.o libtipidee.a.xyzzy -lskarnet
 INTERNAL_LIBS :=
