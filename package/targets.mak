@@ -2,7 +2,7 @@ BIN_TARGETS := \
 tipideed \
 tipidee-config \
 tipidee-logaggregate \
-cgit-nollmcrawler
+cgiwrapper-nollmcrawler
 
 LIBEXEC_TARGETS := \
 tipidee-config-preprocess \

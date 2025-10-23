@@ -16,7 +16,7 @@
 #include <skalibs/fmtscan.h>
 #include <skalibs/exec.h>
 
-#define USAGE "as a CGI script: cgit-nollmcrawler [ -v verbosity ] [ -d pathinfodepth ] rulesdir badregex realcgit..."
+#define USAGE "as a CGI script: cgiwrapper-nollmcrawler [ -v verbosity ] [ -d pathinfodepth ] rulesdir badregex realcgit..."
 #define dieusage() strerr_dieusage(100, USAGE)
 
 enum golb_e
@@ -48,7 +48,7 @@ int main (int argc, char const *const *argv)
   char const *wgola[GOLA_N] = { 0 } ;
   uint64_t wgolb = 0 ;
   unsigned int golc ;
-  unsigned int depth = 1 ;
+  unsigned int depth = 0 ;
   char const *remoteaddr ;
   char const *x ;
   size_t rdlen, m = 0 ;
@@ -88,9 +88,12 @@ int main (int argc, char const *const *argv)
   if (errno != ENOENT) strerr_diefu2sys(111, "access ", fn) ;
   fn[m] = 0 ;
 
-  x = getenv("PATH_INFO") ;
-  if (!x) goto writeandallow ;
-  if (byte_count(x, strlen(x), '/') <= depth) goto writeandallow ;
+  if (depth)
+  {
+    x = getenv("PATH_INFO") ;
+    if (!x) goto writeandallow ;
+    if (byte_count(x, strlen(x), '/') <= depth) goto writeandallow ;
+  }
   x = getenv("QUERY_STRING") ;
   if (!x) goto writeandallow ;
 

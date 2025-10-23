@@ -3,4 +3,4 @@ tipidee-config-preprocess	0755
 tipidee-config			0755
 ls.cgi				0755
 tipidee-logaggregate		0755
-cgit-nollmcrawler		0755
+cgiwrapper-nollmcrawler		0755
