@@ -16,7 +16,7 @@
 #include <skalibs/fmtscan.h>
 #include <skalibs/exec.h>
 
-#define USAGE "as a CGI script: cgiwrapper-nollmcrawler [ -v verbosity ] [ -d pathinfodepth ] rulesdir badregex realcgit..."
+#define USAGE "as a CGI script: cgiwrapper-nollmcrawler [ -v verbosity ] [ -d pathinfodepth ] rulesdir badregex realcgi..."
 #define dieusage() strerr_dieusage(100, USAGE)
 
 enum golb_e

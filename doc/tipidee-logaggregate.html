@@ -1,0 +1,108 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="Content-Language" content="en" />
+    <title>tipidee: the tipidee-logaggregate program</title>
+    <meta name="Description" content="tipidee: the tipidee-logaggregate program" />
+    <meta name="Keywords" content="tipidee web server log aggregator http skarnet.org skarnet software httpd" />
+    <!-- <link rel="stylesheet" type="text/css" href="//skarnet.org/default.css" /> -->
+  </head>
+<body>
+
+<p>
+<a href="index.html">tipidee</a><br />
+<a href="//skarnet.org/software/">Software</a><br />
+<a href="//skarnet.org/">skarnet.org</a>
+</p>
+
+<h1> The <tt>tipidee-logaggregate</tt> program </h1>
+
+<p>
+ <tt>tipidee-logaggregate</tt> is a very ad-hoc, quick-and-dirty log aggregator
+for tipidee.
+</p>
+
+<div id="interface">
+<h2> Interface </h2>
+</div>
+
+<pre>
+     tipidee-logaggregate [ -4 | -6 ]
+</pre>
+
+<ul>
+ <li> tipidee-logaggregate reads a series of log entries on its stdin. </li>
+ <li> It aggregates the logs, and prints what it finds to stdout. For every
+client IP that hit the server, it prints that IP, followed by all the URLs
+that the client requested. </li>
+</ul>
+
+<div id="log-format">
+<h2> Log format </h2>
+</div>
+
+<p>
+ tipidee-logaggregate was written for a very specific situation and is only
+provided as a convenience. No effort has been made to try and make it generic,
+so it expects a precise log format:
+</p>
+
+<ul>
+ <li> The <tt>log</tt> directive in <tt>/etc/tipidee.conf</tt> must contain at
+least the following: <tt>log start ip request resource</tt> </li>
+ <li> The log lines must start with a TAI64N label. This is achieved by running
+<a href="//skarnet.org/software/s6/s6-log.html">s6-log</a> as the logging program
+with the <strong><tt>t</tt></strong> directive. </li>
+</ul>
+
+<p>
+ If these conditions are not met, tipidee-logaggregate will not work properly.
+</p>
+
+<div id="commonusage">
+<h2> Common usage </h2>
+</div>
+
+<p>
+<code> cat *.s current | tipidee-logaggregate > result </code>
+</p>
+
+<div id="exitcodes">
+<h2> Exit codes </h2>
+</div>
+
+<dl>
+ <dt> 0 </dt> <dd> Success. </dd>
+ <dt> 100 </dt> <dd> Bad usage. </dd>
+ <dt> 111 </dt> <dd> System call failed. This usually signals an issue with the
+underlying operating system. </dd>
+</dl>
+
+<div id="options">
+<h2> Options </h2>
+</div>
+
+<dl>
+ <dt> -4 </dt>
+ <dd> Expect IPv4 addresses. Use this option when reading logs from a server listening
+to an IPv4 address. </dd>
+
+ <dt> -6 </dt>
+ <dd> Expect IPv6 addresses. Use this option when reading logs from a server listening
+to an IPv6 address. </dd>
+</dl>
+
+<div id="notes">
+<h2> Notes </h2>
+</div>
+
+<ul>
+ <li> If you feed tipidee-logaggregate logs starting from a random moment in time
+when tipideed has already been serving, some warnings are normal and expected.
+They correspond to the already-connected clients that tipidee-logaggregate cannot
+identify. Unless they repeat for a large number of lines, these warnings are harmless. </li>
+</ul>
+
+</body>
+</html>

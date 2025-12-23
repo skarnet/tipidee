@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <errno.h>
 #include <limits.h>
+#include <unistd.h>
 
 #include <skalibs/uint64.h>
 #include <skalibs/bytestr.h>
@@ -442,5 +443,5 @@ int main (int argc, char const *const *argv)
     buffer_putsflush(buffer_1, " ips\n") ;
   }
   (void)avltree_iter(&ipinfo_map, &print_iter, 0) ;
-  return 0 ;
+  _exit(0) ;
 }

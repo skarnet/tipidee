@@ -1,0 +1,165 @@
+<html>
+  <head>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+    <meta http-equiv="Content-Language" content="en" />
+    <title>tipidee: the cgiwrapper-nollmcrawler program</title>
+    <meta name="Description" content="tipidee: the cgiwrapper-nollmcrawler program" />
+    <meta name="Keywords" content="tipidee web cgi wrapper llm crawler protection s6-tcpserver-access" />
+    <!-- <link rel="stylesheet" type="text/css" href="//skarnet.org/default.css" /> -->
+  </head>
+<body>
+
+<p>
+<a href="index.html">tipidee</a><br />
+<a href="//skarnet.org/software/">Software</a><br />
+<a href="//skarnet.org/">skarnet.org</a>
+</p>
+
+<h1> The <tt>cgiwrapper-nollmcrawler</tt> program </h1>
+
+<p>
+ <tt>cgiwrapper-nollmcrawler</tt> is a very ad-hoc, quick-and-dirty protection
+against LLM crawler bots for installations that run tipidee under super-servers from
+<a href="//skarnet.org/software/s6-networking/">s6-networking</a>. tipidee servers
+cannot run an anti-crawler solution like
+<a href="https://anubis.techaro.lol/">Anubis</a> and need alternative protections.
+</p>
+
+<p>
+cgiwrapper-nollmcrawler is a chainloading program that you wrap your CGI program
+with. It takes a regular expression on the command line; if a new client connects
+to the server and hits the CGI program with a query string that matches the
+regular expression, the request is denied and the IP of the client is immediately
+blacklisted. Otherwise, the client is whitelisted and can hit any URL on the
+server.
+</p>
+
+<p>
+ This takes advantage of the LLM crawler propensity to hit servers from random
+IPs with random deep queries, while minimizing false positives from real users,
+who rarely make a deep query on their first visit.
+</p>
+
+<div id="interface">
+<h2> Interface </h2>
+</div>
+
+<p>
+ As a CGI program:
+</p>
+<pre>
+     cgiwrapper-nollmcrawler [ -f ] [ -v <em>verbosity</em> ] [ -d <em>depth</em> ] <em>rulesdir</em> <em>regex</em> <em>realcgi...</em>
+</pre>
+
+<ul>
+ <li> cgiwrapper-nollmcrawler expects to be run by tipideed as a CGI program,
+as a wrapper around <em>realcgi...</em>, which must also, obviously, be runnable
+as a CGI program. </li>
+ <li> It expects <em>rulesdir</em> to be the access rules directory given as argument
+to the <tt>-i</tt> option to
+<a href="//skarnet.org/software/s6-networking/s6-tcpserver-access.html">s6-tcpserver-access</a>
+on the tipidee command line. This directory must be writable by the user cgiwrapper-nollmcrawler
+is running as (so, typically, the user running the tipideed process). <em>rulesdir</em> must
+follow a specific format, see below. </li>
+ <li> When cgiwrapper-nollmcrawler is invoked, it first checks whether the client has previously
+been whitelisted in <em>rulesdir</em>. In that case, it execs into <em>realcgi...</em> immediately.
+ <li> Then it checks whether the depth of the PATH_INFO variable against <em>depth</em>.
+If the contents of PATH_INFO have <em>depth</em> slashes (<tt>/</tt>) or fewer, the query is
+allowed and the client is whitelisted. </li>
+ <li> Then it checks the contents of the QUERY_STRING variable against <em>regex</em>. If
+the query string <em>matches</em>, then cgiwrapper-nollmcrawler blacklists the client in
+<em>rulesdir</em> and responds a status 403 with an ungracious message. </li>
+ <li> If the query string does not match <em>regex</em>, then the client is whitelisted
+and cgiwrapper-nollmcrawler execs into <em>realcgi...</em>. </li>
+</ul>
+
+<div id="accessrules-format">
+<h2> Access rules format </h2>
+</div>
+
+<ul>
+ <li> <tt><em>rulesdir</em>/ip4</tt> must exist if <em>rulesdir</em> performs access
+control for IPv4 addresses, and <tt><em>rulesdir</em>/ip6</tt> must exist if
+<em>rulesdir</em> performs access control for IPv6 addresses. This is the standard
+access rules directory structure. </li>
+ <li> The <tt><em>rulesdir</em>/outputs/allow/allow</tt> and
+<tt><em>rulesdir</em>/outputs/deny/deny</tt> files must also exist. They can be empty. </li>
+</ul>
+
+<p>
+ This permits the following implementation:
+</p>
+
+<ul>
+ <li> When cgiwrapper-llmcrawler <em>whitelists</em> a client, it just means it symlinks
+<tt>../outputs/allow</tt> to the canonical
+<a href="//skarnet.org/software/s6-networking/s6-tcpserver-access.html">s6-tcpserver-access</a>
+format for the client's IP, in either <tt><em>rulesdir</em>/ip4</tt> or
+<tt><em>rulesdir</em>/ip6</tt>. </li>
+ <li> When cgiwrapper-llmcrawler <em>blacklists</em> a client, it just means it symlinks
+<tt>../outputs/deny</tt> instead.  </li>
+ <li> This ensures each entry only uses one inode, and as little room as possible. </li>
+</ul>
+
+<p>
+ LLM crawler bots are ruthless and can attack from <em>millions</em> of IPs, which is why
+efficiency is important. Implementing a ban with just a <tt>symlink()</tt> is efficient.
+</p>
+
+<div id="commonusage">
+<h2> Common usage </h2>
+</div>
+
+<ul>
+ <li> cgiwrapper-nollmcrawler expects to be run by tipideed as a CGI program,
+as a wrapper around <em>realcgi...</em>.
+ <li> e.g. if the URL you want to protect is <tt>https://example.com/cgit.cgi</tt>,
+and <tt>cgit.cgi</tt> is a direct cgit binary, then the way to protect it is:
+ <ul>
+  <li> Move <tt>cgit.cgi</tt> to <tt>cgit.cgi-real</tt> and <em>never link this resource anywhere</em>. </li>
+  <li> Write a script (shell, execline, whatever language you want) standing in for <tt>cgit.cgi</tt>
+that execs into cgiwrapper-nollmcrawler with <tt>cgit.cgi-real</tt> as its last argument. Make it executable. </li>
+ </ul> </li>
+ <li> cgiwrapper-nollmcrawler is typically be used to protect cgit, but it can
+protect any backend that uses CGI as its interface and has deep URLs with easily
+identifiable query strings. </li>
+</ul>
+
+<div id="exitcodes">
+<h2> Exit codes </h2>
+</div>
+
+<dl>
+ <dt> 0 </dt> <dd> Success. </dd>
+ <dt> 100 </dt> <dd> Bad usage. </dd>
+ <dt> 111 </dt> <dd> System call failed. This usually signals an issue with the
+underlying operating system. </dd>
+</dl>
+
+<div id="options">
+<h2> Options </h2>
+</div>
+
+<dl>
+ <dt> -4 </dt>
+ <dd> Expect IPv4 addresses. Use this option when reading logs from a server listening
+to an IPv4 address. </dd>
+
+ <dt> -6 </dt>
+ <dd> Expect IPv6 addresses. Use this option when reading logs from a server listening
+to an IPv6 address. </dd>
+</dl>
+
+<div id="notes">
+<h2> Notes </h2>
+</div>
+
+<ul>
+ <li> This <a href="https://social.treehouse.systems/@ska/115384879517972291">Fediverse
+thread</a> tells the story of how cgiwrapper-nollmcrawler came to be, and how it was
+deployed on skarnet.org. </li>
+</ul>
+
+</body>
+</html>
