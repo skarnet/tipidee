@@ -81,10 +81,10 @@ int main (int argc, char const *const *argv)
   memcpy(fn + m, is6 ? "128" : "32", is6 ? 3 : 2) ; m += 2 + is6 ;
   fn[m] = 0 ;
   memcpy(fn + m, "/allow", 7) ;
-  if (access(fn, W_OK) == 0) goto allow ;
+  if (access(fn, R_OK) == 0) goto allow ;
   if (errno != ENOENT) strerr_diefu2sys(111, "access ", fn) ;
   memcpy(fn + m + 1, "deny", 5) ;
-  if (access(fn, W_OK) == 0) goto deny ;
+  if (access(fn, R_OK) == 0) goto deny ;
   if (errno != ENOENT) strerr_diefu2sys(111, "access ", fn) ;
   fn[m] = 0 ;
 
