@@ -78,8 +78,7 @@ static inline void modify_env (tipidee_rql const *rql, char const *docroot, tipi
 
   if (infopath[0]) addenvslash(rql, docroot, "PATH_INFO", infopath) ;
   else delenv(rql, docroot, "PATH_INFO") ;
-  if (rql->uri.query) addenv(rql, docroot, "QUERY_STRING", rql->uri.query) ;
-  else delenv(rql, docroot, "QUERY_STRING") ;
+  addenv(rql, docroot, "QUERY_STRING", rql->uri.query ? rql->uri.query : "") ;
   addenv(rql, docroot, "SCRIPT_NAME", script) ;
   addrequesturi(rql, docroot, script, infopath) ;
   addenv(rql, docroot, "SERVER_NAME", rql->uri.host) ;
