@@ -28,7 +28,7 @@ static pid_t pid = 0 ;
 
 static void sigchld_handler (int sig)
 {
-  (void)sig ;
+  int e = errno ;
   for (;;)
   {
     int wstat ;
@@ -41,6 +41,8 @@ static void sigchld_handler (int sig)
       else _exit(wait_estatus(wstat)) ;
     }
   }
+  (void)sig ;
+  errno = e ;
 }
 
 static inline void conf_output (char const *ofile, unsigned int omode)
