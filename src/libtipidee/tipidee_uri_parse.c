@@ -162,6 +162,7 @@ size_t tipidee_uri_parse (char *out, size_t max, char const *in, tipidee_uri *ur
     if (c & 0x0040)
     {
       if (w >= max) return 0 ;
+      if (!decoded) return 0 ;
       if (decoded == '/') lastslash = w ;
       out[w++] = decoded ;
       decoded = 0 ;
