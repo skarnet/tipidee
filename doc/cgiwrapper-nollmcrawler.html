@@ -114,14 +114,14 @@ efficiency is important. Implementing a ban with just a <tt>symlink()</tt> is ef
 <ul>
  <li> cgiwrapper-nollmcrawler expects to be run by tipideed as a CGI program,
 as a wrapper around <em>realcgi...</em>.
- <li> e.g. if the URL you want to protect is <tt>https://example.com/cgit.cgi</tt>,
+ <li> E.g. if the URL you want to protect is <tt>https://example.com/cgit.cgi</tt>,
 and <tt>cgit.cgi</tt> is a direct cgit binary, then the way to protect it is:
  <ul>
   <li> Move <tt>cgit.cgi</tt> to <tt>cgit.cgi-real</tt> and <em>never link this resource anywhere</em>. </li>
   <li> Write a script (shell, execline, whatever language you want) standing in for <tt>cgit.cgi</tt>
 that execs into cgiwrapper-nollmcrawler with <tt>cgit.cgi-real</tt> as its last argument. Make it executable. </li>
  </ul> </li>
- <li> cgiwrapper-nollmcrawler is typically be used to protect cgit, but it can
+ <li> cgiwrapper-nollmcrawler is typically used to protect cgit, but it can
 protect any backend that uses CGI as its interface and has deep URLs with easily
 identifiable query strings. </li>
 </ul>
