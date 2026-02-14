@@ -49,7 +49,7 @@ who rarely make a deep query on their first visit.
  As a CGI program:
 </p>
 <pre>
-     cgiwrapper-nollmcrawler [ -f ] [ -v <em>verbosity</em> ] [ -d <em>depth</em> ] <em>rulesdir</em> <em>regex</em> <em>realcgi...</em>
+     cgiwrapper-nollmcrawler [ -v <em>verbosity</em> ] [ -d <em>depth</em> ] <em>rulesdir</em> <em>regex</em> <em>realcgi...</em>
 </pre>
 
 <ul>
@@ -142,13 +142,16 @@ underlying operating system. </dd>
 </div>
 
 <dl>
- <dt> -4 </dt>
- <dd> Expect IPv4 addresses. Use this option when reading logs from a server listening
-to an IPv4 address. </dd>
+ <dt> -v <em>verbosity</em>, --verbosity=<em>verbosity</em> </dt>
+ <dd> Be more or less verbose. 0 is only fatal messages, 1 prints warnings as well, 2 prints
+more runtime information. Default is <strong>1</strong>. </dd>
 
- <dt> -6 </dt>
- <dd> Expect IPv6 addresses. Use this option when reading logs from a server listening
-to an IPv6 address. </dd>
+ <dt> -d <em>depth</em>, --pathinfo-depth=<em>depth</em> </dt>
+ <dd> <em>depth</em> must be an unsigned integer, representing the minimal depth
+for automated blacklisting. If the value of the PATH_INFO variable has <em>depth</em>
+or fewer slash characters (<tt>/</tt>) then the IP of the request is automatically
+whitelisted. If it has <em>more</em> than <em>depth</em>, then cgiwrapper-nollmcrawler
+moves on to the regex check. </dd>
 </dl>
 
 <div id="notes">
