@@ -99,7 +99,7 @@ int main (int argc, char const *const *argv)
 
   {
     regex_t re ;
-    int e = regcomp(&re, argv[1], REG_EXTENDED) ;
+    int e = regcomp(&re, argv[1], REG_EXTENDED | REG_NOSUB) ;
     if (e == REG_BADPAT) strerr_dief2x(100, "invalid regex: ", argv[1]) ;
     if (e)
     {
@@ -107,7 +107,7 @@ int main (int argc, char const *const *argv)
       fmt[int_fmt(fmt, e)] = 0 ;
       strerr_diefu4x(111, "regcomp ", argv[1], ": error code is ", fmt) ;
     }
-    e = regexec(&re, x, 0, 0, REG_NOSUB) ;
+    e = regexec(&re, x, 0, 0, 0) ;
     if (e == 0) goto writeanddeny ;
     if (e != REG_NOMATCH)
     {
