@@ -153,7 +153,7 @@ static void includefromhere (char const *file)
   unsigned char state = 0 ;
 
   if (!stralloc_catb(&namesa, "\004", 1)) dienomem() ;
-  if (sarealpath(&namesa, file) == -1)
+  if (sarealpath(&namesa, file) == -1 || !stralloc_0(&namesa))
   {
     cmd = errno ;
     if (sagetcwd(&sa) == -1) strerr_diefu1sys(111, "getcwd") ;
@@ -161,7 +161,6 @@ static void includefromhere (char const *file)
     errno = cmd ;
     strerr_dief4sys(111, "from directory ", sa.s + sabase, ": unable to realpath ", file) ;
   }
-  if (!stralloc_0(&namesa)) dienomem() ;
   if (avltree_search(&namemap, namesa.s + namesabase + 1, &d))
   {
     if (namesa.s[d] & 0x04)
