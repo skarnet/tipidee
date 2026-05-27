@@ -507,24 +507,28 @@ int main (int argc, char const *const *argv, char const *const *envp)
       default : strerr_dief2x(101, "can't happen: ", "unknown HTTP method") ;
     }
 
-    x = tipidee_headers_search(&hdr, "Host") ;  /* HTTP/1.05 */
+    x = tipidee_headers_search(&hdr, "Host") ;
     if (x)
     {
       char *p = strchr(x, ':') ;
       if (p)
       {
-        if (!uint160_scan(p+1, &rql.uri.port)) eexit_400(&rql, "Invalid Host header") ;
+        uint16_t port ;
+        if (!uint160_scan(p+1, &port) || !port) eexit_400(&rql, "Invalid Host header") ;
         *p = 0 ;
+        if (rql.uri.port)
+        {
+          if (rql.uri.port != port) eexit_400(&rql, "Port mismatch between Request-Line and Host") ;
+        }
+        else rql.uri.port = port ;
       }
       if (!*x || *x == '.') eexit_400(&rql, "Invalid Host header") ;
-      rql.uri.host = x ;
+      if (!rql.uri.host) rql.uri.host = x ;  /* origin-form or HTTP/1.05 */
     }
-    else if (!rql.uri.host)
-    {
-      if (rql.http_minor) eexit_400(&rql, "Missing Host header") ;
-      else rql.uri.host = g.defaulthost ;
-    }
+    else if (rql.http_minor) eexit_400(&rql, "Missing Host header") ;
+    else rql.uri.host = g.defaulthost ;
     if (!rql.uri.port) rql.uri.port = g.defaultport ;
+
     tipidee_log_request(g.logv, &rql, &hdr, &g.sa) ;
 
     if (rql.m == TIPIDEE_METHOD_TRACE)
