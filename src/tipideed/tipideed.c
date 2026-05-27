@@ -513,14 +513,10 @@ int main (int argc, char const *const *argv, char const *const *envp)
       char *p = strchr(x, ':') ;
       if (p)
       {
-        uint16_t port ;
-        if (!uint160_scan(p+1, &port) || !port) eexit_400(&rql, "Invalid Host header") ;
+        if (!rql.uri.port)
+          if (!uint160_scan(p+1, &rql.uri.port) || !rql.uri.port)
+            eexit_400(&rql, "Invalid Host header") ;
         *p = 0 ;
-        if (rql.uri.port)
-        {
-          if (rql.uri.port != port) eexit_400(&rql, "Port mismatch between Request-Line and Host") ;
-        }
-        else rql.uri.port = port ;
       }
       if (!*x || *x == '.') eexit_400(&rql, "Invalid Host header") ;
       if (!rql.uri.host) rql.uri.host = x ;  /* origin-form or HTTP/1.05 */
