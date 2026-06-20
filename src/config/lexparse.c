@@ -367,7 +367,7 @@ static inline void parse_rproxy (char const *s, size_t const *word, size_t n, ch
 
 static void parse_bitattr (char const *s, size_t const *word, size_t n, char const *domain, size_t domainlen, mdt const *md, uint8_t bit, int h)
 {
-  static char const *const attr[4][2] = { { "noncgi", "cgi" }, { "nonnph", "nph", }, { "noauth", "basic-auth" }, { "norealtime", "realtime" } } ;
+  static char const *const attr[5][2] = { { "noncgi", "cgi" }, { "nonnph", "nph" }, { "noauth", "basic-auth" }, { "noautochunk", "autochunk" }, { "norealtime", "realtime" } } ;
   if (n != 1)
     strerr_dief8x(1, "too ", n > 1 ? "many" : "few", " arguments to directive ", attr[bit][h], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   if (!domain)
