@@ -129,6 +129,11 @@ extern void respond_30x (tipidee_rql const *, tipidee_redirection const *) ;
 extern void rproxy (tipidee_rql const *, tipidee_redirection const *, char const *, tipidee_headers const *, char const *, size_t) ;
 
 
+ /* fastcgi */
+
+extern void fastcgi (tipidee_rql const *, tipidee_redirection const *, char const *, tipidee_headers const *, char const *, size_t) ;
+
+
  /* trace */
 
 extern int respond_trace (tipidee_rql const *, tipidee_headers const *) ;

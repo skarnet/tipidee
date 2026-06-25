@@ -15,12 +15,12 @@ void respond_30x (tipidee_rql const *rql, tipidee_redirection const *rd)
   static unsigned int const status[4] = { 307, 308, 302, 301 } ;
   tipidee_defaulttext dt ;
   tain deadline ;
-  unsigned int type = rd->type & 3 ;
+  unsigned int type = rd->flags & 3 ;
   tipidee_util_defaulttext(status[type], &dt) ;
   tipidee_response_status(buffer_1, rql, status[type], dt.reason) ;
   tipidee_response_header_writeall_G(buffer_1, g.rhdr, g.rhdrn, 0) ;
   buffer_putsnoflush(buffer_1, "Content-Length: 0\r\nLocation: ") ;
-  buffer_putsnoflush(buffer_1, rd->location) ;
+  buffer_putsnoflush(buffer_1, rd->addr) ;
   if (rd->sub) buffer_putsnoflush(buffer_1, rd->sub) ;
   buffer_putnoflush(buffer_1, "\r\n\r\n", 4) ;
   tipidee_log_answer(g.logv, rql, status[type], 0) ;

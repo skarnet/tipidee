@@ -5,6 +5,7 @@
 #include <stdlib.h>
 #include <errno.h>
 
+#include <skalibs/uint16.h>
 #include <skalibs/uint32.h>
 #include <skalibs/fmtscan.h>
 #include <skalibs/buffer.h>
@@ -14,10 +15,12 @@
 #include <skalibs/skamisc.h>
 
 #include <tipidee/log.h>
+#include <tipidee/redirection.h>
+#include <tipidee/resattr.h>
 #include <tipidee/config.h>
 #include "tipidee-config-internal.h"
 
-#define dietoobig() strerr_diefu1sys(100, "read configuration")
+#define dietoobig() strerr_diefusys(100, "read configuration")
 
 typedef struct mdt_s mdt, *mdt_ref ;
 struct mdt_s
@@ -47,6 +50,7 @@ enum directivevalue_e
   T_REDIRECT,
   T_NOREDIRECT,
   T_RPROXY,
+  T_FASTCGI,
   T_CGI,
   T_NONCGI,
   T_NPH,
@@ -69,6 +73,13 @@ enum customheaderoptionvalue_e
   CHO_NEVER
 } ;
 
+static unsigned int log2u (uint32_t x)
+{
+  unsigned int n = 0 ;
+  while (x >>= 1) n++ ;
+  return n ;
+}
+
 static void conftree_checkunique (char const *key, mdt const *md)
 {
   node const *node = conftree_search(key) ;
@@ -76,7 +87,7 @@ static void conftree_checkunique (char const *key, mdt const *md)
   {
     char fmt[UINT32_FMT] ;
     fmt[uint32_fmt(fmt, node->line)] = 0 ;
-    strerr_diefn(1, 12, "duplicate ", "key ", key, " in file ", g.storage.s + md->filepos, " line ", md->linefmt, ", previously defined", " in file ", g.storage.s + node->filepos, " line ", fmt) ;
+    strerr_dief(1, "duplicate ", "key ", key, " in file ", g.storage.s + md->filepos, " line ", md->linefmt, ", previously defined", " in file ", g.storage.s + node->filepos, " line ", fmt) ;
   }
 }
 
@@ -87,7 +98,7 @@ static void headers_checkunique (char const *key, mdt const *md)
   {
     char fmt[UINT32_FMT] ;
     fmt[uint32_fmt(fmt, node->line)] = 0 ;
-    strerr_diefn(1, 12, "duplicate ", "header ", key, " in file ", g.storage.s + md->filepos, " line ", md->linefmt, ", previously defined", " in file ", g.storage.s + node->filepos, " line ", fmt) ;
+    strerr_dief(1, "duplicate ", "header ", key, " in file ", g.storage.s + md->filepos, " line ", md->linefmt, ", previously defined", " in file ", g.storage.s + node->filepos, " line ", fmt) ;
   }
 }
 
@@ -116,11 +127,11 @@ static inline void parse_global (char const *s, size_t const *word, size_t n, md
   uint32_t u ;
   char pack[4] ;
   if (n != 2)
-    strerr_dief8x(1, "too ", n < 2 ? "few" : "many", " arguments to directive ", "global", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    strerr_dief(1, "too ", n < 2 ? "few" : "many", " arguments to directive ", "global", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   x = BSEARCH(char const *, s + word[0], globalkeys) ;
   if (!x) strerr_dief6x(1, "unrecognized global setting ", s + word[0], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   if (!uint320_scan(s + word[1], &u))
-    strerr_dief6x(1, "invalid (non-numeric) value for global setting ", s + word[0], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    strerr_dief(1, "invalid (non-numeric) value for global setting ", s + word[0], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   uint32_pack_big(pack, u) ;
   {
     size_t len = strlen(*x) ;
@@ -135,7 +146,7 @@ static inline void parse_indexfile (char const *s, size_t const *word, size_t n,
 {
   node node ;
   if (!n)
-    strerr_dief8x(1, "too ", "few", " arguments to directive ", "index_file", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    strerr_dief(1, "too ", "few", " arguments to directive ", "index_file", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   conftree_checkunique("G:index-file", md) ;
   confnode_start(&node, "G:index-file", md->filepos, md->line) ;
   for (size_t i = 0 ; i < n ; i++)
@@ -164,14 +175,14 @@ static inline void parse_log (char const *s, size_t const *word, size_t n, mdt c
   uint32_t v = 0 ;
   char pack[4] ;
   if (!n)
-    strerr_dief8x(1, "too ", "few", " arguments to directive ", "log", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    strerr_dief(1, "too ", "few", " arguments to directive ", "log", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   for (size_t i = 0 ; i < n ; i++)
   {
     struct namevalue_s const *l = BSEARCH(struct namevalue_s, s + word[i], logkeys) ;
     if (!l) strerr_dief6x(1, "unrecognized log setting ", s + word[i], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
     if (l->value) v |= l->value ;
     else if (n == 1) v = 0 ;
-    else strerr_dief5x(1, "log nothing cannot be mixed with other log values", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    else strerr_dief(1, "log nothing cannot be mixed with other log values", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   }
   
   uint32_pack_big(pack, v) ;
@@ -182,17 +193,17 @@ static inline void parse_contenttype (char const *s, size_t const *word, size_t 
 {
   char const *ct ;
   if (n < 2)
-    strerr_dief8x(1, "too ", "few", " arguments to directive ", "content-type", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    strerr_dief(1, "too ", "few", " arguments to directive ", "content-type", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   ct = s + *word++ ;
   if (!strchr(ct, '/'))
-    strerr_dief6x(1, "Content-Type must include a slash", " - check directive content-type", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    strerr_dief(1, "Content-Type must include a slash", " - check directive content-type", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   n-- ;
   for (size_t i = 0 ; i < n ; i++)
   {
     if (s[word[i]] == '\"' && s[word[i]+1] == '\"' && !s[word[i]+2])
       add_unique("T:", ct, strlen(ct) + 1, md) ;
     else if (s[word[i]] != '.')
-      strerr_dief6x(1, "file extensions must be \"\" or start with a dot", " - check directive content-type", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+      strerr_dief(1, "file extensions must be \"\" or start with a dot", " - check directive content-type", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
     else
     {
       size_t len = strlen(s + word[i]) ;
@@ -217,11 +228,11 @@ static inline void parse_customheader (char const *s, size_t const *word, size_t
   } ;
   struct namevalue_s const *p ;
   if (n < 2)
-    strerr_dief8x(1, "too ", "few", " arguments to directive ", "custom-header", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    strerr_dief(1, "too ", "few", " arguments to directive ", "custom-header", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   p = BSEARCH(struct namevalue_s, s + *word, choptions) ;
-  if (!p) strerr_dief9x(1, "invalid subcommand ", s + *word, " for", " directive ", "custom-header", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+  if (!p) strerr_dief(1, "invalid subcommand ", s + *word, " for", " directive ", "custom-header", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   if ((p->value == CHO_ADD || p->value == CHO_ALWAYS) == (n == 2))
-    strerr_dief10x(1, "too ", n == 2 ? "few" : "many", " arguments to directive ", "custom-header", " ", p->name, " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    strerr_dief(1, "too ", n == 2 ? "few" : "many", " arguments to directive ", "custom-header", " ", p->name, " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   word++ ; n-- ;
   {
     size_t len = strlen(s + *word) ;
@@ -229,7 +240,7 @@ static inline void parse_customheader (char const *s, size_t const *word, size_t
     memcpy(key, s + *word++, len + 1) ; n-- ;
     header_canonicalize(key) ;
     if (!header_allowed(key))
-      strerr_dief7x(1, "header ", key, " cannot be customized", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+      strerr_dief(1, "header ", key, " cannot be customized", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
     headers_checkunique(key, md) ;
     switch (p->value)
     {
@@ -253,11 +264,11 @@ static inline void parse_customheader (char const *s, size_t const *word, size_t
 static inline void parse_noredirect (char const *s, size_t const *word, size_t n, char const *domain, size_t domainlen, mdt const *md)
 {
   if (n != 1)
-    strerr_dief8x(1, "too ", n > 1 ? "many" : "few", " arguments to directive ", "noredirect", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    strerr_dief(1, "too ", n > 1 ? "many" : "few", " arguments to directive ", "noredirect", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   if (!domain)
-    strerr_dief6x(1, "noredirection", " without a domain directive", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    strerr_dief(1, "noredirection", " without a domain directive", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   if (s[*word] != '/')
-    strerr_dief6x(1, "noredirected resource", " must start with /", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    strerr_dief(1, "noredirected resource", " must start with /", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   {
     size_t urlen = strlen(s + *word) ;
     char key[3 + domainlen + urlen] ;
@@ -266,8 +277,38 @@ static inline void parse_noredirect (char const *s, size_t const *word, size_t n
     memcpy(key + 2, domain, domainlen) ;
     memcpy(key + 2 + domainlen, s + *word, urlen) ;
     key[2 + domainlen + urlen] = 0 ;
-    add_unique(key, "\200", 2, md) ;
+    add_unique(key, "", 1, md) ;
   }
+}
+
+static void make_redirect_node (char const *sub, uint8_t type, uint8_t flags, char const *addr, uint16_t port, char const *domain, size_t domainlen, mdt const *md)
+{
+  node node ;
+  size_t sublen = strlen(sub) ;
+  char key[3 + domainlen + sublen] ;
+  if (sub[sublen - 1] == '/') { key[0] = 'r' ; sublen-- ; } else key[0] = 'R' ;
+  key[1] = ':' ;
+  memcpy(key + 2, domain, domainlen) ;
+  memcpy(key + 2 + domainlen, sub, sublen) ;
+  key[2 + domainlen + sublen] = 0 ;
+  conftree_checkunique(key, md) ;
+  confnode_start(&node, key, md->filepos, md->line) ;
+  confnode_add(&node, (char *)&type, 1) ;
+  confnode_add(&node, (char *)&flags, 1) ;
+  if (type >= 2 && flags & 1)
+  {
+    char pack[2] ;
+    uint16_pack_big(pack, port) ;
+    confnode_add(&node, pack, 2) ;
+    confnode_add(&node, addr, flags & 2 ? 16 : 4) ;
+  }
+  else
+  {
+    size_t addrlen = strlen(addr) ;
+    confnode_add(&node, addr, addrlen - (addr[addrlen - 1] == '/')) ;
+    confnode_add(&node, "", 1) ;
+  }
+  conftree_add(&node) ;
 }
 
 static inline void parse_redirect (char const *s, size_t const *word, size_t n, char const *domain, size_t domainlen, mdt const *md)
@@ -276,104 +317,65 @@ static inline void parse_redirect (char const *s, size_t const *word, size_t n, 
   uint32_t code ;
   uint32_t i = 0 ;
   if (n != 3)
-    strerr_dief8x(1, "too ", n > 3 ? "many" : "few", " arguments to directive ", "redirect", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    strerr_dief(1, "too ", n > 3 ? "many" : "few", " arguments to directive ", "redirect", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   if (!domain)
-    strerr_dief6x(1, "redirection", " without a domain directive", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    strerr_dief(1, "redirection", " without a domain directive", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   if (s[word[0]] != '/')
-    strerr_dief6x(1, "redirected resource", " must start with /", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    strerr_dief(1, "redirected resource", " must start with /", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   if (!uint320_scan(s + word[1], &code))
-    strerr_dief6x(1, "invalid redirection code ", s + word[1], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    strerr_dief(1, "invalid redirection code ", s + word[1], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   for (; i < 4 ; i++) if (code == codes[i]) break ;
   if (i >= 4)
-    strerr_dief6x(1, "redirection code ", "must be 301, 302, 307 or 308", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    strerr_dief(1, "redirection code ", "must be 301, 302, 307 or 308", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   if (strncmp(s + word[2], "http://", 7) && strncmp(s + word[2], "https://", 8))
-    strerr_dief5x(1, "redirection target must be a full http:// or https:// target", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
-  {
-    node node ;
-    size_t urlen = strlen(s + word[0]) ;
-    char key[3 + domainlen + urlen] ;
-    if (s[word[0] + urlen - 1] == '/') { key[0] = 'r' ; urlen-- ; } else key[0] = 'R' ;
-    key[1] = ':' ;
-    memcpy(key + 2, domain, domainlen) ;
-    memcpy(key + 2 + domainlen, s + word[0], urlen) ;
-    key[2 + domainlen + urlen] = 0 ;
-    conftree_checkunique(key, md) ;
-    confnode_start(&node, key, md->filepos, md->line) ;
-    key[0] = '@' | i ;
-    confnode_add(&node, &key[0], 1) ;
-    urlen = strlen(s + word[2]) ;
-    confnode_add(&node, s + word[2], urlen - (s[word[2] + urlen - 1] == '/')) ;
-    confnode_add(&node, "", 1) ;
-    conftree_add(&node) ;
-  }
+    strerr_dief(1, "redirection target must be a full http:// or https:// target", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+  make_redirect_node(s + word[0], TIPIDEE_REDIR_REDIRECT, i, s + word[2], 0, domain, domainlen, md) ;
 }
 
-static inline void parse_rproxy (char const *s, size_t const *word, size_t n, char const *domain, size_t domainlen, mdt const *md)
+static inline void parse_rproxy_fastcgi (char const *s, size_t const *word, size_t n, char const *domain, size_t domainlen, mdt const *md, int isfcgi)
 {
-  uint8_t type ;
+  char ip[16] ;
+  uint16_t port = 0 ;
+  uint8_t flags ;
   if (n < 3 || n > 4)
-    strerr_dief8x(1, "too ", n > 4 ? "many" : "few", " arguments to directive ", "rproxy", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    strerr_dief(1, "too ", n > 4 ? "many" : "few", " arguments to directive ", isfcgi ? "fastcgi" : "rproxy", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   if (!domain)
-    strerr_dief6x(1, "rproxy redirection", " without a domain directive", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    strerr_dief(1, "redirection", " without a domain directive", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   if (s[word[0]] != '/')
-    strerr_dief6x(1, "redirected resource", " must start with /", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
-  if (!strcmp(s + word[1], "unix"))
-    type = 48 ;
-  else if (!strcmp(s + word[1], "tcp"))
-    type = 32 ;
+    strerr_dief(1, "redirected resource", " must start with /", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+  if (!strcmp(s + word[1], "unix")) flags = 0 ;
+  else if (!strcmp(s + word[1], "tcp")) flags = 1 ;
   else
-    strerr_dief7x(1, "rproxy", " directive", " needs to specify unix or tcp", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    strerr_dief(1, isfcgi ? "fastcgi" : "rproxy", " directive", " needs to specify unix or tcp", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
 
+  if (flags & 1)
   {
-    node node ;
-    size_t urlen = strlen(s + word[0]) ;
-    char key[3 + domainlen + urlen] ;
-    if (s[word[0] + urlen - 1] == '/') { key[0] = 'r' ; urlen-- ; } else key[0] = 'R' ;
-    key[1] = ':' ;
-    memcpy(key + 2, domain, domainlen) ;
-    memcpy(key + 2 + domainlen, s + word[0], urlen) ;
-    key[2 + domainlen + urlen] = 0 ;
-    conftree_checkunique(key, md) ;
-    confnode_start(&node, key, md->filepos, md->line) ;
-
-    if (type == 48)
-    {
-      if (n != 3)
-        strerr_dief8x(1, "too ", "many" , " arguments to directive ", "rproxy", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
-      key[0] = '@' | type ;
-      confnode_add(&node, &key[0], 1) ;
-      confnode_add(&node, s + word[2], strlen(s + word[2]) + 1) ;
-    }
-    else
-    {
-      char ip[16] ;
-      uint16_t port ;
-      if (n != 4)
-        strerr_dief8x(1, "too ", "few" , " arguments to directive ", "rproxy", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
-      if (ip6_scan(s + word[2], ip)) type |= 8 ;
-      else if (!ip4_scan(s + word[2], ip))
-        strerr_dief8x(1, "invalid ip address ", "in directive ", "rproxy", " tcp", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
-      if (!uint160_scan(s + word[3], &port))
-        strerr_dief8x(1, "invalid port ", "in directive ", "rproxy", " tcp", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
-      key[0] = '@' | type ;
-      uint16_pack_big(key+1, port) ;
-      confnode_add(&node, key, 3) ;
-      confnode_add(&node, ip, type & 8 ? 16 : 4) ;
-    }
-    confnode_add(&node, "", 1) ;
-    conftree_add(&node) ;
+    if (n != 4)
+      strerr_dief(1, "too ", "few" , " arguments to directive ", isfcgi ? "fastcgi" : "rproxy", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    if (ip6_scan(s + word[2], ip)) flags |= 2 ;
+    else if (!ip4_scan(s + word[2], ip))
+      strerr_dief(1, "invalid ip address ", "in directive ", isfcgi ? "fastcgi" : "rproxy", " tcp", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    if (!uint160_scan(s + word[3], &port))
+      strerr_dief(1, "invalid port ", "in directive ", isfcgi ? "fastcgi" : "rproxy", " tcp", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   }
+  else
+  {
+    if (n != 3)
+       strerr_dief(1, "too ", "many" , " arguments to directive ", isfcgi ? "fastcgi" : "rproxy", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+  }
+  make_redirect_node(s + word[0], 2 + isfcgi, flags, flags & 1 ? ip : s + word[2], port, domain, domainlen, md) ;
 }
 
-static void parse_bitattr (char const *s, size_t const *word, size_t n, char const *domain, size_t domainlen, mdt const *md, uint8_t bit, int h)
+static void parse_bitattr (char const *s, size_t const *word, size_t n, char const *domain, size_t domainlen, mdt const *md, uint32_t flag, int h)
 {
   static char const *const attr[5][2] = { { "noncgi", "cgi" }, { "nonnph", "nph" }, { "noauth", "basic-auth" }, { "noautochunk", "autochunk" }, { "norealtime", "realtime" } } ;
+  unsigned int bit = log2u(flag) ;
   if (n != 1)
-    strerr_dief8x(1, "too ", n > 1 ? "many" : "few", " arguments to directive ", attr[bit][h], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    strerr_dief(1, "too ", n > 1 ? "many" : "few", " arguments to directive ", attr[bit][h], " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   if (!domain)
-    strerr_dief7x(1, "resource attribute ", "definition", " without a domain directive", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    strerr_dief(1, "resource attribute ", "definition", " without a domain directive", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   if (s[*word] != '/')
-    strerr_dief6x(1, "resource", " must start with /", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
+    strerr_dief(1, "resource", " must start with /", " in file ", g.storage.s + md->filepos, " line ", md->linefmt) ;
   {
     node const *oldnode ;
     size_t arglen = strlen(s + *word) ;
@@ -389,22 +391,22 @@ static void parse_bitattr (char const *s, size_t const *word, size_t n, char con
       uint32_t flags, mask ;
       uint32_unpack_big(g.storage.s + oldnode->data, &flags) ;
       uint32_unpack_big(g.storage.s + oldnode->data + 4, &mask) ;
-      if (mask & 1 << bit)
+      if (mask & flag)
       {
         char fmt[UINT32_FMT] ;
         fmt[uint32_fmt(fmt, oldnode->line)] = 0 ;
-        strerr_diefn(1, 13, "resource attribute ", attr[bit][h], " redefinition", " in file ", g.storage.s + md->filepos, " line ", md->linefmt, "; previous definition", " in file ", g.storage.s + oldnode->filepos, " line ", fmt, " or later") ;
+        strerr_dief(1, "resource attribute ", attr[bit][h], " redefinition", " in file ", g.storage.s + md->filepos, " line ", md->linefmt, "; previous definition", " in file ", g.storage.s + oldnode->filepos, " line ", fmt, " or later") ;
       }
-      mask |= 1 << bit ;
-      if (h) flags |= 1 << bit ; else flags &= ~(1 << bit) ;
+      mask |= flag ;
+      if (h) flags |= flag ; else flags &= ~flag ;
       uint32_pack_big(g.storage.s + oldnode->data, flags) ;
       uint32_pack_big(g.storage.s + oldnode->data + 4, mask) ;
     }
     else
     {
       node node ;
-      uint32_t flags = h ? 1 << bit : 0 ;
-      uint32_t mask = 1 << bit ;
+      uint32_t flags = h ? flag : 0 ;
+      uint32_t mask = flag ;
       char val[9] = "\0\0\0\0\0\0\0\0" ;
       uint32_pack_big(val, flags) ;
       uint32_pack_big(val + 4, mask) ;
@@ -435,11 +437,20 @@ static inline void parse_filetype (char const *s, size_t const *word, size_t n, 
     oldnode = conftree_search(key) ;
     if (oldnode)
     {
+      uint32_t oldflags ;
+      uint32_unpack_big(g.storage.s + oldnode->data, &oldflags) ;
+      if (oldflags & (TIPIDEE_RA_FLAG_CGI | TIPIDEE_RA_FLAG_NPH))
+      {
+        char fmt[UINT32_FMT] ;
+        fmt[uint32_fmt(fmt, oldnode->line)] = 0 ;
+        strerr_dief(1, "incompatible", "file-type", " definition", " in file ", g.storage.s + md->filepos, " line ", md->linefmt, "; conflicting attribute", " in file ", g.storage.s + oldnode->filepos, " line ", fmt, " or later") ;
+      }
+      
       if (g.storage.s[oldnode->data + 8])
       {
         char fmt[UINT32_FMT] ;
         fmt[uint32_fmt(fmt, oldnode->line)] = 0 ;
-        strerr_diefn(1, 12, "file-type", " redefinition", " in file ", g.storage.s + md->filepos, " line ", md->linefmt, "; previous definition", " in file ", g.storage.s + oldnode->filepos, " line ", fmt, " or later") ;
+        strerr_dief(1, "file-type", " redefinition", " in file ", g.storage.s + md->filepos, " line ", md->linefmt, "; previous definition", " in file ", g.storage.s + oldnode->filepos, " line ", fmt, " or later") ;
       }
       else
       {
@@ -499,6 +510,7 @@ static inline void process_line (char const *s, size_t const *word, size_t n, st
     { .name = "custom-header", .value = T_CUSTOMHEADER },
     { .name = "custom-response", .value = T_CUSTOMRESPONSE },
     { .name = "domain", .value = T_DOMAIN },
+    { .name = "fastcgi", .value = T_FASTCGI },
     { .name = "file-type", .value = T_FILETYPE },
     { .name = "global", .value = T_GLOBAL },
     { .name = "index-file", .value = T_INDEXFILE },
@@ -579,42 +591,45 @@ static inline void process_line (char const *s, size_t const *word, size_t n, st
       parse_redirect(s, word, n, domain->s, domain->len, md) ;
       break ;
     case T_RPROXY :
-      parse_rproxy(s, word, n, domain->s, domain->len, md) ;
+      parse_rproxy_fastcgi(s, word, n, domain->s, domain->len, md, 0) ;
+      break ;
+    case T_FASTCGI :
+      parse_rproxy_fastcgi(s, word, n, domain->s, domain->len, md, 1) ;
       break ;
     case T_NOREDIRECT :
       parse_noredirect(s, word, n, domain->s, domain->len, md) ;
       break ;
     case T_CGI :
-      parse_bitattr(s, word, n, domain->s, domain->len, md, 0, 1) ;
+      parse_bitattr(s, word, n, domain->s, domain->len, md, TIPIDEE_RA_FLAG_CGI, 1) ;
       break ;
     case T_NONCGI :
-      parse_bitattr(s, word, n, domain->s, domain->len, md, 0, 0) ;
+      parse_bitattr(s, word, n, domain->s, domain->len, md, TIPIDEE_RA_FLAG_CGI, 0) ;
       break ;
     case T_NPH :
-      parse_bitattr(s, word, n, domain->s, domain->len, md, 1, 1) ;
+      parse_bitattr(s, word, n, domain->s, domain->len, md, TIPIDEE_RA_FLAG_NPH, 1) ;
       break ;
     case T_NONNPH :
-      parse_bitattr(s, word, n, domain->s, domain->len, md, 1, 0) ;
+      parse_bitattr(s, word, n, domain->s, domain->len, md, TIPIDEE_RA_FLAG_NPH, 0) ;
       break ;
     case T_BASICAUTH :
       strerr_warnw5x("file ", g.storage.s + md->filepos, " line ", md->linefmt, ": directive basic-auth not implemented in tipidee-" TIPIDEE_VERSION) ;
-      parse_bitattr(s, word, n, domain->s, domain->len, md, 2, 1) ;
+      parse_bitattr(s, word, n, domain->s, domain->len, md, TIPIDEE_RA_FLAG_BA, 1) ;
       break ;
     case T_NOAUTH :
       strerr_warnw5x("file ", g.storage.s + md->filepos, " line ", md->linefmt, ": directive basic-auth not implemented in tipidee-" TIPIDEE_VERSION) ;
-      parse_bitattr(s, word, n, domain->s, domain->len, md, 2, 0) ;
+      parse_bitattr(s, word, n, domain->s, domain->len, md, TIPIDEE_RA_FLAG_BA, 0) ;
       break ;
     case T_AUTOCHUNK :
-      parse_bitattr(s, word, n, domain->s, domain->len, md, 3, 1) ;
+      parse_bitattr(s, word, n, domain->s, domain->len, md, TIPIDEE_RA_FLAG_AUTOCHUNK, 1) ;
       break ;
     case T_NOAUTOCHUNK :
-      parse_bitattr(s, word, n, domain->s, domain->len, md, 3, 0) ;
+      parse_bitattr(s, word, n, domain->s, domain->len, md, TIPIDEE_RA_FLAG_AUTOCHUNK, 0) ;
       break ;
     case T_REALTIME :
-      parse_bitattr(s, word, n, domain->s, domain->len, md, 4, 1) ;
+      parse_bitattr(s, word, n, domain->s, domain->len, md, TIPIDEE_RA_FLAG_REALTIME, 1) ;
       break ;
     case T_NOREALTIME :
-      parse_bitattr(s, word, n, domain->s, domain->len, md, 4, 0) ;
+      parse_bitattr(s, word, n, domain->s, domain->len, md, TIPIDEE_RA_FLAG_REALTIME, 0) ;
       break ;
     case T_FILETYPE :
       parse_filetype(s, word, n, domain->s, domain->len, md) ;

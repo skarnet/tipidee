@@ -64,7 +64,7 @@ static void rproxy_unix (tipidee_rql const *rql, char const *socketpath, char co
   fd_close(fd) ;
 }
 
-static void rproxy_tcp (tipidee_rql const *rql, char const *ip, uint16_t port, int is6, char const *sub, char const *docroot, tipidee_headers const *hdr, char const *body, size_t bodylen)
+static inline void rproxy_tcp (tipidee_rql const *rql, char const *ip, uint16_t port, int is6, char const *sub, char const *docroot, tipidee_headers const *hdr, char const *body, size_t bodylen)
 {
   tain deadline ;
   size_t m = 0 ;
@@ -87,11 +87,8 @@ static void rproxy_tcp (tipidee_rql const *rql, char const *ip, uint16_t port, i
 
 void rproxy (tipidee_rql const *rql, tipidee_redirection const *rd, char const *docroot, tipidee_headers const *hdr, char const *body, size_t bodylen)
 {
-  if (rd->type & 16) rproxy_unix(rql, rd->location, rd->sub, docroot, hdr, body, bodylen) ;
+  if (rd->flags & TIPIDEE_REDIR_ISINET)
+    rproxy_tcp(rql, rd->addr, rd->port, !!(rd->flags & TIPIDEE_REDIR_ISV6), rd->sub, docroot, hdr, body, bodylen) ;
   else
-  {
-    uint16_t port ;
-    uint16_unpack_big(rd->location, &port) ;
-    rproxy_tcp(rql, rd->location + 2, port, !!(rd->type & 8), rd->sub, docroot, hdr, body, bodylen) ;
-  }
+    rproxy_unix(rql, rd->addr, rd->sub, docroot, hdr, body, bodylen) ;
 }

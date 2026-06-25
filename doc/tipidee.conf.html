@@ -919,6 +919,28 @@ or IPv6. </li>
 <em>resource</em> does not need to exist in the filesystem. The same caveats apply. </li>
 </ul>
 
+<div id="fastcgi">
+<h4> <tt>fastcgi</tt> </h4>
+</div>
+
+<p>
+ <code> fastcgi <em>resource</em> unix <em>socketpath</em> </code> <br>
+ <code> fastcgi <em>resource</em> tcp <em>ip</em> <em>port</em> </code>
+</p>
+
+<ul>
+ <li> The <em>fastcgi</em> directive tells tipidee that when a client hits a
+given URL, the server should let a FastCGI application answer the request.
+For this exchange, tipideed will connect to the FastCGI server listening
+either to a Unix domain socket on <em>socketpath</em> or to an INET domain
+socket listening on IP address <em>ip</em> and port <em>port</em>. </li>
+ <li> It is similar to the <code>rproxy</code> directive, but whereas
+<code>rproxy</code> makes tipideed act as an HTTP client, <code>fastcgi</code>
+makes it act as a FastCGI client. </li>
+ <li> <em>resource</em> is the URI to redirect, relative to the current domain.
+ <li> Just like with the <code>redirect</code> and <code>rproxy</code> directives,
+<em>resource</em> does not need to exist in the filesystem. The same caveats apply. </li>
+</ul>
 
 <div id="noredirect">
 <h4> <tt>noredirect</tt> </h4>
@@ -934,7 +956,7 @@ useful to carve exceptions to a generic redirection policy: if you have a <code>
 directive for directory A and a <code>noredirect</code> directive for resource B, and A is
 a prefix of B, then B will not be redirected, but everything else under A will. </li>
  <li> You can also use <code>noredirect</code> to prevent <em>resource</em> from being
-proxied by a more generic <code>rproxy</code> directive.
+proxied by a more generic <code>rproxy</code> or <code>fastcgi</code> directive.
 </ul>
 
 <div id="custom-response">

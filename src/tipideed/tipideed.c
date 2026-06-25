@@ -211,12 +211,12 @@ static inline void get_resattr (tipidee_rql const *rql, char const *docroot, cha
 
 static inline void force_redirect (tipidee_rql const *rql, char const *fn)
 {
-  tipidee_redirection rd = { .sub = 0, .type = 1 } ;
+  tipidee_redirection rd = { .sub = 0, .type = TIPIDEE_REDIR_REDIRECT, .flags = TIPIDEE_REDIR_308, .port = 0 } ;
   size_t len = strlen(fn) ;
   char location[len + 8 + g.ssl] ;
   memcpy(location, g.ssl ? "https://" : "http://", 7 + g.ssl) ;
   memcpy(location + 7 + g.ssl, fn, len + 1) ;
-  rd.location = location ;
+  rd.addr = location ;
   respond_30x(rql, &rd) ;
 }
 
@@ -241,11 +241,13 @@ static inline int serve (tipidee_rql *rql, char const *docroot, char *uribuf, ti
     tipidee_redirection rd = TIPIDEE_REDIRECTION_ZERO ;
     int e = tipidee_conf_get_redirection(&g.conf, docroot, docrootlen, rql->uri.path, &rd) ;
     if (e == -1) die500sys(rql, 111, docroot, "get redirection data for ", fn) ;
-    if (e)
+    if (e) switch (rd.type)
     {
-      if (rd.type & 32) rproxy(rql, &rd, docroot, hdr, body, bodylen) ;
-      else respond_30x(rql, &rd) ;
-      return 0 ;
+      case TIPIDEE_REDIR_NONE : break ;
+      case TIPIDEE_REDIR_REDIRECT : respond_30x(rql, &rd) ; return 0 ;
+      case TIPIDEE_REDIR_RPROXY : rproxy(rql, &rd, docroot, hdr, body, bodylen) ; return 0 ;
+      case TIPIDEE_REDIR_FASTCGI : fastcgi(rql, &rd, docroot, hdr, body, bodylen) ; return 0 ;
+      default : strerr_dief(101, "can't happen: ", "unknown redirection type") ;
     }
   }
 

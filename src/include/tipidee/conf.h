@@ -10,6 +10,7 @@
 #include <skalibs/uint32.h>
 #include <skalibs/cdb.h>
 
+#include <tipidee/redirection.h>
 #include <tipidee/resattr.h>
 #include <tipidee/uri.h>
 
@@ -21,15 +22,6 @@ struct tipidee_conf_s
   cdb c ;
 } ;
 #define TIPIDEE_CONF_ZERO { .c = CDB_ZERO }
-
-typedef struct tipidee_redirection_s tipidee_redirection, *tipidee_redirection_ref ;
-struct tipidee_redirection_s
-{
-  char const *sub ;
-  char const *location ;
-  uint8_t type ;
-} ;
-#define TIPIDEE_REDIRECTION_ZERO { .sub = 0, .location = 0, .type = 0 }
 
 extern void tipidee_conf_free (tipidee_conf *) ;
 extern int tipidee_conf_init (tipidee_conf *, char const *) ;

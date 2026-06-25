@@ -1,6 +1,7 @@
 cgi.o
 errors.o
 harden.o
+fastcgi.o
 options.o
 regular.o
 redirection.o
