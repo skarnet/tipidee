@@ -43,6 +43,7 @@ struct global_s
   uint16_t ssl : 1 ;
   uint16_t xiscgi : 1 ;
   uint8_t flagnoxlate : 1 ;
+  uint8_t flagcgipassauth : 1 ;
 } ;
 #define GLOBAL_ZERO \
 { \
@@ -68,7 +69,8 @@ struct global_s
   .cont = 1, \
   .ssl = 0, \
   .xiscgi = 0, \
-  .flagnoxlate = 0 \
+  .flagnoxlate = 0, \
+  .flagcgipassauth = 0 \
 }
 
 extern struct global_s g ;

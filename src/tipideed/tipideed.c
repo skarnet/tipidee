@@ -386,6 +386,7 @@ int main (int argc, char const *const *argv, char const *const *envp)
   g.logv = get_uint32("G:logv") ;
   g.xiscgi = !!get_uint32("G:executable_means_cgi") ;
   g.flagnoxlate = !!get_uint32("G:XXX_no_translate") ;
+  g.flagcgipassauth = !!get_uint32("G:cgi_pass_authorization") ;
   n = tipidee_conf_get_argv(&g.conf, "G:index-file", g.indexnames, 16, &g.indexlen) ;
   if (!n) strerr_dief3x(102, "bad", " config value for ", "G:index_file") ;
   g.indexn = n-1 ;

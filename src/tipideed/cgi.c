@@ -97,6 +97,7 @@ static inline void modify_env (tipidee_rql const *rql, char const *docroot, tipi
         addenvb(rql, docroot, "AUTH_TYPE", val, n) ;
         got |= 1 ;
       }
+      if (g.flagcgipassauth) addenvb(rql, docroot, "HTTP_AUTHORIZATION", val, len) ;
     }
     else if (!strcasecmp(key, "Content-Type")) { addenv(rql, docroot, "CONTENT_TYPE", val) ; got |= 2 ; }
     else if (!strcasecmp(key, "Content-Length") || !strcasecmp(key, "Connection")) ;

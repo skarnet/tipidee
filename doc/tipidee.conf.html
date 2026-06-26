@@ -303,6 +303,29 @@ a directive can protect dynamically managed content that is restricted
 to a given hierarchy. </li>
 </ul>
 
+<div id="cgi_pass_authorization">
+<h4> <tt>cgi_pass_authorization</tt> </h4>
+</div>
+
+<p>
+ <code> global cgi_pass_authorization <em>value</em> </code>
+</p>
+
+<ul>
+ <li> <em>value</em> is a non-negative integer. </li>
+ <li> For security reasons, if there is an <tt>Authorization:</tt>
+header, the CGI specification says it should not be fully passed
+to the CGI script. Instead, only the first word, determining what
+authorization type has been used, is passed in the <tt>AUTH_TYPE</tt>
+environment variable. </li>
+ <li> By default, or when <em>value</em> is zero, tipideed does just
+that. </li>
+ <li> If <em>value</em> is nonzero, then additionally to the
+regular <tt>AUTH_TYPE</tt>, tipideed passes the full value of the
+<tt>Authorization:</tt> header to CGI scripts via the
+<tt>HTTP_AUTHORIZATION</tt> variable. </li>
+</ul>
+
 <div id="XXX_no_translate">
 <h4> <tt>XXX_no_translate</tt> </h4>
 </div>
