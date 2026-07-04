@@ -50,39 +50,5 @@ places in <a href="tipideed.html">tipideed</a>. That was more complexity than I
 wanted for an initial release; it's not urgent, it can wait.
 </p>
 
-<h2> ETags </h2>
-
-<p>
-<a href="https://datatracker.ietf.org/doc/html/rfc9110#field.etag">ETags</a> are
-unique identifiers for resources that clients can use to cache data, and only
-download resources they do not have. Like ranges, ETags support can save bandwidth.
-</p>
-
-<p>
- The problem is that creating ETags is pretty resource-intensive on the server
-side. You have to maintain an ETag database, and update it any time a document
-changes; alternatively, you have to dynamically hash a whole resource before
-deciding if you're serving it or not. Both paths are riddled with traps and
-design challenges, and neither is appealing to a server like tipidee aiming at
-simplicity and efficiency. ETag support may come one day, but it won't be soon.
-</p>
-
-<h2> FastCGI </h2>
-
-<p>
- If tipidee compares to big Web servers performance-wise, which is the expectation,
-it is quite possible that the performance bottleneck becomes the CGI protocol
-itself, i.e. the need to spawn an additional process for a dynamic request.
-In this case, it would be useful to support other methods of communicating with
-dynamic backends.
-</p>
-
-<p>
- A module system, or embedding language-specific support into
-<a href="tipideed.html">tipideed</a>, is out of the question, because it goes against
-the design principles of tipidee; however, FastCGI support sounds like a possible
-path to more performance.
-</p>
-
 </body>
 </html>
