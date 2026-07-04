@@ -28,6 +28,7 @@ struct tipidee_headers_s
 
 extern void tipidee_headers_init (tipidee_headers *, char *, size_t) ;
 
+extern int tipidee_headers_parse_fromstring_nb (char const *, size_t, size_t *, tipidee_headers *, disize *, uint32_t *) ;
 extern int tipidee_headers_parse_nb (buffer *, tipidee_headers *, disize *, uint32_t *) ;
 extern int tipidee_headers_timed_parse (buffer *, tipidee_headers *, tain const *, tain *) ;
 #define tipidee_headers_timed_parse_g(b, hdr, deadline) tipidee_headers_timed_parse(b, hdr, (deadline), &STAMP)

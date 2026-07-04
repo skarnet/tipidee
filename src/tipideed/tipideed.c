@@ -246,7 +246,7 @@ static inline int serve (tipidee_rql *rql, char const *docroot, char *uribuf, ti
       case TIPIDEE_REDIR_NONE : break ;
       case TIPIDEE_REDIR_REDIRECT : respond_30x(rql, &rd) ; return 0 ;
       case TIPIDEE_REDIR_RPROXY : rproxy(rql, &rd, docroot, hdr, body, bodylen) ; return 0 ;
-      case TIPIDEE_REDIR_FASTCGI : fastcgi(rql, &rd, docroot, hdr, body, bodylen) ; return 0 ;
+      case TIPIDEE_REDIR_FASTCGI : fastcgi(rql, &rd, docroot, hdr, body, bodylen, uribuf) ; return 0 ;
       default : strerr_dief(101, "can't happen: ", "unknown redirection type") ;
     }
   }

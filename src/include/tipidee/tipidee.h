@@ -5,6 +5,7 @@
 
 #include <tipidee/config.h>
 #include <tipidee/conf.h>
+#include <tipidee/fcgi.h>
 #include <tipidee/headers.h>
 #include <tipidee/log.h>
 #include <tipidee/method.h>

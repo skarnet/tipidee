@@ -3,6 +3,7 @@ errors.o
 harden.o
 fastcgi.o
 options.o
+process_cgi_headers.o
 regular.o
 redirection.o
 rproxy.o

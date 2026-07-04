@@ -9,6 +9,7 @@
 #include <skalibs/bytestr.h>
 #include <skalibs/buffer.h>
 #include <skalibs/error.h>
+#include <skalibs/disize.h>
 #include <skalibs/avltreen.h>
 #include <skalibs/unix-timed.h>
 
@@ -71,24 +72,41 @@ states: 4 bits, actions: 7 bits
 */
 
 
-struct tainp_s
+struct buffertime_s
 {
+  buffer *b ;
   tain const *deadline ;
   tain *stamp ;
 } ;
 
-typedef ssize_t get1_func (buffer *, char *, struct tainp_s *) ;
+struct string_s
+{
+  char const *s ;
+  size_t len ;
+  size_t *i ;
+} ;
+
+typedef ssize_t get1_func (char *, void *) ;
 typedef get1_func *get1_func_ref ;
 
-static ssize_t get1_timed (buffer *b, char *c, struct tainp_s *d)
+static ssize_t get1_timed (char *c, void *param)
 {
-  return buffer_timed_get(b, c, 1, d->deadline, d->stamp) ;
+  struct buffertime_s *p = param ;
+  return buffer_timed_get(p->b, c, 1, p->deadline, p->stamp) ;
 }
 
-static ssize_t get1_notimed (buffer *b, char *c, struct tainp_s *data)
+static ssize_t get1_notimed (char *c, void *param)
 {
-  (void)data ;
+  buffer *b = param ;
   return buffer_get(b, c, 1) ;
+}
+
+static ssize_t get1_string (char *c, void *param)
+{
+  struct string_s *st = param ;
+  if ((*st->i) >= st->len) return (errno = EAGAIN, -1) ;
+  *c = st->s[(*st->i)++] ;
+  return 1 ;
 }
 
 static uint8_t cclass (char c)
@@ -104,7 +122,7 @@ static int needs_processing (char const *s)
   return 1 ;
 }
 
-static int tipidee_headers_parse_with (buffer *b, tipidee_headers *hdr, get1_func_ref next, struct tainp_s *data, disize *header, uint32_t *state)
+static int tipidee_headers_parse_with (tipidee_headers *hdr, disize *header, uint32_t *state, get1_func_ref next, void *param)
 {
   static uint16_t const table[10][8] =
   {
@@ -123,7 +141,7 @@ static int tipidee_headers_parse_with (buffer *b, tipidee_headers *hdr, get1_fun
   {
     uint16_t c ;
     char cur = 0 ;
-    if ((*next)(b, &cur, data) < 0)
+    if ((*next)(&cur, param) == -1)
       return errno == ETIMEDOUT ? 408 : error_isagain(errno) ? -2 : -1 ;
     c = table[*state][cclass(cur)] ;
 /*
@@ -201,13 +219,19 @@ static int tipidee_headers_parse_with (buffer *b, tipidee_headers *hdr, get1_fun
 
 int tipidee_headers_timed_parse (buffer *b, tipidee_headers *hdr, tain const *deadline, tain *stamp)
 {
-  struct tainp_s d = { .deadline = deadline, .stamp = stamp } ;
+  struct buffertime_s bt = { .b = b, .deadline = deadline, .stamp = stamp } ;
   disize header = DISIZE_ZERO ;
   uint32_t state = 0 ;
-  return tipidee_headers_parse_with(b, hdr, &get1_timed, &d, &header, &state) ;
+  return tipidee_headers_parse_with(hdr, &header, &state, &get1_timed, &bt) ;
 }
 
 int tipidee_headers_parse_nb (buffer *b, tipidee_headers *hdr, disize *header, uint32_t *state)
 {
-  return tipidee_headers_parse_with(b, hdr, &get1_notimed, 0, header, state) ;
+  return tipidee_headers_parse_with(hdr, header, state, &get1_notimed, b) ;
+}
+
+int tipidee_headers_parse_fromstring_nb (char const *s, size_t len, size_t *i, tipidee_headers *hdr, disize *header, uint32_t *state)
+{
+  struct string_s st = { .s = s, .len = len, .i = i } ;
+  return tipidee_headers_parse_with(hdr, header, state, &get1_string, &st) ;
 }

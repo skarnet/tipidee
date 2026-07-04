@@ -4,17 +4,50 @@
 #define TIPIDEE_FCGI_H
 
 #include <stdint.h>
+#include <string.h>
+#include <sys/types.h>
+#include <sys/uio.h>
 
-typedef struct fcgi_header_s fcgi_header, *fcgi_header_ref ;
-struct fcgi_header_s
+#include <skalibs/buffer.h>
+#include <skalibs/tai.h>
+#include <skalibs/stralloc.h>
+
+typedef struct tipidee_fcgi_s tipidee_fcgi, *tipidee_fcgi_ref ;
+struct tipidee_fcgi_s
 {
-  uint8_t version ;
-  uint8_t type ;
-  uint16_t requestid ;
-  uint16_t len ;
-  uint8_t padlen ;
-  uint8_t reserved ;
+  buffer b ;
+  char buf[4096] ;
+  tain deadline ;
+  uint16_t id ;
 } ;
+#define TIPIDEE_FCGI_ZERO { .b = BUFFER_ZERO, .deadline = TAIN_ZERO, .id = 0 }
+
+extern void tipidee_fcgi_startwrite (tipidee_fcgi *, int, pid_t, tain const *) ;
+extern void tipidee_fcgi_startread (tipidee_fcgi *, int, pid_t, tain const *) ;
+
+extern size_t tipidee_fcgi_put (tipidee_fcgi *, uint8_t, char const *, size_t, tain *) ;
+#define tipidee_fcgi_put_g(fc, rectype, s, len) tipidee_fcgi_put(fc, rectype, s, (len), &STAMP)
+
+extern size_t tipidee_fcgi_putv (tipidee_fcgi *, uint8_t, struct iovec const *, unsigned int, tain *) ;
+#define tipidee_fcgi_putv_g(fc, rectype, v, n) tipidee_fcgi_putv(fc, rectype, v, (n), &STAMP)
+
+extern int tipidee_fcgi_flush (tipidee_fcgi *, tain *) ;
+#define tipidee_fcgi_flush_g(fc) tipidee_fcgi_flush((fc), &STAMP)
+
+extern int tipidee_fcgi_beginrequest (tipidee_fcgi *, tain *) ;
+#define tipidee_fcgi_beginrequest_g(fc) tipidee_fcgi_beginrequest((fc), &STAMP)
+
+extern int tipidee_fcgi_addenvb (stralloc *, char const *, size_t, char const *, size_t) ;
+#define tipidee_fcgi_addenv(sa, key, val) tipidee_fcgi_addenvb(sa, key, strlen(key), val, strlen(val))
+
+extern int tipidee_fcgi_params (tipidee_fcgi *, char const *, size_t, tain *) ;
+#define tipidee_fcgi_params_g(fc, s, len) tipidee_fcgi_params(fc, s, (len), &STAMP)
+
+extern int tipidee_fcgi_stdin (tipidee_fcgi *, char const *, size_t, tain *) ;
+#define tipidee_fcgi_stdin_g(fc, s, len) tipidee_fcgi_stdin(fc, s, (len), &STAMP)
+
+extern int tipidee_fcgi_read (tipidee_fcgi *, uint32_t *, stralloc *, tain *) ;
+#define tipidee_fcgi_read_g(fc, status, sa) tipidee_fcgi_read(fc, status, (sa), &STAMP)
 
 typedef enum fcgi_type_e fcgi_type ;
 enum fcgi_type_e
@@ -30,33 +63,11 @@ enum fcgi_type_e
   FCGI_GET_VALUES,
   FCGI_GET_VALUES_RESULT,
   FCGI_UNKNOWN_TYPE,
-  FCGI_MAXTYPE
 } ;
+
+#define FCGI_VERSION_1 1
 
 #define FCGI_NULL_REQUEST_ID 0
-
-extern void tipidee_fcgi_header_pack (char *, fcgi_header const *) ;
-extern void tipidee_fcgi_header_unpack (char const *, fcgi_header *) ;
-
-
-typedef struct fcgi_beginrequest_body_s fcgi_beginrequest_body, *fcgi_beginrequest_body_ref ;
-struct fcgi_beginrequest_body_s
-{
-  uint16_t role ;
-  uint8_t flags;
-  unsigned char reserved[5] ;
-} ;
-
-extern void tipidee_fcgi_beginrequest_body_pack (char *, fcgi_beginrequest_body const *) ;
-extern void tipidee_fcgi_beginrequest_body_unpack (char const *, fcgi_beginrequest_body *) ;
-
-
-typedef struct fcgi_beginrequest_record_s fcgi_beginrequest_record, *fcgi_beginrequest_record_ref ;
-struct fcgi_beginrequest_record_s
-{
-  fcgi_header header ;
-  fcgi_beginrequest_body body ;
-} ;
 
 #define FCGI_KEEP_CONN  1
 
@@ -64,61 +75,9 @@ struct fcgi_beginrequest_record_s
 #define FCGI_AUTHORIZER 2
 #define FCGI_FILTER     3
 
-extern void tipidee_fcgi_beginrequest_record_pack (char *, fcgi_beginrequest_record const *) ;
-extern void tipidee_fcgi_beginrequest_record_unpack (char const *, fcgi_beginrequest_record *) ;
-
-
-typedef struct fcgi_endrequest_body_s fcgi_endrequest_body, *fcgi_endrequest_body_ref ;
-struct fcgi_endrequest_body_s
-{
-  uint32_t appstatus ;
-  uint8_t protostatus ;
-  uint8_t reserved[3] ;
-} ;
-
-extern void tipidee_fcgi_endrequest_body_pack (char *, fcgi_endrequest_body const *) ;
-extern void tipidee_fcgi_endrequest_body_unpack (char const *, fcgi_endrequest_body *) ;
-
-
-typedef struct fcgi_endrequest_record_s fcgi_endrequest_record, *fcgi_endrequest_record_ref ;
-struct fcgi_endrequest_record_s
-{
-  fcgi_header header ;
-  fcgi_endrequest_body body ;
-} ;
-
 #define FCGI_REQUEST_COMPLETE 0
 #define FCGI_CANT_MPX_CONN    1
 #define FCGI_OVERLOADED       2
 #define FCGI_UNKNOWN_ROLE     3
-
-#define FCGI_MAX_CONNS  "FCGI_MAX_CONNS"
-#define FCGI_MAX_REQS   "FCGI_MAX_REQS"
-#define FCGI_MPXS_CONNS "FCGI_MPXS_CONNS"
-
-extern void tipidee_fcgi_endrequest_record_pack (char *, fcgi_endrequest_record const *) ;
-extern void tipidee_fcgi_endrequest_record_unpack (char const *, fcgi_endrequest_record *) ;
-
-
-typedef struct fcgi_unknowntype_body_s fcgi_unknowntype_body, *fcgi_unknowntype_body_ref ;
-struct fcgi_unknowntype_body_s
-{
-  uint8_t type ;
-  uint8_t reserved[7] ;
-} ;
-
-extern void tipidee_fcgi_unknowntype_body_pack (char *, fcgi_unknowntype_body const *) ;
-extern void tipidee_fcgi_unknowntype_body_unpack (char const *, fcgi_unknowntype_body *) ;
-
-
-typedef struct fcgi_unknowntype_record_s fcgi_unknowntype_record, *fcgi_unknowntype_record_ref ;
-struct fcgi_unknowntype_record_s
-{
-  fcgi_header header ;
-  fcgi_unknowntype_body body ;
-} ;
-
-extern void tipidee_fcgi_unknowntype_record_pack (char *, fcgi_unknowntype_record const *) ;
-extern void tipidee_fcgi_unknowntype_record_unpack (char const *, fcgi_unknowntype_record *) ;
 
 #endif

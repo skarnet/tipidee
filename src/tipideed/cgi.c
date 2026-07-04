@@ -151,33 +151,9 @@ static inline int do_nph (tipidee_rql const *rql, char const *docroot, char cons
   die500sys(rql, errno == ENOENT ? 127 : 126, docroot, "exec nph ", argv[0]) ;
 }
 
-static inline int local_redirect (tipidee_rql *rql, char const *docroot, char const *loc, char *uribuf, char const *cginame)
-{
-  size_t n ;
-  size_t hostlen = strlen(rql->uri.host) ;
-  uint16_t port = rql->uri.port ;
-  uint8_t ishttps = rql->uri.https ;
-  char hosttmp[hostlen + 1] ;
-  memcpy(hosttmp, rql->uri.host, hostlen + 1) ;
-  n = tipidee_uri_parse(uribuf, URI_BUFSIZE, loc, &rql->uri) ;
-  if (!n || n + hostlen + 1 > URI_BUFSIZE)
-    die502x(rql, 2, docroot, "cgi ", cginame, " returned an invalid ", "Location", " value", " for local redirection") ;
-  memcpy(uribuf + n, hosttmp, hostlen + 1) ;
-  rql->uri.host = uribuf + n ;
-  rql->uri.port = port ;
-  rql->uri.https = ishttps ;
-  tipidee_log_debug(g.logv, "cgi ", cginame, ": local redirect to ", rql->uri.path) ;
-  return 1 ;
-}
-
 static inline int do_cgi (tipidee_rql *rql, char const *docroot, char const *const *argv, char const *const *envp, char const *body, size_t bodylen, char *uribuf, int autochunk, uint32_t raflags)
 {
-  char const *reason = "OK" ;
-  char const *location ;
-  char const *contentlength ;
-  char const *statusfield ;
   uint64_t rbodylen = 0 ;
-  unsigned int status = 0 ;
   int r ;
   tipidee_headers hdr ;
   char hdrbuf[4096] ;
@@ -249,7 +225,6 @@ static inline int do_cgi (tipidee_rql *rql, char const *docroot, char const *con
   return 0 ;
 
  normalcase:
-
   if (x[1].fd >= 0)
   {
     if (timed_write_g(x[1].fd, body + bodyw, bodylen - bodyw, &deadline) < bodylen - bodyw)
@@ -262,91 +237,19 @@ static inline int do_cgi (tipidee_rql *rql, char const *docroot, char const *con
   }
   tain_add_g(&deadline, &g.writetto) ;
 
-  statusfield = tipidee_headers_search(&hdr, "Status") ;
-  location = tipidee_headers_search(&hdr, "Location") ;
-  contentlength = tipidee_headers_search(&hdr, "Content-Length") ;
-  if (contentlength)
+  r = process_cgi_headers(rql, &hdr, docroot, "cgi", argv[0], autochunk, &rbodylen) ;
+  if (r == 2)
   {
-    if (!uint640_scan(contentlength, &rbodylen))
-      die502x(rql, 2, docroot, "cgi ", argv[0], " returned an invalid ", "Content-Length", " header") ;
+    close(x[0].fd) ;
+    return local_redirect(rql, docroot, tipidee_headers_search(&hdr, "Location"), uribuf, "cgi", argv[0]) ;
   }
-  if (statusfield)
-  {
-    size_t m = uint_scan(statusfield, &status) ;
-    if (!m || (statusfield[m] && statusfield[m] != ' '))
-      die502x(rql, 2, docroot, "cgi ", argv[0], " returned an invalid ", "Status", " header") ;
-    if (statusfield[m]) reason = statusfield + m + 1 ;
-    else
-    {
-      tipidee_defaulttext dt ;
-      reason = tipidee_util_defaulttext(status, &dt) ? dt.reason : "" ;
-    }
-    if (!location && (status == 301 || status == 302 || status == 307 || status == 308))
-      die502x(rql, 2, docroot, "cgi ", argv[0], " returned a redirection status code without a ", "Location", " header") ;
-    if (status < 100 || status > 999)
-      die502x(rql, 2, docroot, "cgi ", argv[0], " returned an invalid ", "Status", " value") ;
-  }
-  if (location)
-  {
-    if (!location[0]) die502x(rql, 2, docroot, "cgi ", argv[0], " returned an invalid ", "Location", " header") ;
-    if (location[0] == '/' && location[1] != '/')
-    {
-      close(x[0].fd) ;
-      return local_redirect(rql, docroot, location, uribuf, argv[0]) ;
-    }
-    if (rbodylen)
-    {
-      if (!status)
-        die502x(rql, 2, docroot, "cgi ", argv[0], " didn't output a ", "Status", " header", " for a client redirect response with document") ;
-      if (status < 300 || status > 399)
-        die502x(rql, 2, docroot, "cgi ", argv[0], " returned an invalid ", "Status", " value", " for a client redirect response with document") ;
-    }
-    else
-    {
-      for (size_t i = 0 ; i < hdr.n ; i++)
-      {
-        char const *key = hdr.buf + hdr.list[i].left ;
-        if (!strcasecmp(key, "Location") || !strcasecmp(key, "Status")) continue ;
-        if (str_start(key, "X-CGI-")) continue ;
-        die502x(rql, 2, docroot, "cgi ", argv[0], " returned extra headers", " for a client redirect response without document") ;
-      }
-      if (!status)
-      {
-        status = 302 ;
-        reason = "Found" ;
-      }
-    }
-  }
-  else
-  {
-    if (!status) status = 200 ;
-    if (status != 304 && (status < 400 || status > 599) && !tipidee_headers_search(&hdr, "Content-Type"))
-      die502x(rql, 2, docroot, "cgi ", argv[0], " didn't output a ", "Content-Type", " header") ;
-  }
-
-  tipidee_response_status(buffer_1, rql, status, reason) ;
-  tipidee_response_header_writemerge_G(buffer_1, g.rhdr, g.rhdrn, &hdr, !g.cont) ;
-
-  if (contentlength)
-  {
-    char fmt[UINT64_FMT] ;
-    fmt[uint64_fmt(fmt, rbodylen)] = 0 ;
-    buffer_putsnoflush(buffer_1, "Content-Length: ") ;
-    buffer_putsnoflush(buffer_1, fmt) ;
-    buffer_putnoflush(buffer_1, "\r\n", 2) ;
-  }
-  else if (autochunk)
-    buffer_putsnoflush(buffer_1, "Transfer-Encoding: chunked\r\n") ;
-
-  buffer_putnoflush(buffer_1, "\r\n", 2) ;
-  tipidee_log_answer(g.logv, rql, status, rbodylen) ;
 
   if (rql->m == TIPIDEE_METHOD_HEAD)
   {
     if (!buffer_timed_flush_g(buffer_1, &deadline))
       strerr_diefu1sys(111, "write to stdout") ;
   }
-  else if (contentlength)
+  else if (r)
   {
     size_t len ;
     struct iovec v[2] ;

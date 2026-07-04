@@ -119,6 +119,7 @@ extern void respond_416 (tipidee_rql const *, char const *, uint64_t) ;
 #define die500x(r, e, d, ...) diefx(r, e, d, 500, __VA_ARGS__)
 #define die500sys(r, e, d, ...) diefusys(r, e, d, 500, __VA_ARGS__)
 #define die502x(r, e, d, ...) diefx(r, e, d, 502, __VA_ARGS__)
+#define die502sys(r, e, d, ...) diefusys(r, e, d, 502, __VA_ARGS__)
 
 
  /* redirection */
@@ -133,7 +134,7 @@ extern void rproxy (tipidee_rql const *, tipidee_redirection const *, char const
 
  /* fastcgi */
 
-extern void fastcgi (tipidee_rql const *, tipidee_redirection const *, char const *, tipidee_headers const *, char const *, size_t) ;
+extern int fastcgi (tipidee_rql *, tipidee_redirection const *, char const *, tipidee_headers const *, char const *, size_t, char *) ;
 
 
  /* trace */
@@ -172,6 +173,12 @@ extern int respond_304 (tipidee_rql const *, char const *, struct stat const *) 
  /* cgi */
 
 extern int respond_cgi (tipidee_rql *, char const *, char const *, size_t, char const *, char *, tipidee_headers const *, tipidee_resattr const *, char const *, size_t) ;
+
+
+ /* process_cgi_headers */
+
+extern int process_cgi_headers (tipidee_rql const *, tipidee_headers *, char const *, char const *, char const *, int, uint64_t *) ;
+extern int local_redirect (tipidee_rql *, char const *, char const *, char *, char const *, char const *) ;
 
 
  /* util */
