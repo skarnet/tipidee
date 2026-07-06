@@ -90,9 +90,7 @@ static int parse_vars (stralloc *sa, char const *s, size_t len)
     if (c & 0x10) { keystart = mark ; keylen = i - mark ; }
     if (c & 0x20) mark = i ;
     if (c & 0x40)
-    {
       if (!tipidee_fcgi_addenvb(sa, s + keystart, keylen, s + mark, i - mark)) return 0 ;
-    }
   }
   return 1 ;
 }
@@ -110,7 +108,6 @@ static void addenv (fctx *c, stralloc *sa, char const *key, char const *val)
 
 static void prepare_env (fctx *c, tipidee_headers const *hdr, size_t bodylen, stralloc *sa)
 {
-  size_t docrootlen = strlen(c->docroot) ;
   sa->len = 0 ;
   if (!parse_vars(sa, g.sa.s + g.cwdlen + 1, g.sa.len - (g.cwdlen + 1)))
   {
@@ -140,13 +137,13 @@ static void prepare_env (fctx *c, tipidee_headers const *hdr, size_t bodylen, st
   {
     size_t sublen = strlen(c->sub) ;
     size_t pathlen = strlen(c->rql->uri.path) ;
-    char val[pathlen - sublen - docrootlen + 1] ;
-    memcpy(val, c->rql->uri.path + docrootlen, pathlen - sublen - docrootlen) ;
-    val[pathlen - sublen - docrootlen] = 0 ;
+    char val[pathlen - sublen + 1] ;
+    memcpy(val, c->rql->uri.path, pathlen - sublen) ;
+    val[pathlen - sublen] = 0 ;
     addenv(c, sa, "PATH_INFO", c->sub) ;
     addenv(c, sa, "SCRIPT_NAME", val) ;
   }
-  else addenv(c, sa, "SCRIPT_NAME", c->rql->uri.path + docrootlen) ;
+  else addenv(c, sa, "SCRIPT_NAME", c->rql->uri.path) ;
   addenv(c, sa, "SERVER_NAME", c->rql->uri.host) ;
   addenv(c, sa, "SERVER_PROTOCOL", c->rql->http_minor ? "HTTP/1.1" : "HTTP/1.0") ;
 
@@ -191,8 +188,6 @@ static void do_write (fctx *c, char const *s, size_t len, uint64_t cl, uint64_t 
 {
   tain wdeadline ;
   tain_add_g(&wdeadline, &g.writetto) ;
-  if (cl + len > *w)
-    die502x(c->rql, 111, c->docroot, "fastcgi", " ", c->fn, " sent more data than advertised") ;
   if (!cl)
   {
     char fmt[SIZE_XFMT] ;
@@ -200,6 +195,11 @@ static void do_write (fctx *c, char const *s, size_t len, uint64_t cl, uint64_t 
     if (buffer_timed_put_g(buffer_1, fmt, w, &wdeadline) < w
      || buffer_timed_put_g(buffer_1, "\r\n", 2, &wdeadline) < 2)
       strerr_diefusys(111, "write to stdout") ;
+  }
+  else if (*w + len > cl)
+  {
+    strerr_warnw("fastcgi", " ", c->fn, " sent more data than advertised - truncating") ;
+    len = cl - *w ;
   }
   if (buffer_timed_put_g(buffer_1, s, len, &wdeadline) < len)
     strerr_diefusys(111, "write to stdout") ;
@@ -225,11 +225,12 @@ static int do_fastcgi (fctx *c, int fd, tipidee_headers const *hdr, char const *
 
   tipidee_headers_init(&rhdr, rhdrbuf, 4096) ;
   tipidee_fcgi_startwrite(&c->fc, fd, getpid(), deadline) ;
-  if (!tipidee_fcgi_beginrequest_g(&c->fc)) die500sys(c->rql, 111, c->docroot, "send request to ", "fastcgi", " ", c->fn) ;
-  prepare_env(c, hdr, bodylen, &sa) ;
-  if (bodylen && !tipidee_fcgi_stdin_g(&c->fc, body, bodylen)) die500sys(c->rql, 111, c->docroot, "send", " request body to ", "fastcgi", " ", c->fn) ;
-  if (!tipidee_fcgi_stdin_g(&c->fc, 0, 0)) die500sys(c->rql, 111, c->docroot, "finish sending", " request body to ", "fastcgi", " ", c->fn) ;
 
+  if (!tipidee_fcgi_beginrequest_g(&c->fc)) die500sys(c->rql, 111, c->docroot, "send request", " to ", "fastcgi", " ", c->fn) ;
+  prepare_env(c, hdr, bodylen, &sa) ;
+  if (bodylen && !tipidee_fcgi_stdin_g(&c->fc, body, bodylen)) die500sys(c->rql, 111, c->docroot, "send", " request body", " to ", "fastcgi", " ", c->fn) ;
+  if (!tipidee_fcgi_stdin_g(&c->fc, 0, 0)) die500sys(c->rql, 111, c->docroot, "finish sending", " request body", " to ", "fastcgi", " ", c->fn) ;
+  if (!tipidee_fcgi_flush_g(&c->fc)) die500sys(c->rql, 111, c->docroot, "flush information", " to ", "fastcgi", " ", c->fn) ;
   tipidee_fcgi_startread(&c->fc, fd, c->fc.id, deadline) ;
   while (stream)
   {
@@ -242,7 +243,7 @@ static int do_fastcgi (fctx *c, int fd, tipidee_headers const *hdr, char const *
         case ENFILE: die502x(c->rql, 111, c->docroot, "fastcgi", " ", c->fn, " is overloaded") ;
         case EAFNOSUPPORT: die502x(c->rql, 111, c->docroot, "fastcgi", " ", c->fn, " does not support the Responder role") ;
         case EPROTO : die502x(c->rql, 111, c->docroot, "fastcgi", " ", c->fn, " spoke a weird dialect") ;
-        default : die502sys(c->rql, 111, c->docroot, "unable to ", "read", " from ", "fastcgi", " ", c->fn) ;
+        default : die502sys(c->rql, 111, c->docroot, "read", " from ", "fastcgi", " ", c->fn) ;
       }
     }
     else if (stream == 1)
@@ -280,7 +281,7 @@ static int do_fastcgi (fctx *c, int fd, tipidee_headers const *hdr, char const *
         if (i < sa.len) do_write(c, sa.s + i, sa.len - i, cl, &w) ;
       }
       else if (state == 1) do_write(c, sa.s, sa.len, cl, &w) ;
-      else die502x(c->rql, 111, c->docroot, "fastcgi", " ", c->fn, " kept sending FCGI_STDOUT data after EOF marker") ;
+      else strerr_dief(111, "fastcgi", " ", c->fn, " kept sending FCGI_STDOUT data after EOF marker") ;
      cont:
       if (!sa.len) state = 2 ;
       sa.len = 0 ;
@@ -291,11 +292,15 @@ static int do_fastcgi (fctx *c, int fd, tipidee_headers const *hdr, char const *
       tain_now_g() ;
       sa.len = 0 ;
     }
+    else if (w) strerr_dief(111, "fastcgi", " ", c->fn, " sent data on an unsupported stream") ;
     else die502x(c->rql, 111, c->docroot, "fastcgi", " ", c->fn, " sent data on an unsupported stream") ;
   }
   fd_close(fd) ;
   if (cl && w < cl)
-    die502x(c->rql, 111, c->docroot, "fastcgi", " ", c->fn, " sent less data than advertised") ;
+  {
+    if (w) strerr_dief(111, "fastcgi", " ", c->fn, " sent less data than advertised") ;
+    else die502x(c->rql, 111, c->docroot, "fastcgi", " ", c->fn, " sent less data than advertised") ;
+  }
   return 0 ;
 }
 
