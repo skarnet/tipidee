@@ -5,7 +5,8 @@ In 0.0.8.0
 
  - Bugfixes.
  - New configuration option: cgi_pass_authorization
- - New configuration option: fastcgi
+ - New configuration option: fastcgi.
+ - FastCGI support.
 
 
 In 0.0.7.2
